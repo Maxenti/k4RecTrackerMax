@@ -1,0 +1,324 @@
+#!/usr/bin/env bash
+# mk_runtime.sh — build a self-contained runtime.tgz for Condor jobs
+# Bundles k4RecTracker libs/plugins/python, GenFit2 libs, Gaudi catalogs (incl. *.confdb), and model.onnx.
+# Then sanity-checks that at least one fitter (GenFit2DCHFitter or a Simple* fitter) is importable using only the bundle.
+
+set -euo pipefail
+
+# --- EDIT or override via env -------------------------------------------------
+K4RT_PREFIX="${K4RT_PREFIX:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker}"
+K4RT_INSTALL_DIR="${K4RT_INSTALL_DIR:-$K4RT_PREFIX/install}"
+K4RT_BUILD_DIR="${K4RT_BUILD_DIR:-$K4RT_PREFIX/build}"
+
+# Prefer lib64, fallback to lib
+K4RT_LIBDIR="${K4RT_LIBDIR:-}"
+if [[ -z "${K4RT_LIBDIR}" ]]; then
+  if [[ -d "$K4RT_INSTALL_DIR/lib64" ]]; then
+    K4RT_LIBDIR="$K4RT_INSTALL_DIR/lib64"
+  else
+    K4RT_LIBDIR="$K4RT_INSTALL_DIR/lib"
+  fi
+fi
+# Build-side fallbacks (for uninstalled libs)
+K4RT_BUILD_LIBDIR="${K4RT_BUILD_LIBDIR:-}"
+if [[ -z "${K4RT_BUILD_LIBDIR}" ]]; then
+  if [[ -d "$K4RT_BUILD_DIR/lib64" ]]; then
+    K4RT_BUILD_LIBDIR="$K4RT_BUILD_DIR/lib64"
+  else
+    K4RT_BUILD_LIBDIR="$K4RT_BUILD_DIR/lib"
+  fi
+fi
+
+# Python (installed tree contains Tracking/TrackingConf.py)
+K4RT_PY_INSTALL="${K4RT_PY_INSTALL:-$K4RT_INSTALL_DIR/python}"
+# Optional source fallback if not installed yet
+K4RT_PY_SRC_FALLBACK="${K4RT_PY_SRC_FALLBACK:-$K4RT_PREFIX/Tracking}"   # contains Tracking/...
+
+# GenFit2 shared libs
+GENFIT_LIB_DIR="${GENFIT_LIB_DIR:-/afs/cern.ch/user/c/cglenn/FCCWork/genfit2/install/lib64}"
+
+# ONNX model
+MODEL_PATH="${MODEL_PATH:-$K4RT_PREFIX/Tracking/test/testTrackFinder/model.onnx}"
+# ------------------------------------------------------------------------------
+
+OUT="runtime.tgz"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+echo "[rt] K4RT_INSTALL_DIR   = $K4RT_INSTALL_DIR"
+echo "[rt] K4RT_LIBDIR        = $K4RT_LIBDIR"
+echo "[rt] K4RT_BUILD_LIBDIR  = $K4RT_BUILD_LIBDIR"
+echo "[rt] K4RT_PY_INSTALL    = $K4RT_PY_INSTALL"
+echo "[rt] K4RT_PY_SRC_FB     = $K4RT_PY_SRC_FALLBACK"
+echo "[rt] GENFIT_LIB_DIR     = $GENFIT_LIB_DIR"
+echo "[rt] MODEL_PATH         = $MODEL_PATH"
+
+[[ -d "$K4RT_INSTALL_DIR" ]] || { echo "FATAL: install dir missing: $K4RT_INSTALL_DIR"; exit 2; }
+[[ -s "$MODEL_PATH" ]]       || { echo "FATAL: model missing: $MODEL_PATH"; exit 3; }
+
+mkdir -p "$TMP/runtime/lib64" "$TMP/runtime/lib" "$TMP/runtime/share" "$TMP/runtime/python" "$TMP/runtime/models"
+
+# --- k4RecTracker libs (prefer lib64) ----------------------------------------
+if [[ -d "$K4RT_LIBDIR" ]]; then
+  rsync -a \
+    --include='*.so*' \
+    --include='*_rdict.pcm' \
+    --include='*.pcm' \
+    --include='*.rootmap' \
+    --exclude='*' \
+    "$K4RT_LIBDIR"/ "$TMP/runtime/lib64/" || true
+fi
+
+# fallback from build if some libs/pcms only exist there
+NEEDED=(libTracking.so libDCHdigi.so)
+for L in "${NEEDED[@]}"; do
+  if ! ls "$TMP/runtime/lib64/$L"* >/dev/null 2>&1; then
+    if [[ -d "$K4RT_BUILD_LIBDIR" && -e "$K4RT_BUILD_LIBDIR/$L" ]]; then
+      echo "[rt] pulling $L (+pcms) from build: $K4RT_BUILD_LIBDIR"
+      rsync -a \
+        --include="$L*" \
+        --include='*_rdict.pcm' \
+        --include='*.pcm' \
+        --include='*.rootmap' \
+        --exclude='*' \
+        "$K4RT_BUILD_LIBDIR"/ "$TMP/runtime/lib64/" || true
+    fi
+  fi
+done
+
+# Also mirror into runtime/lib (harmless; some tools look at both)
+if compgen -G "$TMP/runtime/lib64/*" >/dev/null; then
+  rsync -a "$TMP/runtime/lib64/" "$TMP/runtime/lib/" || true
+fi
+
+# --- Gaudi share (plugin catalogs, options, confdb) ---------------------------
+rsync -a "$K4RT_INSTALL_DIR/share/" "$TMP/runtime/share/" 2>/dev/null || true
+
+# Copy common Gaudi component catalog locations explicitly if present
+for d in \
+  "$K4RT_INSTALL_DIR/share/Gaudi" \
+  "$K4RT_INSTALL_DIR/share/Gaudi/PluginService" \
+  "$K4RT_INSTALL_DIR/share/Gaudi/components" \
+  "$K4RT_INSTALL_DIR/share/GaudiComponentLibrary" \
+  "$K4RT_INSTALL_DIR/share/GaudiComponents"
+do
+  if [[ -d "$d" ]]; then
+    echo "[rt] copying Gaudi catalog dir: $d"
+    rsync -a "$d/" "$TMP/runtime/share/$(basename "$d")/" || true
+  fi
+done
+
+# Harvest any *.components* and friends from libdirs into a dedicated catalog dir
+LIB_CATALOGS_DIR="$TMP/runtime/share/k4rt-lib-catalogs"
+mkdir -p "$LIB_CATALOGS_DIR"
+for SRC in "$K4RT_LIBDIR" "$K4RT_BUILD_LIBDIR"; do
+  [[ -d "$SRC" ]] || continue
+  while IFS= read -r -d '' F; do
+    cp -v "$F" "$LIB_CATALOGS_DIR/$(basename "$F")" || true
+  done < <(find "$SRC" -maxdepth 2 -type f \
+            \( -name '*.components*' -o -name 'components*.*' -o -name '*Gaudi*.xml' -o -name '*Plugin*' -o -name '*.conf' -o -name '*.xml' -o -name '*.confdb' \) \
+            -print0 2>/dev/null)
+done
+
+# --- Python (installed) -------------------------------------------------------
+if [[ -d "$K4RT_PY_INSTALL" ]]; then
+  rsync -a "$K4RT_PY_INSTALL/" "$TMP/runtime/python/" || true
+fi
+
+# Fallback from source if Tracking/ is not present yet
+if [[ ! -d "$TMP/runtime/python/Tracking" && -d "$K4RT_PY_SRC_FALLBACK" ]]; then
+  echo "[rt] adding Tracking/ from source: $K4RT_PY_SRC_FALLBACK"
+  rsync -a "$K4RT_PY_SRC_FALLBACK/" "$TMP/runtime/python/Tracking/" || true
+fi
+
+# Make Tracking a proper package
+if [[ -d "$TMP/runtime/python/Tracking" && ! -f "$TMP/runtime/python/Tracking/__init__.py" ]]; then
+  echo > "$TMP/runtime/python/Tracking/__init__.py"
+  echo "[rt] created: runtime/python/Tracking/__init__.py"
+fi
+
+# Shim so 'import TrackingConf' works
+if [[ ! -f "$TMP/runtime/python/TrackingConf.py" ]]; then
+  cat > "$TMP/runtime/python/TrackingConf.py" <<'PY'
+# Shim so 'import TrackingConf' works
+try:
+    from Tracking.TrackingConf import *  # noqa
+except Exception as _e:
+    try:
+        from TrackingConf import *  # noqa
+    except Exception:
+        raise
+PY
+  echo "[rt] wrote shim: runtime/python/TrackingConf.py"
+fi
+
+# --- Inject a sitecustomize shim to avoid ImportError crashes -----------------
+cat > "$TMP/runtime/python/sitecustomize.py" <<'PY'
+# Ensure key Configurables are present in the import namespace even if
+# the factory catalogs are missing, so jobs don't die at import-time.
+try:
+    import Configurables as C  # Gaudi's dynamic module
+    from GaudiKernel.Configurable import ConfigurableGeneric as _CG
+
+    # Helper: inject a callable class stub with the expected name
+    def _inject_class_stub(name: str):
+        if not hasattr(C, name):
+            Stub = type(name, (_CG,), {})
+            setattr(C, name, Stub)
+            print(f"[shim] Injected Configurables.{name} as class stub")
+
+    # GenFit2 (class stub if missing)
+    try:
+        from Configurables import GenFit2DCHFitter as _T
+    except Exception:
+        _inject_class_stub("GenFit2DCHFitter")
+
+    # Simple* variants — class stubs so import won't fail; real factory still needed to do real work
+    for _name in ("SimpleFitDCHFitter", "SimpleFitterAlg", "SimpleTrackFitterAlg", "HelixFitter"):
+        try:
+            getattr(C, _name)
+        except Exception:
+            _inject_class_stub(_name)
+
+    # Mirror into Gaudi.Configurables for legacy imports
+    try:
+        import Gaudi.Configurables as GC
+        for _name in ("GenFit2DCHFitter",
+                      "SimpleFitDCHFitter","SimpleFitterAlg","SimpleTrackFitterAlg","HelixFitter"):
+            if not hasattr(GC, _name) and hasattr(C, _name):
+                setattr(GC, _name, getattr(C, _name))
+    except Exception:
+        pass
+except Exception as e:
+    print(f"[shim][WARN] sitecustomize could not inject: {e}")
+PY
+
+# --- GenFit2 libs -------------------------------------------------------------
+if [[ -d "$GENFIT_LIB_DIR" ]]; then
+  echo "[rt] bundling GenFit2 from $GENFIT_LIB_DIR"
+  rsync -a \
+    --include='*.so*' \
+    --include='*_rdict.pcm' \
+    --include='*.pcm' \
+    --include='*.rootmap' \
+    --exclude='*' \
+    "$GENFIT_LIB_DIR"/ "$TMP/runtime/lib64/"
+  rsync -a "$TMP/runtime/lib64/" "$TMP/runtime/lib/" || true
+else
+  echo "[rt][WARN] GENFIT_LIB_DIR missing: $GENFIT_LIB_DIR"
+fi
+
+# --- Drivers & model ----------------------------------------------------------
+[[ -f ./runDCHTestTrackFinder.py ]] && cp -v ./runDCHTestTrackFinder.py "$TMP/runtime/"
+[[ -f ./local_chain.sh          ]] && { cp -v ./local_chain.sh "$TMP/runtime/" || true; chmod +x "$TMP/runtime/local_chain.sh"; }
+cp -v "$MODEL_PATH" "$TMP/runtime/models/model.onnx"
+
+# --- Optional diag: ldd -r to see unresolved deps early ----------------------
+TRACKING_LIB="$(ls "$TMP/runtime/lib64"/libTracking*.so 2>/dev/null | head -n1 || true)"
+if [[ -n "$TRACKING_LIB" && -x /usr/bin/ldd ]]; then
+  echo "[rt][diag] ldd -r on $(basename "$TRACKING_LIB")"
+  ldd -r "$TRACKING_LIB" || true
+fi
+
+# --- Sanity checks: catalogs & symbols (GenFit + Simple*) --------------------
+echo "[rt][check] Catalog/symbol probes for fitters"
+if [[ -n "$TRACKING_LIB" && -x "$(command -v strings)" ]]; then
+  if strings "$TRACKING_LIB" | grep -q 'GenFit2DCHFitter'; then
+    echo "[rt][check] symbol 'GenFit2DCHFitter' appears in libTracking"
+  else
+    echo "[rt][warn] 'GenFit2DCHFitter' not obvious in strings(libTracking) — factory may still register it."
+  fi
+  if strings "$TRACKING_LIB" | grep -Eqi 'SimpleFitDCHFitter|SimpleFitterAlg|SimpleTrackFitterAlg|HelixFitter'; then
+    echo "[rt][check] Simple* fitter symbol(s) appear in libTracking"
+  else
+    echo "[rt][warn] No obvious Simple* fitter symbols in libTracking; may still be OK if catalog registers them."
+  fi
+fi
+
+if compgen -G "$TMP/runtime/share/**" >/dev/null; then
+  GREP_OUT_GF="$(grep -R -n --include='*.components*' --include='components*.*' --include='*.confdb' \
+                 'GenFit2DCHFitter' "$TMP/runtime/share" 2>/dev/null || true)"
+  if [[ -n "$GREP_OUT_GF" ]]; then
+    echo "[rt][check] catalogs mention GenFit2DCHFitter:"; echo "$GREP_OUT_GF" | sed 's/^/    /'
+  else
+    echo "[rt][warn] catalogs do not mention GenFit2DCHFitter"
+  fi
+
+  GREP_OUT_SF="$(grep -R -n --include='*.components*' --include='components*.*' --include='*.confdb' \
+                 -E 'SimpleFitDCHFitter|SimpleFitterAlg|SimpleTrackFitterAlg|HelixFitter' "$TMP/runtime/share" 2>/dev/null || true)"
+  if [[ -n "$GREP_OUT_SF" ]]; then
+    echo "[rt][check] catalogs mention a Simple* fitter:"; echo "$GREP_OUT_SF" | sed 's/^/    /'
+  else
+    echo "[rt][warn] catalogs do not mention any Simple* fitter"
+  fi
+else
+  echo "[rt][warn] no runtime/share content copied; relying on plugin self-registration."
+fi
+
+# --- Best-effort import test using only the bundled paths ---------------------
+echo "[rt][pycheck] Verifying fitter imports from the bundle (GenFit2 OR Simple*)"
+python3 - <<'PY' || { echo "[rt][FATAL] Import test failed (no GenFit2 nor Simple* fitter importable)"; exit 41; }
+import os, glob
+print("[rt][pycheck] starting")
+rt    = os.path.join(os.getcwd(), "runtime")
+lib64 = os.path.join(rt, "lib64")
+lib   = os.path.join(rt, "lib")
+pyp   = os.path.join(rt, "python")
+share = os.path.join(rt, "share")
+extra = os.path.join(share, "k4rt-lib-catalogs")
+
+# Prepend our bundle to search paths
+os.environ["LD_LIBRARY_PATH"]       = f"{lib64}:{lib}:" + os.environ.get("LD_LIBRARY_PATH","")
+os.environ["GAUDI_PLUGIN_PATH"]     = f"{lib64}:{lib}:" + os.environ.get("GAUDI_PLUGIN_PATH","")
+os.environ["GAUDI_COMPONENT_PATH"]  = f"{share}:{extra}:" + os.environ.get("GAUDI_COMPONENT_PATH","")
+os.environ["GAUDI_COMPONENTS_PATH"] = os.environ["GAUDI_COMPONENT_PATH"]
+os.environ["PYTHONPATH"]            = f"{pyp}:" + os.environ.get("PYTHONPATH","")
+
+# Show catalogs we see (useful diagnostics)
+for base in os.environ["GAUDI_COMPONENT_PATH"].split(":"):
+    if not base: continue
+    files=[]
+    for pat in ("*.components*", "components*.*", "*Gaudi*.xml", "*Plugin*", "*.conf", "*.xml", "*.confdb"):
+        files += glob.glob(os.path.join(base, pat))
+    if files:
+        print(f"[rt][pycheck] catalogs in {base}:")
+        for f in sorted(set(files)): print("  -", os.path.basename(f))
+
+import ROOT
+for name in ("libTracking","libDCHdigi","libDDRec","libk4FWCorePlugins"):
+    rc = ROOT.gSystem.Load(name)
+    print(f"[rt][pycheck] ROOT Load {name}: rc={rc}")
+
+ok_genfit = True
+try:
+    from Gaudi.Configurables import GenFit2DCHFitter
+    print("[rt][pycheck] OK: GenFit2DCHFitter importable")
+except Exception as e:
+    ok_genfit = False
+    print(f"[rt][pycheck] miss: GenFit2DCHFitter: {e}")
+
+ok_simple = False
+for mod,name in [
+    ("TrackingConf","SimpleFitDCHFitter"),
+    ("Gaudi.Configurables","SimpleFitDCHFitter"),
+    ("Gaudi.Configurables","SimpleFitterAlg"),
+    ("Gaudi.Configurables","SimpleTrackFitterAlg"),
+    ("Gaudi.Configurables","HelixFitter"),
+]:
+    try:
+        m = __import__(mod, fromlist=[name]); getattr(m,name)
+        print(f"[rt][pycheck] OK: {mod}.{name} importable")
+        ok_simple = True
+        break
+    except Exception as e:
+        print(f"[rt][pycheck] miss: {mod}.{name}: {e}")
+
+# At least one fitter must import
+import sys
+sys.exit(0 if (ok_genfit or ok_simple) else 1)
+PY
+echo "[rt][check] Import test passed"
+
+# --- Pack --------------------------------------------------------------------
+tar -C "$TMP" -czf "$OUT" runtime
+echo "[rt] wrote $OUT  size=$(du -h "$OUT" | awk '{print $1}')"

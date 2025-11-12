@@ -1,0 +1,41 @@
+# ================= DDSim gun production (per-eta dir + per-(eta,pt) file) =================
+
+universe        = vanilla
+executable      = scripts/condor_ddsim.sh
+
+# Resources
+request_cpus    = 1
+request_memory  = 3 GB
+request_disk    = 2 GB
+
+# Environment and platform
++JobFlavour     = "tomorrow"
+
+
+# We write locally and xrdcp to EOS; do NOT let Condor transfer outputs.
+should_transfer_files    = YES
+when_to_transfer_output  = ON_EXIT
+transfer_executable      = True
+
+# We always transfer the wrapper and the per-job params JSON.
+# queue_items.txt lists filenames like "job_0.json" that live under params/
+transfer_input_files     = scripts/condor_ddsim.sh, params/$(jobfile)
+
+# ----------- RUNTIME MACROS (set via -a on condor_submit) -----------
+#   -a OUT_DIR=/eos/user/c/cglenn/gun_samples
+#   -a COMPACT_XML_ARG=/eos/.../IDEA_o1_v03CF_2umAu.xml
+# --------------------------------------------------------------------
+
+# Logging
+output          = logs/$(jobfile).out
+error           = logs/$(jobfile).err
+log             = logs/condor.log
+
+# Arguments:
+#   1) params json (basename under params/)
+#   2) compact XML path on EOS
+#   3) OUT_DIR base on EOS
+arguments       = $(jobfile) $(COMPACT_XML_ARG) $(OUT_DIR)
+
+# Submit one job per line from queue_items.txt (each line like: job_0.json)
+queue jobfile from scripts/queue_items.txt

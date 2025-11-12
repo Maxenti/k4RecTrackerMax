@@ -1,0 +1,8 @@
+Unable to find image 'almalinux:9' locally
+9: Pulling from library/almalinux
+d2ed363a5c15: Pulling fs layer
+d2ed363a5c15: Verifying Checksum
+d2ed363a5c15: Download complete
+d2ed363a5c15: Pull complete
+Digest: sha256:375aa0df1af54a6ad8f4dec9ec3e0df16feec385c4fb761ac5c5ccdd829d0170
+Status: Downloaded newer image for almalinux:9

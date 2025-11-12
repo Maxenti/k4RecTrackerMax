@@ -1,0 +1,41 @@
+# reco.debug.condor — single debug job on a known-good file
+
+universe        = vanilla
+executable      = scripts/reco_job.sh
+transfer_executable = True
+
+
+# Resources / runtime window
+request_cpus    = 1
+request_memory  = 3.5 GB
+request_disk    = 2 GB
++JobFlavour     = "workday"
+
+# --- I/O under HTCondor ---
+# We ship the runtime bundle and optional chain file; output is written to EOS by the job itself.
+transfer_input_files    = runtime.tgz, local_chain.sh
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+# Logging (make sure logs/ exists before condor_submit)
+output  = logs/debug.$(ClusterId).$(ProcId).out
+error   = logs/debug.$(ClusterId).$(ProcId).err
+log     = logs/debug.$(ClusterId).$(ProcId).log
+
+# --- User knobs ---------------------------------------------------
+outdir     = /eos/user/c/cglenn/reco_samples
+compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
+
+# Tracking / fitting knobs
+fitter   = simple
+usemat   = 1
+stage    = fit
+fitout   = auto
+extraargs =
+
+# Wrapper args:
+#   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8 extraargs
+arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(extraargs)
+
+# Submit one job per line; scripts/filelist.txt should contain either /eos/... or root://... paths
+queue infile from scripts/filelist.txt
