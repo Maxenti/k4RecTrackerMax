@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Utility rule file for VTXdigi_MergeComponents.
 
@@ -69,8 +69,8 @@ include VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/progress.make
 VTXdigi/CMakeFiles/VTXdigi_MergeComponents: VTXdigi.components
 
 VTXdigi.components: VTXdigi/VTXdigi.components
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .components files for VTXdigi"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi && cat /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi/VTXdigi.components > /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi.components
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .components files for VTXdigi"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi && cat /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi/VTXdigi.components > /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi.components
 
 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/codegen:
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/codegen
@@ -85,10 +85,10 @@ VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build: VTXdigi_MergeComponents
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build
 
 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi && $(CMAKE_COMMAND) -P CMakeFiles/VTXdigi_MergeComponents.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi && $(CMAKE_COMMAND) -P CMakeFiles/VTXdigi_MergeComponents.dir/cmake_clean.cmake
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/clean
 
 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/VTXdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/VTXdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/depend
 

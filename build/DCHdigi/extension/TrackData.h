@@ -33,12 +33,6 @@ public:
   unsigned int tracks_end{};
 };
 
-
-namespace v1 {
-using TrackData = extension::TrackData;
-} // namespace v1
-
-
 } // namespace extension
 
 

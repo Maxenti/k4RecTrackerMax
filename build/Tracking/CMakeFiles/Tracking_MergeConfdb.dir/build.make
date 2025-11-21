@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Utility rule file for Tracking_MergeConfdb.
 
@@ -69,8 +69,8 @@ include Tracking/CMakeFiles/Tracking_MergeConfdb.dir/progress.make
 Tracking/CMakeFiles/Tracking_MergeConfdb: Tracking.confdb
 
 Tracking.confdb: Tracking/genConfDir/Tracking/Tracking.confdb
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .confdb files for Tracking"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && cat /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/genConfDir/Tracking/Tracking.confdb > /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking.confdb
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .confdb files for Tracking"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && cat /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/genConfDir/Tracking/Tracking.confdb > /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking.confdb
 
 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/codegen:
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfdb.dir/codegen
@@ -85,10 +85,10 @@ Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build: Tracking_MergeConfdb
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build
 
 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/Tracking_MergeConfdb.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/Tracking_MergeConfdb.dir/cmake_clean.cmake
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfdb.dir/clean
 
 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/CMakeFiles/Tracking_MergeConfdb.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/CMakeFiles/Tracking_MergeConfdb.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfdb.dir/depend
 

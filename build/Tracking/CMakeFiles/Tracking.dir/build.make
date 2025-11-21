@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Include any dependencies generated for this target.
 include Tracking/CMakeFiles/Tracking.dir/depend.make
@@ -73,95 +73,155 @@ Tracking/CMakeFiles/Tracking.dir/codegen:
 .PHONY : Tracking/CMakeFiles/Tracking.dir/codegen
 
 Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/GGTF_tracking.cpp
+Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp
 Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o -MF CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o.d -o CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/GGTF_tracking.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o -MF CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o.d -o CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp
 
 Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/GGTF_tracking.cpp > CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp > CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/GGTF_tracking.cpp -o CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp -o CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s
+
+Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
+Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o -MF CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o.d -o CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+
+Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.i"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp > CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.i
+
+Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.s"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp -o CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.s
 
 Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp
+Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp
 Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o -MF CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o.d -o CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o -MF CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o.d -o CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp
 
 Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp > CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp > CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp -o CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp -o CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s
+
+Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
+Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o -MF CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o.d -o CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+
+Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.i"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp > CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.i
+
+Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.s"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp -o CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.s
+
+Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
+Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o -MF CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o.d -o CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+
+Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.i"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp > CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.i
+
+Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.s"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp -o CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.s
 
 Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp
+Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp
 Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o -MF CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o.d -o CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o -MF CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o.d -o CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp
 
 Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp > CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp > CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp -o CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TrackdNdxDelphesBased.cpp -o CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s
 
 Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp
+Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp
 Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o -MF CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o.d -o CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o -MF CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o.d -o CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp
 
 Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp > CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp > CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp -o CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/TracksFromGenParticles.cpp -o CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s
+
+Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
+Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/fit_ggtf_tracks.cpp
+Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o -MF CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o.d -o CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/fit_ggtf_tracks.cpp
+
+Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.i"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/fit_ggtf_tracks.cpp > CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.i
+
+Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.s"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/fit_ggtf_tracks.cpp -o CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.s
 
 Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/GenFitter.cpp
+Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/GenFitter.cpp
 Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o -MF CMakeFiles/Tracking.dir/src/GenFitter.cpp.o.d -o CMakeFiles/Tracking.dir/src/GenFitter.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/GenFitter.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o -MF CMakeFiles/Tracking.dir/src/GenFitter.cpp.o.d -o CMakeFiles/Tracking.dir/src/GenFitter.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/GenFitter.cpp
 
 Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/src/GenFitter.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/GenFitter.cpp > CMakeFiles/Tracking.dir/src/GenFitter.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/GenFitter.cpp > CMakeFiles/Tracking.dir/src/GenFitter.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/src/GenFitter.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/GenFitter.cpp -o CMakeFiles/Tracking.dir/src/GenFitter.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/GenFitter.cpp -o CMakeFiles/Tracking.dir/src/GenFitter.cpp.s
 
 Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o: Tracking/CMakeFiles/Tracking.dir/flags.make
-Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/utils.cpp
+Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/utils.cpp
 Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o: Tracking/CMakeFiles/Tracking.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o -MF CMakeFiles/Tracking.dir/src/utils.cpp.o.d -o CMakeFiles/Tracking.dir/src/utils.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/utils.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o -MF CMakeFiles/Tracking.dir/src/utils.cpp.o.d -o CMakeFiles/Tracking.dir/src/utils.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/utils.cpp
 
 Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Tracking.dir/src/utils.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/utils.cpp > CMakeFiles/Tracking.dir/src/utils.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/utils.cpp > CMakeFiles/Tracking.dir/src/utils.cpp.i
 
 Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Tracking.dir/src/utils.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/src/utils.cpp -o CMakeFiles/Tracking.dir/src/utils.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/src/utils.cpp -o CMakeFiles/Tracking.dir/src/utils.cpp.s
 
 # Object files for target Tracking
 Tracking_OBJECTS = \
 "CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o" \
+"CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o" \
 "CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o" \
+"CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o" \
+"CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o" \
 "CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o" \
 "CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o" \
+"CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o" \
 "CMakeFiles/Tracking.dir/src/GenFitter.cpp.o" \
 "CMakeFiles/Tracking.dir/src/utils.cpp.o"
 
@@ -169,15 +229,19 @@ Tracking_OBJECTS = \
 Tracking_EXTERNAL_OBJECTS =
 
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o
+Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o
+Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o
+Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o
+Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/build.make
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/marlinutil/71b32a8436b0635bffdfb1ad2a850097d4cf3d4c_develop-miujhi/lib/libMarlinUtil.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/marlinutil/71b32a8436b0635bffdfb1ad2a850097d4cf3d4c_develop-miujhi/lib/libMarlinUtilAnn.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/ced/5796193c222d1b604158934d4172c28a4e59400a_develop-2kx2nv/lib/libCED.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/marlinutil/71b32a8436b0635bffdfb1ad2a850097d4cf3d4c_develop-ejp3tr/lib/libMarlinUtil.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/marlinutil/71b32a8436b0635bffdfb1ad2a850097d4cf3d4c_develop-ejp3tr/lib/libMarlinUtilAnn.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/ced/41166e992419dfd91790c0bce958a3728c6d1708_develop-w6anly/lib/libCED.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/clhep/2.4.7.1-6k4dbh/lib/libCLHEP-2.4.7.1.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libCore.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libImt.so
@@ -199,14 +263,16 @@ Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libMultiProc.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTVecOps.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/pandorasdk/3.4.2-xev72z/lib/libPandoraSDK.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/c79b7a8a158c72483dd5577a20177602a5ce753c_develop-t673qg/lib/libk4FWCore.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/a56d9f63caec4c8c036ec6cc53107973701af7c0_develop-2bvzew/lib/libk4FWCore.so
 Tracking/libTracking.so: DCHdigi/libextensionDict.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/py-onnxruntime/1.21.0-szdggw/lib64/libonnxruntime.so.1.21.0
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDRec.so.1.32
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDCore.so.1.32
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/delphes/2dcc5a41ceebfea467ec3f7cb4295c117f2a1388_develop-3jt55n/lib/libDelphes.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/py-torch/2.8.0-anom7k/lib/python3.13/site-packages/torch/lib/libtorch.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDRec.so.1.33
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDCore.so.1.33
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/delphes/5a60982c470a9eb0e20a24ce9d71480abc0b7947_develop-37rmcc/lib/libDelphes.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDParsers.so.1.33
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/py-torch/2.8.0-anom7k/lib/python3.13/site-packages/torch/lib/libc10.so
+Tracking/libTracking.so: /afs/cern.ch/user/c/cglenn/genfit2/install/lib64/libgenfit2.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDParsers.so.1.32
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libRint.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libPhysics.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libGeom.so.6.36.04
@@ -226,8 +292,8 @@ Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/intel-tbb/2022.0.0-sjg44y/lib64/libtbb.so.12.14
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/fmt/10.2.1-7y6px4/lib64/libfmt.a
 Tracking/libTracking.so: /usr/lib64/librt.a
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioIO.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioRootIO.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioIO.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioRootIO.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libTree.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libMathCore.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTNTuple.so.6.36.04
@@ -236,32 +302,32 @@ Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libNet.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTVecOps.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/vdt/0.4.6-rviadr/lib/libvdt.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioSioIO.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioSioIO.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/sio/9368e91bb3f4a99e8286d26dc7a425f216ff97d7_develop-5awric/lib64/libsio.so.0.2.0
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libRIO.so.6.36.04
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libThread.so.6.36.04
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hepUtils.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hepUtils.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libCore.so.6.36.04
 Tracking/libTracking.so: DCHdigi/libextension.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hep.so
-Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodio.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hep.so
+Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodio.so
 Tracking/libTracking.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/py-torch/2.8.0-anom7k/lib/python3.13/site-packages/torch/lib/libc10.so
 Tracking/libTracking.so: Tracking/CMakeFiles/Tracking.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared module libTracking.so"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Tracking.dir/link.txt --verbose=$(VERBOSE)
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/libTracking.so /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/.plugins/libTracking.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output Tracking.components libTracking.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/Tracking -p Tracking -i /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/libTracking.so
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX shared module libTracking.so"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Tracking.dir/link.txt --verbose=$(VERBOSE)
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/libTracking.so /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/.plugins/libTracking.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output Tracking.components libTracking.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/Tracking -p Tracking -i /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/libTracking.so
 
 # Rule to build all files generated by this target.
 Tracking/CMakeFiles/Tracking.dir/build: Tracking/libTracking.so
 .PHONY : Tracking/CMakeFiles/Tracking.dir/build
 
 Tracking/CMakeFiles/Tracking.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/Tracking.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/Tracking.dir/cmake_clean.cmake
 .PHONY : Tracking/CMakeFiles/Tracking.dir/clean
 
 Tracking/CMakeFiles/Tracking.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/CMakeFiles/Tracking.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/CMakeFiles/Tracking.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : Tracking/CMakeFiles/Tracking.dir/depend
 

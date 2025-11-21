@@ -57,10 +57,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,14 +142,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/VTXdigi//CMakeFiles/progress.marks
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/VTXdigi//CMakeFiles/progress.marks
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/clean
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/clean
 .PHONY : clean
 
 # The main clean target
@@ -158,22 +158,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 VTXdigi/CMakeFiles/VTXdigi.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi.dir/rule
 .PHONY : VTXdigi/CMakeFiles/VTXdigi.dir/rule
 
 # Convenience name for target.
@@ -182,12 +182,12 @@ VTXdigi: VTXdigi/CMakeFiles/VTXdigi.dir/rule
 
 # fast build rule for target.
 VTXdigi/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/build
 .PHONY : VTXdigi/fast
 
 # Convenience name for target.
 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/rule
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/rule
 
 # Convenience name for target.
@@ -196,12 +196,12 @@ VTXdigi_MergeComponents: VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/rule
 
 # fast build rule for target.
 VTXdigi_MergeComponents/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeComponents.dir/build
 .PHONY : VTXdigi_MergeComponents/fast
 
 # Convenience name for target.
 VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/rule
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/rule
 
 # Convenience name for target.
@@ -210,12 +210,12 @@ VTXdigi_MergeConfdb: VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/rule
 
 # fast build rule for target.
 VTXdigi_MergeConfdb/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeConfdb.dir/build
 .PHONY : VTXdigi_MergeConfdb/fast
 
 # Convenience name for target.
 VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/rule
 .PHONY : VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/rule
 
 # Convenience name for target.
@@ -224,7 +224,7 @@ VTXdigi_MergeConfDB2: VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/rule
 
 # fast build rule for target.
 VTXdigi_MergeConfDB2/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/build.make VTXdigi/CMakeFiles/VTXdigi_MergeConfDB2.dir/build
 .PHONY : VTXdigi_MergeConfDB2/fast
 
 src/VTXdigitizer.o: src/VTXdigitizer.cpp.o
@@ -232,7 +232,7 @@ src/VTXdigitizer.o: src/VTXdigitizer.cpp.o
 
 # target to build an object file
 src/VTXdigitizer.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.o
 .PHONY : src/VTXdigitizer.cpp.o
 
 src/VTXdigitizer.i: src/VTXdigitizer.cpp.i
@@ -240,7 +240,7 @@ src/VTXdigitizer.i: src/VTXdigitizer.cpp.i
 
 # target to preprocess a source file
 src/VTXdigitizer.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.i
 .PHONY : src/VTXdigitizer.cpp.i
 
 src/VTXdigitizer.s: src/VTXdigitizer.cpp.s
@@ -248,7 +248,7 @@ src/VTXdigitizer.s: src/VTXdigitizer.cpp.s
 
 # target to generate assembly for a file
 src/VTXdigitizer.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f VTXdigi/CMakeFiles/VTXdigi.dir/build.make VTXdigi/CMakeFiles/VTXdigi.dir/src/VTXdigitizer.cpp.s
 .PHONY : src/VTXdigitizer.cpp.s
 
 # Help Target
@@ -282,6 +282,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

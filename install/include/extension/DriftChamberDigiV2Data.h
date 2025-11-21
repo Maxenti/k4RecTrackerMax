@@ -30,12 +30,6 @@ public:
   unsigned int nElectrons_end{};
 };
 
-
-namespace v1 {
-using DriftChamberDigiV2Data = extension::DriftChamberDigiV2Data;
-} // namespace v1
-
-
 } // namespace extension
 
 

@@ -1,6 +1,6 @@
 // ======================================================================
 // GenFit2DCHFitter.cpp  -- fit GGTF 3D hits with GenFit2 (robust)
-//   - TGeo material effects (cm units internally)
+//   - TGeo material effects (cm units internally) [optional]
 //   - Group hits per GGTF label (quality/type); DBSCAN fallback if all zero
 //   - Diagonal anisotropic measurement covariance (XY/Z) + PD guards
 //   - XY-circle pT seeding with guards; per-group sort + optional dedup
@@ -8,7 +8,9 @@
 //   - Optional cap on measurements per group (for conditioning)
 //   - Retry path: inflate covariances if no FitterInfo after base fit
 //   - Canonical SpacepointMeasurement attach (7-arg ABI)
-//   - Adds an EDM4hep TrackState (AtIP) per exported track
+//   - Exports an EDM4hep TrackState(AtIP) per track:
+//        * omega = q/pT [GeV^-1]   (EDM/LCIO convention)
+//        * time  = pT  [GeV]       (direct pT export; read this for pT)
 // ======================================================================
 
 #include <memory>
@@ -193,7 +195,7 @@ static void addAtIPState(edm4hep::MutableTrack& trk,
   ts.D0             = float(d0);
   ts.Z0             = float(z0);
 
-  // Store pT [GeV] directly for convenience
+  // Store pT [GeV] directly for convenience (read TrackState.time as pT)
   ts.time           = float(pT);
 
   // Diagonal covariance (placeholder; tune later)
@@ -308,7 +310,7 @@ struct GenFit2DCHFitter final
   // --------------------------------------------------------------------
 
   StatusCode initialize() override {
-    genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., m_Bz.value()));
+    genfit::FieldManager::getInstance()->init(new genfit::ConstField(0., 0., 10.0*m_Bz.value()));
 
     if (m_useMatEff.value()) {
       if (!gGeoManager) {
@@ -482,9 +484,7 @@ struct GenFit2DCHFitter final
       info() << "Seed[label=" << label << "] | n=" << P.size()
              << " R_int(cm)=" << R_int
              << " pTseed(GeV)=" << pTseed
-             << " sinTheta=" << sinTheta
              << " pMag(GeV)=" << pMag
-             << " (PMin=" << m_seedPMinGeV.value() << ")"
              << endmsg;
 
       auto rep_up = std::make_unique<genfit::RKTrackRep>(m_pdg.value());
@@ -525,7 +525,7 @@ struct GenFit2DCHFitter final
                << " converged=" << fs_base->isFitConverged()
                << " Ndf=" << fs_base->getNdf()
                << " Chi2=" << fs_base->getChi2()
-               << " pVal=" << fs_base->getPVal() << endmsg;
+               << " P=" << fs_base->getPVal() << endmsg;
       }
 
       auto has_any_FI = [&](genfit::Track& trk)->bool{
@@ -572,7 +572,7 @@ struct GenFit2DCHFitter final
                  << " converged=" << fs_retry->isFitConverged()
                  << " Ndf=" << fs_retry->getNdf()
                  << " Chi2=" << fs_retry->getChi2()
-                 << " pVal=" << fs_retry->getPVal() << endmsg;
+                 << " P=" << fs_retry->getPVal() << endmsg;
         }
 
         if (fs_retry && has_any_FI(fitTrack2)) {

@@ -3,15 +3,13 @@
 set -euo pipefail
 
 # ------------------------ Key4HEP environment ------------------------
-if [ -f /cvmfs/sw.hsf.org/key4hep/setup.sh ]; then
-  K4SETUP=/cvmfs/sw.hsf.org/key4hep/setup.sh
-else
-  K4SETUP=/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
-fi
+
+K4SETUP=/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+
 
 # Source only if not already set; clear "$@" while sourcing
 if [[ -z "${KEY4HEP_STACK:-}" && -z "${K4ENV:-}" ]]; then
-  __orig_args=("$@"); set +u; set --; source "$K4SETUP"; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
+  __orig_args=("$@"); set +u; set --; source "$K4SETUP" -r 2025-09-21; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
 else
   echo "[env] Key4HEP already set, not sourcing again."
 fi
@@ -75,7 +73,7 @@ print(s.replace("+","").replace("-","m"))
 PY
 )
 rel_dir="eta_${eta_tag}"
-file_name="gun_eta${eta_tag}_pt${pt_tag}.root"
+file_name="gun_eta${eta_tag}_E${pt_tag}.root"
 
 # Local scratch output
 SCRATCH="${TMPDIR:-$PWD}"

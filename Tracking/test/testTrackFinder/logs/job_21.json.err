@@ -1,0 +1,13 @@
++ ddsim --compactFile /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml --numberOfEvents 3000 --random.seed 1020001 --enableGun --gun.particle mu- --gun.energy '0.03388888572090415*GeV' --gun.distribution uniform --gun.thetaMin '1.0904152476611673*rad' --gun.thetaMax '1.0904152476611673*rad' --gun.phiMin '0*deg' --gun.phiMax '360*deg' --gun.distribution uniform --outputFile /pool/condor/dir_2229621/tmp/gun_eta+0.50_E0.030053.root
+Info in <TGeoManager::TGeoManager>: Geometry default, Detector Geometry created
+Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+Info in <TGeoManager::SetTopVolume>: Top volume is world_volume. Master volume is world_volume
+Info in <TGeoManager::CheckGeometry>: Fixing runtime shapes...
+Info in <TGeoManager::CheckGeometry>: ...Nothing to fix
+Info in <TGeoManager::CloseGeometry>: Counting nodes...
+Info in <TGeoManager::Voxelize>: Voxelizing...
+Info in <TGeoManager::CloseGeometry>: Building cache...
+Info in <TGeoManager::CountLevels>: max level = 4, max placements = 816
+Info in <TGeoManager::CloseGeometry>: 395257 nodes/ 904 volume UID's in Detector Geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
++ set +x

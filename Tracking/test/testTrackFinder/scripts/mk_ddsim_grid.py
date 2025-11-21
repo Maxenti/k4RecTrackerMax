@@ -6,9 +6,9 @@ ap.add_argument("--out", default="params_ddsim.jsonl", help="Output JSONL of job
 ap.add_argument("--pt-min", type=float, default=0.01, help="min pT [GeV]")
 ap.add_argument("--pt-max", type=float, default=200.0, help="max pT [GeV]")
 ap.add_argument("--pt-n",   type=int,   default=30,    help="number of pT points (logspace)")
-ap.add_argument("--etas",   default="0.0,1.0,2.0",
+ap.add_argument("--etas",   default="0.0, 0.05, 1.0, 1.5, 2.0",
                 help="comma list of eta values")
-ap.add_argument("--nev",    type=int,   default=500,  help="events per point")
+ap.add_argument("--nev",    type=int,   default=1000,  help="events per point")
 ap.add_argument("--particle", default="mu-", help="gun particle PDG name")
 ap.add_argument("--phi-uniform", action="store_true", default=True,
                 help="sample phi uniformly 0..2pi (recommended)")

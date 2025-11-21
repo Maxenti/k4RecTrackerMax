@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Include any dependencies generated for this target.
 include ARCdigi/CMakeFiles/ARCdigi.dir/depend.make
@@ -73,18 +73,18 @@ ARCdigi/CMakeFiles/ARCdigi.dir/codegen:
 .PHONY : ARCdigi/CMakeFiles/ARCdigi.dir/codegen
 
 ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o: ARCdigi/CMakeFiles/ARCdigi.dir/flags.make
-ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp
+ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp
 ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o: ARCdigi/CMakeFiles/ARCdigi.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o -MF CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o.d -o CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o -MF CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o.d -o CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp
 
 ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp > CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp > CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i
 
 ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp -o CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi/src/ARCdigitizer.cpp -o CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s
 
 # Object files for target ARCdigi
 ARCdigi_OBJECTS = \
@@ -95,8 +95,8 @@ ARCdigi_EXTERNAL_OBJECTS =
 
 ARCdigi/libARCdigi.so: ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o
 ARCdigi/libARCdigi.so: ARCdigi/CMakeFiles/ARCdigi.dir/build.make
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/c79b7a8a158c72483dd5577a20177602a5ce753c_develop-t673qg/lib/libk4FWCore.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDRec.so.1.33
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/a56d9f63caec4c8c036ec6cc53107973701af7c0_develop-2bvzew/lib/libk4FWCore.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDRec.so.1.32
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/lib/libGaudiKernel.so
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/lib/libGaudiPluginService.so
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/boost/1.88.0-pfej4w/lib/libboost_fiber.so.1.88.0
@@ -109,19 +109,19 @@ ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/intel-tbb/2022.0.0-sjg44y/lib64/libtbb.so.12.14
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/fmt/10.2.1-7y6px4/lib64/libfmt.a
 ARCdigi/libARCdigi.so: /usr/lib64/librt.a
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioIO.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioRootIO.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioIO.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioRootIO.so
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTNTuple.so.6.36.04
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTVecOps.so.6.36.04
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/vdt/0.4.6-rviadr/lib/libvdt.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioSioIO.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioSioIO.so
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/sio/9368e91bb3f4a99e8286d26dc7a425f216ff97d7_develop-5awric/lib64/libsio.so.0.2.0
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hepUtils.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hep.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodio.so
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDCore.so.1.33
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hepUtils.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hep.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodio.so
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDCore.so.1.32
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libTree.so.6.36.04
-ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDParsers.so.1.33
+ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDParsers.so.1.32
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libRint.so.6.36.04
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libPhysics.so.6.36.04
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libGeom.so.6.36.04
@@ -137,21 +137,21 @@ ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libCore.so.6.36.04
 ARCdigi/libARCdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/xerces-c/3.3.0-qlw52o/lib/libxerces-c.so
 ARCdigi/libARCdigi.so: ARCdigi/CMakeFiles/ARCdigi.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX shared module libARCdigi.so"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ARCdigi.dir/link.txt --verbose=$(VERBOSE)
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi/libARCdigi.so /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/.plugins/libARCdigi.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output ARCdigi.components libARCdigi.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/ARCdigi -p ARCdigi -i /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi/libARCdigi.so
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX shared module libARCdigi.so"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ARCdigi.dir/link.txt --verbose=$(VERBOSE)
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi/libARCdigi.so /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/.plugins/libARCdigi.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output ARCdigi.components libARCdigi.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/ARCdigi -p ARCdigi -i /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi/libARCdigi.so
 
 # Rule to build all files generated by this target.
 ARCdigi/CMakeFiles/ARCdigi.dir/build: ARCdigi/libARCdigi.so
 .PHONY : ARCdigi/CMakeFiles/ARCdigi.dir/build
 
 ARCdigi/CMakeFiles/ARCdigi.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -P CMakeFiles/ARCdigi.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -P CMakeFiles/ARCdigi.dir/cmake_clean.cmake
 .PHONY : ARCdigi/CMakeFiles/ARCdigi.dir/clean
 
 ARCdigi/CMakeFiles/ARCdigi.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi/CMakeFiles/ARCdigi.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi/CMakeFiles/ARCdigi.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : ARCdigi/CMakeFiles/ARCdigi.dir/depend
 

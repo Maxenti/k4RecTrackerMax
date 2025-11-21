@@ -1,9 +1,9 @@
 DCHdigi/CMakeFiles/extension.dir/src/Track.cc.o: \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/src/Track.cc \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/src/Track.cc \
  /usr/include/stdc-predef.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/Track.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackObj.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackData.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/Track.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackObj.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackData.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/cstdint \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/x86_64-pc-linux-gnu/bits/c++config.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/x86_64-pc-linux-gnu/bits/os_defines.h \
@@ -18,13 +18,13 @@ DCHdigi/CMakeFiles/extension.dir/src/Track.cc.o: \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
  /usr/include/bits/time64.h /usr/include/bits/wchar.h \
  /usr/include/bits/stdint-intn.h /usr/include/bits/stdint-uintn.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackerHit.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHitPlaneCollection.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHitPlane.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHitPlaneObj.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHitPlaneData.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/CovMatrix3f.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/utils/cov_matrix_utils.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackerHit.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHitPlaneCollection.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHitPlane.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHitPlaneObj.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHitPlaneData.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/CovMatrix3f.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/utils/cov_matrix_utils.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/array \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/compare \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/version.h \
@@ -225,10 +225,10 @@ DCHdigi/CMakeFiles/extension.dir/src/Track.cc.o: \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/stl_bvector.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/vector.tcc \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/nlohmann-json/3.12.0-z5fmi3/include/nlohmann/detail/abi_macros.hpp \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/Vector2f.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/Vector3d.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/Vector3f.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/ObjectID.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/Vector2f.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/Vector3d.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/Vector3f.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/ObjectID.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/functional \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/std_function.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/unordered_map \
@@ -360,21 +360,21 @@ DCHdigi/CMakeFiles/extension.dir/src/Track.cc.o: \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/any \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/nlohmann-json/3.12.0-z5fmi3/include/nlohmann/detail/macro_unscope.hpp \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/nlohmann-json/3.12.0-z5fmi3/include/nlohmann/thirdparty/hedley/hedley_undef.hpp \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/Constants.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/utilities/MaybeSharedPtr.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/Constants.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/utilities/MaybeSharedPtr.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/atomic \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/detail/OrderKey.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/MutableTrackerHitPlane.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHitPlaneCollectionData.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/CollectionBuffers.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/SchemaEvolution.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/ICollectionProvider.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/detail/OrderKey.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/MutableTrackerHitPlane.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHitPlaneCollectionData.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/CollectionBuffers.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/SchemaEvolution.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/ICollectionProvider.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/deque \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/stl_deque.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/deque.tcc \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/CollectionBase.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/CollectionBase.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/iostream \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/detail/Pythonizations.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/detail/Pythonizations.h \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/python/3.13.5-vselov/include/python3.13/Python.h \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/python/3.13.5-vselov/include/python3.13/patchlevel.h \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/python/3.13.5-vselov/include/python3.13/pyconfig.h \
@@ -504,27 +504,27 @@ DCHdigi/CMakeFiles/extension.dir/src/Track.cc.o: \
  /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/python/3.13.5-vselov/include/python3.13/cpython/tracemalloc.h \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/mutex \
  /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/lib/gcc/x86_64-pc-linux-gnu/14.2.0/../../../../include/c++/14.2.0/bits/unique_lock.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHit3DCollection.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHit3D.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHit3DObj.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHit3DData.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/MutableTrackerHit3D.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackerHit3DCollectionData.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollection.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHit.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitObj.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitData.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/RelationRange.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHit.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollectionData.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollection.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigi.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiObj.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiData.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigi.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollectionData.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include/podio/utilities/TypeHelpers.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/Quantity.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/TrackState.h \
- /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include/edm4hep/CovMatrix6f.h \
- /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableTrack.h
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHit3DCollection.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHit3D.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHit3DObj.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHit3DData.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/MutableTrackerHit3D.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackerHit3DCollectionData.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollection.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHit.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitObj.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitData.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/RelationRange.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHit.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollectionData.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollection.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigi.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiObj.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiData.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigi.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollectionData.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include/podio/utilities/TypeHelpers.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/Quantity.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/TrackState.h \
+ /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include/edm4hep/CovMatrix6f.h \
+ /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableTrack.h

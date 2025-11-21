@@ -3,8 +3,11 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+1.00/gun_eta+1.00_pt22.143.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples/eta_+1.00/reco_eta+1.00_pt22.143.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E200.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples/eta_+0.00/100mmGATE_reco_eta+0.00_E200.root"
+#DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx.md5"
+#Model is exactly the same as before, previously I downloaded it for local use and called it model.onnx but it hasn't changed
+#since PR65 began to now when it's merged.
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
@@ -40,39 +43,39 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 # ----------------- logging & runtime -----------------
 : "${GGTF_LOG:=INFO}"          # INFO|DEBUG
 : "${PRODUCE_3DHITS:=1}"       # 0|1
-: "${MAX_HITS:=10000}"          # hard-cap per event to avoid OOM on huge spikes
+: "${MAX_HITS:=100000}"          # hard-cap per event to avoid OOM on huge spikes
 : "${TIMEOUT_K4RUN:=0}"
 
 # GGTF clustering thresholds
-: "${TBETA:=0.15}"             # default 0.05; slightly tighter by default
+: "${TBETA:=0.6}"             # default 0.05; slightly tighter by default
 : "${TD:=0.3}"                # default 0.05
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
-: "${WIRE_GATE_MM:=12.0}"      # gate for wire->circle projection
+: "${WIRE_GATE_MM:=100.0}"      # gate for wire->circle projection
 : "${MAX_3D_PER_EVT:=200000}"  # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"   # cap spacepoints per track
 
 # GenFit “stability profile” (only used when Fitter=genfit2)
 : "${GF_POS_SCALE:=0.1}"       # mm -> cm internally
 : "${GF_LEN2M:=0.01}"          # cm -> m for pT seeding
-: "${GF_HIT_SIGMA_XY:=1.2}"    # mm
+: "${GF_HIT_SIGMA_XY:=0.8}"    # mm
 : "${GF_HIT_SIGMA_Z:=6.0}"     # mm
-: "${GF_SEED_POS_SIGMA:=500}"  # mm
-: "${GF_SEED_MOM_SIGMA:=30.0}" # GeV
+: "${GF_SEED_POS_SIGMA:=100}"  # mm
+: "${GF_SEED_MOM_SIGMA:=10.0}" # GeV
 : "${GF_DEDUP_TOL:=0.50}"      # mm
 : "${GF_USE_MAT:=1}"           # 0/1 (material effects)
 : "${GF_SEED_PT_MIN:=0.2}"
 : "${GF_SEED_PT_MAX:=200.0}"
-: "${GF_SEED_P_MIN:=0.5}"      # lower bound on |p| seed [GeV]
+: "${GF_SEED_P_MIN:=1.2}"      # lower bound on |p| seed [GeV]
 
 # Fitter grouping / fallback / retry (GenFit2)
-: "${GF_MIN_GROUP:=3}"
+: "${GF_MIN_GROUP:=4}"
 : "${GF_USE_FALLBACK:=1}"      # 1=on, 0=off
 : "${GF_FALLBACK_EPS_CM:=4}"
 : "${GF_FALLBACK_MINPTS:=4}"
 : "${GF_RETRY:=1}"             # 1=on, 0=off
-: "${GF_RETRY_MEAS_INFL:=9.0}" # variance k (C' = k*C)
+: "${GF_RETRY_MEAS_INFL:=5.0}" # variance k (C' = k*C)
 : "${GF_RETRY_SEED_POS:=5.0}"  # seed pos sigma ×
 : "${GF_RETRY_SEED_MOM:=5.0}"  # seed mom sigma ×
 : "${GF_MAX_MEAS_PER_GROUP:=0}"

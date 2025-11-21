@@ -1,4 +1,4 @@
-# runDCHTestTrackFinder.py (tri-fitter edition, no-ConfigurableGeneric)
+# runDCHTestTrackFinder.py (tri-fitter edition, crash-safe: no manual .so loads)
 
 import os
 import math
@@ -6,62 +6,20 @@ import subprocess
 import shutil
 import traceback
 
+# --- HARD STOP ON PRELOADING -------------------------------------------------
+# If GAUDI_PLUGINS is set, Gaudi will *preload* libs by name and then auto-discover
+# them again via GAUDI_PLUGIN_PATH, causing duplicate dictionary loads in Cling.
+# Unset it here to avoid segfaults from double-loads.
+os.environ.pop("GAUDI_PLUGINS", None)
+
 from Gaudi.Configuration import INFO, DEBUG
 from Gaudi.Configuration import ApplicationMgr as GaudiApp
 from Configurables import EventDataSvc, UniqueIDGenSvc, RndmGenSvc, GeoSvc
 from Configurables import AuditorSvc, ChronoAuditor, MemoryAuditor, MessageSvc
 
-# Preload factories (ensures Gaudi registries are in memory)
-import ROOT
-ROOT.gSystem.Load("libTracking.so")
-ROOT.gSystem.Load("libDCHdigi.so")
-
-# --- Make Gaudi see the factories (no loadPlugins in Gaudi 40) ---------------
-import os, glob
-
-# 1) Always set GAUDI_PLUGINS (Gaudi will try to preload these at startup)
-existing = os.environ.get("GAUDI_PLUGINS", "")
-want = "libTracking:libDCHdigi:libDDRec:libk4FWCorePlugins"
-os.environ["GAUDI_PLUGINS"] = f"{want}:{existing}" if existing else want
-print(f"[gaudi] GAUDI_PLUGINS={os.environ['GAUDI_PLUGINS']}")
-
-# 2) Belt-and-suspenders: explicitly load likely component libs so factories register
-#    Some builds put factories in *Components* or *Plugins* libs; try them if present.
-_candidate_libs = [
-    "libTracking", "libTrackingComponents", "libTrackingPlugins",
-    "libDCHdigi", "libDCHdigiComponents", "libk4FWCorePlugins", "libDDRec"
-]
-# Also try any runtime-bundled *.so that match these keywords
-_search_dirs = []
-for envvar in ("GAUDI_PLUGIN_PATH", "LD_LIBRARY_PATH"):
-    for d in os.environ.get(envvar, "").split(":"):
-        if d and os.path.isdir(d): _search_dirs.append(d)
-
-_seen = set()
-for lib in _candidate_libs:
-    try:
-        if lib in _seen: continue
-        rc = ROOT.gSystem.Load(lib)
-        _seen.add(lib)
-        print(f"[gaudi] Loaded {lib}: rc={rc}")
-    except Exception as e:
-        pass
-
-for d in _search_dirs:
-    for so in glob.glob(os.path.join(d, "*.so")):
-        base = os.path.basename(so)
-        if any(k in base for k in ("Tracking", "DCH", "FWCore", "DDRec", "Plugin", "Components")):
-            try:
-                if base in _seen: continue
-                rc = ROOT.gSystem.Load(so)
-                _seen.add(base)
-                print(f"[gaudi] Loaded {base}: rc={rc}")
-            except Exception:
-                pass
-
-# Keep your existing debug setting—use the alias you already defined:
-GaudiApp().PluginDebugLevel = 1
-
+# DO NOT import ROOT and DO NOT call gSystem.Load for any library.
+# Gaudi will load plugins from GAUDI_PLUGIN_PATH automatically when
+# you instantiate Configurables.
 
 from k4FWCore import IOSvc
 from k4FWCore.parseArgs import parser
@@ -81,8 +39,8 @@ parser.add_argument("--dchName",    default="DCH_v2",
                     help="DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)")
 
 # ----------------- GGTF clustering -----------------
-parser.add_argument("--tbeta", type=float, default=0.05, help="GGTF beta threshold")
-parser.add_argument("--td",    type=float, default=0.05, help="GGTF distance threshold")
+parser.add_argument("--tbeta", type=float, default=0.6, help="GGTF beta threshold")
+parser.add_argument("--td",    type=float, default=0.3, help="GGTF distance threshold")
 
 # Runtime / projection
 parser.add_argument("--wireGateMM", type=float, default=3.0,    help="Wire→circle gate [mm]")
@@ -209,7 +167,10 @@ if args.fitter == "genfit2" and args.gf_useMat and not args.compactXML:
 
 # ----------------- Message/Auditing -----------------
 MessageSvc().Format = "% F%18W%S%7W%R%T %0W%M"
-GaudiApp().PluginDebugLevel = 1
+try:
+    GaudiApp().PluginDebugLevel = 1
+except Exception:
+    pass
 
 GaudiApp().AuditAlgorithms = True
 try: GaudiApp().AuditTools = True
@@ -259,18 +220,59 @@ def stage_model(spec: str) -> str:
         shutil.copy2(spec, out); return out
     raise RuntimeError(f"Unrecognized model spec: {spec}")
 
-# ----------------- DCH Digitizer -----------------
-from Configurables import DCHdigi_v01
-dch_digitizer = DCHdigi_v01(
-    "DCHdigi",
-    DCH_simhits=[args.dchSimHits],
-    DCH_name=args.dchName,
-    fileDataAlg="DataAlgFORGEANT.root",
-    calculate_dndx=False,
-    create_debug_histograms=False,
-    zResolution_mm=30.0,
-    xyResolution_mm=0.1
-)
+# ----------------- DCH Digitizer (robust resolver) -----------------
+def _resolve_dch_digitizer():
+    tried = []
+    candidates = [
+        ("DCHdigiConf",    "DCHdigi_v02"),
+        ("Configurables",  "DCHdigi_v02"),
+        ("DCHdigiConf",    "DCHdigi_v01"),
+        ("Configurables",  "DCHdigi_v01"),
+        ("DCHdigiConf",    "DCHdigi"),
+        ("Configurables",  "DCHdigi"),
+        ("TrackingConf",   "DCHdigi_v02"),
+        ("TrackingConf",   "DCHdigi_v01"),
+        ("TrackingConf",   "DCHdigi"),
+    ]
+    for mod, cls in candidates:
+        try:
+            m = __import__(mod, fromlist=[cls])
+            C = getattr(m, cls)
+            print(f"[digitizer] Using {mod}.{cls}")
+            return C(cls)
+        except Exception as e:
+            tried.append(f"{mod}.{cls} -> {e}")
+    paths = os.environ.get("GAUDI_PLUGIN_PATH","(unset)")
+    raise ImportError(
+        "No DCH digitizer component found. Tried:\n  " +
+        "\n  ".join(tried) +
+        f"\nHints:\n"
+        f"  • Ensure k4RecTracker installed libs are on GAUDI_PLUGIN_PATH.\n"
+        f"  • Confirm libDCHdigi*.so exists under your install lib dir.\n"
+        f"  • Re-run `ninja install` in k4RecTracker.\n"
+        f"  • Current GAUDI_PLUGIN_PATH: {paths}"
+    )
+
+dch_digitizer = _resolve_dch_digitizer()
+
+# Best-effort property setting
+def _set_if_has_digitizer(obj, name, value):
+    try:
+        if hasattr(obj, name):
+            setattr(obj, name, value)
+            print(f"[digitizer] set {name} = {value}")
+            return True
+    except Exception as e:
+        print(f"[digitizer] could not set {name}: {e}")
+    return False
+
+_set_if_has_digitizer(dch_digitizer, "DCH_simhits", [args.dchSimHits])
+_set_if_has_digitizer(dch_digitizer, "DCH_name", args.dchName)
+_set_if_has_digitizer(dch_digitizer, "fileDataAlg", "DataAlgFORGEANT.root")
+_set_if_has_digitizer(dch_digitizer, "calculate_dndx", False)
+_set_if_has_digitizer(dch_digitizer, "create_debug_histograms", False)
+_set_if_has_digitizer(dch_digitizer, "zResolution_mm", 30.0)
+_set_if_has_digitizer(dch_digitizer, "xyResolution_mm", 0.1)
 
 # Ensure cluster-size file for digitizer (best-effort)
 cluster_file = "DataAlgFORGEANT.root"
@@ -280,6 +282,7 @@ if not os.path.exists(cluster_file):
     subprocess.run(["wget","--no-verbose","--timeout=180","--tries=2","--no-clobber",url], check=True)
 
 # ----------------- Track Finder (GGTF) -----------------
+# Prefer the pre-generated Configurable module if present; fallback to Configurables registry
 try:
     from TrackingConf import GGTF_tracking
 except Exception:
@@ -380,7 +383,7 @@ fitter_alg = None
 requested_fitter = args.fitter
 
 def _configure_genfit2():
-    # Try to import GenFit2DCHFitter from either namespace (no shim, no ConfigurableGeneric)
+    # Import GenFit2DCHFitter from either namespace (no manual library loads)
     try:
         try:
             from TrackingConf import GenFit2DCHFitter
@@ -394,7 +397,7 @@ def _configure_genfit2():
     alg = GenFit2DCHFitter("GenFit2DCHFitter")
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
-    # IO (try the authoritative property names first)
+    # IO
     for prop, val in (("Input3DHits", "GGTF_3DHits"),
                       ("input3DHits","GGTF_3DHits"),
                       ("inputHits",  ["GGTF_3DHits"])):
@@ -406,7 +409,7 @@ def _configure_genfit2():
                       ("TracksOut", args.fitOut)):
         if _set_if_has(alg, prop, val): break
 
-    # Optional services (only set if they exist)
+    # Optional services
     for prop, val in [
         ("FieldSvc", field_svc_name),
         ("BFieldSvc", field_svc_name),
@@ -454,7 +457,7 @@ def _configure_genfit2():
     return alg
 
 def _configure_simple():
-    # Try to import SimpleFitDCHFitter from either namespace
+    # Import SimpleFitDCHFitter if available; otherwise fallback to threepoint
     Simple = None
     tried = []
     for mod, name in (("TrackingConf","SimpleFitDCHFitter"),
@@ -462,7 +465,7 @@ def _configure_simple():
         try:
             m = __import__(mod, fromlist=[name])
             cand = getattr(m, name)
-            if callable(cand):   # real class/factory
+            if callable(cand):
                 Simple = cand
                 print(f"[fitter] Using {mod}.{name}")
                 break
@@ -536,6 +539,9 @@ def _configure_threepoint():
     return alg
 
 # Build fitter (with optional fallback)
+fitter_alg = None
+requested_fitter = args.fitter
+
 if args.stage == "fit" and requested_fitter != "none":
     if requested_fitter == "genfit2":
         fitter_alg = _configure_genfit2()
@@ -583,9 +589,10 @@ print(f"[pipeline] TopAlg order: {[alg.getFullName() for alg in top_algs]}")
 
 # ---- Ext services ----
 ext_svcs = [geoservice, EventDataSvc("EventDataSvc"), UniqueIDGenSvc("uidSvc"), RndmGenSvc(), svc]
-if field_svc_obj is not None:   ext_svcs.append(field_svc_obj)
-if material_svc_obj is not None:ext_svcs.append(material_svc_obj)
-
+if 'field_svc_obj' in globals() and field_svc_obj is not None:
+    ext_svcs.append(field_svc_obj)
+if 'material_svc_obj' in globals() and material_svc_obj is not None:
+    ext_svcs.append(material_svc_obj)
 
 mgr = GaudiApp(
     TopAlg=top_algs,

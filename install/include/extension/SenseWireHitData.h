@@ -32,12 +32,6 @@ public:
   unsigned int nElectrons_end{};
 };
 
-
-namespace v1 {
-using SenseWireHitData = extension::SenseWireHitData;
-} // namespace v1
-
-
 } // namespace extension
 
 

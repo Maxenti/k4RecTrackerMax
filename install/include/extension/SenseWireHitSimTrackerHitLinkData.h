@@ -17,12 +17,6 @@ public:
 
 };
 
-
-namespace v1 {
-using SenseWireHitSimTrackerHitLinkData = extension::SenseWireHitSimTrackerHitLinkData;
-} // namespace v1
-
-
 } // namespace extension
 
 

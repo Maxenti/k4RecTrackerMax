@@ -232,22 +232,15 @@ public:
                   [ID] (MCRecoDriftChamberDigiAssociationObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -300,6 +293,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class MCRecoDriftChamberDigiAssociationCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};

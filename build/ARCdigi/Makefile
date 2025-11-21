@@ -57,10 +57,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,14 +142,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi//CMakeFiles/progress.marks
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi//CMakeFiles/progress.marks
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/clean
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/clean
 .PHONY : clean
 
 # The main clean target
@@ -158,22 +158,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 ARCdigi/CMakeFiles/ARCdigi.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi.dir/rule
 .PHONY : ARCdigi/CMakeFiles/ARCdigi.dir/rule
 
 # Convenience name for target.
@@ -182,12 +182,12 @@ ARCdigi: ARCdigi/CMakeFiles/ARCdigi.dir/rule
 
 # fast build rule for target.
 ARCdigi/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/build
 .PHONY : ARCdigi/fast
 
 # Convenience name for target.
 ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/rule
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/rule
 
 # Convenience name for target.
@@ -196,12 +196,12 @@ ARCdigi_MergeComponents: ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/rule
 
 # fast build rule for target.
 ARCdigi_MergeComponents/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeComponents.dir/build
 .PHONY : ARCdigi_MergeComponents/fast
 
 # Convenience name for target.
 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/rule
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/rule
 
 # Convenience name for target.
@@ -210,12 +210,12 @@ ARCdigi_MergeConfdb: ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/rule
 
 # fast build rule for target.
 ARCdigi_MergeConfdb/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build
 .PHONY : ARCdigi_MergeConfdb/fast
 
 # Convenience name for target.
 ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/rule
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/rule
 
 # Convenience name for target.
@@ -224,7 +224,7 @@ ARCdigi_MergeConfDB2: ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/rule
 
 # fast build rule for target.
 ARCdigi_MergeConfDB2/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/build.make ARCdigi/CMakeFiles/ARCdigi_MergeConfDB2.dir/build
 .PHONY : ARCdigi_MergeConfDB2/fast
 
 src/ARCdigitizer.o: src/ARCdigitizer.cpp.o
@@ -232,7 +232,7 @@ src/ARCdigitizer.o: src/ARCdigitizer.cpp.o
 
 # target to build an object file
 src/ARCdigitizer.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.o
 .PHONY : src/ARCdigitizer.cpp.o
 
 src/ARCdigitizer.i: src/ARCdigitizer.cpp.i
@@ -240,7 +240,7 @@ src/ARCdigitizer.i: src/ARCdigitizer.cpp.i
 
 # target to preprocess a source file
 src/ARCdigitizer.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.i
 .PHONY : src/ARCdigitizer.cpp.i
 
 src/ARCdigitizer.s: src/ARCdigitizer.cpp.s
@@ -248,7 +248,7 @@ src/ARCdigitizer.s: src/ARCdigitizer.cpp.s
 
 # target to generate assembly for a file
 src/ARCdigitizer.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f ARCdigi/CMakeFiles/ARCdigi.dir/build.make ARCdigi/CMakeFiles/ARCdigi.dir/src/ARCdigitizer.cpp.s
 .PHONY : src/ARCdigitizer.cpp.s
 
 # Help Target
@@ -282,6 +282,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

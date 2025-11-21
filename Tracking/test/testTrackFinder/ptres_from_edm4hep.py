@@ -1,27 +1,78 @@
 #!/usr/bin/env python3
-# ptres_from_edm4hep.py  (v2: spacepoint→SimHit proximity matching)
+# ptres_vs_pt.py
+#
+# Compute and plot pT resolution vs truth pT using Δ(q/pT) from TrackState.omega.
+# Each input reco file is expected to be a single-pT gun sample; the truth pT is
+# derived from the filename/path via either:
+#   • "...eta_+X.XX..." AND "...EYY.Y..."  → pT_truth = sqrt(E^2 - m^2)/cosh(eta)
+#   • OR "...ptYY.Y..."                    → pT_truth = given value
+#
+# Output: a PNG scatter plot of σ(pT)/pT vs pT_truth (one point per input file).
+#
+# Requires: podio (Reader), edm4hep, numpy, matplotlib.
+#
+# Example:
+#   python3 ptres_vs_pt.py \
+#     /eos/.../reco_eta+0.00_pt1.0.root \
+#     /eos/.../reco_eta+0.00_pt2.0.root \
+#     /eos/.../reco_eta+0.00_pt5.0.root \
+#     --bz 2.0 --png ptres_vs_pt.png
+#
+#   # or with energy+eta encoded
+#   python3 ptres_vs_pt.py /eos/.../reco_eta+1.00_E50.0.root --bz 2.0
 
+import re
+import os
 import math
 import argparse
-from collections import defaultdict, Counter
+from collections import defaultdict
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")  # for batch systems
+import matplotlib.pyplot as plt
+
 from podio.root_io import Reader
-import edm4hep  # ensure type mapping
+import edm4hep
 
 K = 0.299792458  # GeV/(c·T·m)
 
-def pT_from_state(ts, bz_t):
-    denom = abs(ts.omega) * 1000.0
-    if bz_t == 0.0 or denom == 0.0:
-        return 0.0
-    return (K * abs(bz_t)) / (denom)
+# ------------- parsing helpers -------------
+def parse_eta_energy_or_pt_from_path(path):
+    """
+    Returns (eta, E_GeV or None, pt_GeV or None) parsed from the path.
+    Accepts 'eta_+1.00' or 'eta+1.00' or 'eta=-0.75';
+    Accepts 'E50.0' or 'pt22.143'.
+    """
+    s = path
+    m_eta = re.search(r'eta[_=]?([+\-]?\d+(?:\.\d+)?)', s)
+    eta = float(m_eta.group(1)) if m_eta else None
 
+    m_E = re.search(r'(?:^|[^A-Za-z0-9])E([0-9]+(?:\.[0-9]+)?)', s)
+    E = float(m_E.group(1)) if m_E else None
+
+    m_pt = re.search(r'(?:^|[^A-Za-z0-9])pt([0-9]+(?:\.[0-9]+)?)', s, re.IGNORECASE)
+    pt = float(m_pt.group(1)) if m_pt else None
+
+    return eta, E, pt
+
+def truth_pt_from_eta_and_energy(eta, E_GeV, mass_GeV):
+    """pT = sqrt(E^2 - m^2)/cosh(eta)."""
+    if eta is None or E_GeV is None:
+        return None
+    if E_GeV <= mass_GeV:
+        return None
+    p = math.sqrt(max(0.0, E_GeV*E_GeV - mass_GeV*mass_GeV))
+    return p / math.cosh(eta)
+
+# ------------- track-state helpers -------------
 def signed_q_over_pT_from_state(ts, bz_t):
     if bz_t == 0.0 or ts.omega == 0.0:
         return 0.0
+    # omega is 1/mm; convert to 1/m with *1000
     return (ts.omega * 1000.0) / (K * bz_t)
 
 def robust_sigma(values):
+    """Core width ~ (p84 - p16)/2 to reduce tail sensitivity."""
     if len(values) < 3:
         return float("nan")
     v = np.sort(np.asarray(values))
@@ -33,205 +84,179 @@ def robust_sigma(values):
         p84 = np.percentile(v, 84.0, interpolation="nearest")
     return 0.5 * (p84 - p16)
 
-def obj_key(obj):
-    oid = obj.getObjectID()
-    return (oid.collectionID, oid.index)
+def boot_sigma(values, n_boot=300, rng=None):
+    """Bootstrap uncertainty on robust sigma (optional)."""
+    if n_boot <= 0 or len(values) < 5:
+        return float("nan")
+    rng = np.random.default_rng() if rng is None else rng
+    vals = np.asarray(values)
+    sigmas = []
+    n = len(vals)
+    for _ in range(n_boot):
+        resamp = vals[rng.integers(0, n, n)]
+        sigmas.append(robust_sigma(resamp))
+    return float(np.std(sigmas, ddof=1)) if len(sigmas) > 1 else float("nan")
 
-def mcp_from_simhit(simhit):
-    # Try several bindings styles
-    try:
-        mcp = simhit.getMCParticle()
-        if mcp is not None and getattr(mcp, "isAvailable", lambda: True)():
-            return mcp
-    except Exception:
-        pass
-    for attr in ("mcParticle", "MCParticle"):
-        try:
-            mcp = getattr(simhit, attr)
-            if callable(mcp): mcp = mcp()
-            if mcp is not None and getattr(mcp, "isAvailable", lambda: True)():
-                return mcp
-        except Exception:
-            continue
-    return None
+# ------------- per-file analysis -------------
+def analyze_file(input_path, tracks_name, bz_t, mass_GeV, require_atip=False):
+    """
+    Returns dict with:
+      {
+        'pt_truth': float,
+        'n_tracks': int,
+        'n_used': int,
+        'n_atip_miss': int,
+        'bias_dqopT': float,
+        'sigcore_dqopT': float,
+        'rel_sigma_pt': float,     # ~ σ(pT)/pT
+        'residuals': list[float],  # Δ(q/pT)
+        'source': str              # text on how pt_truth was derived
+      }
+    """
+    eta, E_GeV, pt_in_name = parse_eta_energy_or_pt_from_path(input_path)
+    if E_GeV is not None and eta is not None:
+        pt_truth = truth_pt_from_eta_and_energy(eta, E_GeV, mass_GeV)
+        source = f"E={E_GeV:g} GeV, eta={eta:g}"
+    elif pt_in_name is not None:
+        pt_truth = pt_in_name
+        source = f"pt(name)={pt_truth:g} GeV"
+    else:
+        raise RuntimeError(f"Could not parse truth pT from path: {input_path}")
 
-def main():
-    ap = argparse.ArgumentParser(description="pT resolution from EDM4hep using SimHit proximity matching")
-    ap.add_argument("input", help="EDM4hep ROOT file")
-    ap.add_argument("--tracks", default="GenFitTracks", help="Track collection name")
-    ap.add_argument("--simhits", default="DCHCollection", help="DCH SimTrackerHit collection")
-    ap.add_argument("--mc", default="MCParticles", help="MCParticle collection")
-    ap.add_argument("--bz", type=float, default=2.0, help="Magnetic field [T] used in fit")
-    ap.add_argument("--purity", type=float, default=0.60, help="Minimum spacepoint→MC vote purity")
-    ap.add_argument("--minSimHits", type=int, default=6, help="MC denominator: min SimHits in DCH")
-    ap.add_argument("--ptBins", default="0.5,1,2,5,10,20,50,100", help="Comma-separated pT bin edges [GeV]")
-    # proximity gates (mm)
-    ap.add_argument("--drXY", type=float, default=3.0, help="Max XY distance (mm) to associate a spacepoint to a SimHit")
-    ap.add_argument("--dz",   type=float, default=15.0, help="Max |Δz| (mm) to associate a spacepoint to a SimHit")
-    args = ap.parse_args()
-
-    pt_edges = np.array([float(x) for x in args.ptBins.split(",") if x])
-
-    rdr = Reader(args.input)
+    rdr = Reader(input_path)
     events = rdr.get("events")
 
-    n_truth_den = Counter()
-    bin_residuals = defaultdict(list)
-    matched_count = 0
-    reco_count = 0
+    residuals = []
+    n_tracks = 0
+    n_atip_miss = 0
 
-    for iev, evt in enumerate(events):
-        tracks  = evt.get(args.tracks)
-        simhits = evt.get(args.simhits)
-        mcparts = evt.get(args.mc)
-
-        # ---- build SimHit arrays + map to MC keys
-        sim_xyz = []
-        sim_mc_keys = []
-
-        mc_simhit_count = Counter()
-        for sh in simhits:
-            mcp = mcp_from_simhit(sh)
-            if mcp is None:
-                continue
-            mc_key = obj_key(mcp)
-            mc_simhit_count[mc_key] += 1
-            p = sh.getPosition()
-            sim_xyz.append((p.x, p.y, p.z))
-            sim_mc_keys.append(mc_key)
-
-        if len(sim_xyz) == 0:
-            continue
-
-        sim_xyz = np.asarray(sim_xyz, dtype=np.float32)
-        sim_xy = sim_xyz[:, :2]
-        sim_z  = sim_xyz[:, 2]
-        dr2_max = args.drXY * args.drXY
-        dz_max  = args.dz
-
-        # ---- denominator by truth pT bins
-        for mcp in mcparts:
-            n_hits = mc_simhit_count.get(obj_key(mcp), 0)
-            if n_hits >= args.minSimHits:
-                mom = mcp.getMomentum()
-                pt_truth = math.hypot(mom.x, mom.y)
-                ib = int(np.digitize([pt_truth], pt_edges)[0] - 1)
-                if 0 <= ib < len(pt_edges) - 1:
-                    n_truth_den[ib] += 1
-
-        # ---- per-track matching
+    for evt in events:
+        tracks = evt.get(tracks_name)
         for trk in tracks:
-            reco_count += 1
-
-            # choose the AtIP state we wrote in the fitter
-            ts_atip = None
+            n_tracks += 1
+            # Prefer AtIP, else first state if allowed
+            ts_use = None
             for ts in trk.getTrackStates():
                 if ts.location == edm4hep.TrackState.AtIP:
-                    ts_atip = ts
+                    ts_use = ts
                     break
-            if ts_atip is None or ts_atip.omega == 0.0:
+            if ts_use is None and not require_atip:
+                states = list(trk.getTrackStates())
+                if states:
+                    ts_use = states[0]
+
+            if ts_use is None:
+                n_atip_miss += 1
+                continue
+            if ts_use.omega == 0.0:
                 continue
 
-            # collect spacepoints
-            sp_xyz = []
-            for h in trk.getTrackerHits():
-                try:
-                    p = h.getPosition()
-                except Exception:
-                    # older bindings
-                    p = h.position()
-                sp_xyz.append((p.x, p.y, p.z))
-            if not sp_xyz:
-                continue
+            q_over_pt_reco = signed_q_over_pT_from_state(ts_use, bz_t)
+            # Adopt reco charge sign for truth (uniform-charge gun assumption)
+            sign = 1.0 if q_over_pt_reco >= 0 else -1.0
+            q_over_pt_truth = sign / pt_truth
 
-            sp_xyz = np.asarray(sp_xyz, dtype=np.float32)
-            sp_xy  = sp_xyz[:, :2]
-            sp_z   = sp_xyz[:, 2]
+            residuals.append(q_over_pt_reco - q_over_pt_truth)
 
-            # nearest-neighbour in XY with Δz gate (vectorized)
-            votes = Counter()
-            for i in range(sp_xy.shape[0]):
-                dxy = sim_xy - sp_xy[i]
-                dr2 = (dxy * dxy).sum(axis=1)
-                # fast pre-gate by dr2
-                mask = dr2 <= dr2_max
-                if not np.any(mask):
-                    continue
-                # now apply |Δz|
-                dz = np.abs(sim_z[mask] - sp_z[i])
-                m2 = dz <= dz_max
-                if not np.any(m2):
-                    continue
-                # pick closest among the remaining
-                cand_idx = np.nonzero(mask)[0][m2]
-                j = cand_idx[np.argmin(dr2[mask][m2])]
-                votes[sim_mc_keys[j]] += 1
+    n_used = len(residuals)
+    bias = float(np.mean(residuals)) if n_used > 0 else float("nan")
+    sig = robust_sigma(residuals) if n_used > 0 else float("nan")
+    rel = sig * pt_truth if np.isfinite(sig) else float("nan")
 
-            if not votes:
-                continue
+    return {
+        "pt_truth": float(pt_truth),
+        "n_tracks": int(n_tracks),
+        "n_used": int(n_used),
+        "n_atip_miss": int(n_atip_miss),
+        "bias_dqopT": float(bias),
+        "sigcore_dqopT": float(sig),
+        "rel_sigma_pt": float(rel),
+        "residuals": residuals,
+        "source": source,
+    }
 
-            mc_key, n_vote = votes.most_common(1)[0]
-            purity = n_vote / sum(votes.values())
-            if purity < args.purity:
-                continue
+# ------------- main -------------
+def main():
+    ap = argparse.ArgumentParser(description="Plot σ(pT)/pT vs pT_truth using Δ(q/pT) from reco track states.")
+    ap.add_argument("inputs", nargs="+", help="One or more EDM4hep reco ROOT files (single-pT gun per file).")
+    ap.add_argument("--tracks", default="GenFitTracks", help="Track collection name.")
+    ap.add_argument("--bz", type=float, default=2.0, help="Magnetic field [T] used in fit.")
+    ap.add_argument("--speciesMass", type=float, default=0.10566, help="Gun particle mass [GeV] (muon default).")
+    ap.add_argument("--png", default="ptres_vs_pt.png", help="Output PNG filename.")
+    ap.add_argument("--requireAtIP", action="store_true", default=False,
+                    help="Only accept tracks that have an AtIP state.")
+    ap.add_argument("--bootstrap", type=int, default=0,
+                    help="If >0, bootstrap resamples for error bars on σ(pT)/pT (e.g. 300).")
+    args = ap.parse_args()
 
-            # fetch MCParticle to get truth pT and charge
-            mcp = None
-            try:
-                # index part of key often works
-                mcp = mcparts[mc_key[1]]
-                if obj_key(mcp) != mc_key:
-                    mcp = None
-            except Exception:
-                mcp = None
-            if mcp is None:
-                for cand in mcparts:
-                    if obj_key(cand) == mc_key:
-                        mcp = cand
-                        break
-            if mcp is None:
-                continue
+    results = []
+    for path in args.inputs:
+        try:
+            r = analyze_file(path, args.tracks, args.bz, args.speciesMass, args.requireAtIP)
+            results.append((path, r))
+        except Exception as e:
+            print(f"[WARN] Skipping {path}: {e}")
 
-            q_truth = int(round(mcp.getCharge()))
-            mom = mcp.getMomentum()
-            pt_truth = math.hypot(mom.x, mom.y)
-            if pt_truth <= 0:
-                continue
+    if not results:
+        raise SystemExit("No valid inputs produced results.")
 
-            q_over_pt_reco  = signed_q_over_pT_from_state(ts_atip, args.bz)
-            q_over_pt_truth = q_truth / pt_truth
-            delta_q_over_pt = q_over_pt_reco - q_over_pt_truth
+    # Aggregate points (one point per file)
+    pts = []
+    rels = []
+    yerrs = []
+    labels = []
 
-            ib = int(np.digitize([pt_truth], pt_edges)[0] - 1)
-            if 0 <= ib < len(pt_edges) - 1:
-                bin_residuals[ib].append(delta_q_over_pt)
-                matched_count += 1
-
-    # ---- report ----
-    print("\n=== pT Resolution (using Δ(q/pT)) ===")
-    print(f"Input: {args.input}")
-    print(f"Bz = {args.bz} T | purity >= {args.purity:.2f} | minSimHits (den) >= {args.minSimHits}")
-    print(f"Reco tracks seen: {reco_count} | Matched tracks: {matched_count}\n")
-
-    header = f"{'pT bin [GeV]':>14} | {'Nmatch':>7} | {'bias <Δ(q/pT)>':>15} | {'σ_core(Δ(q/pT))':>18} | {'eff (matched/den)':>18}"
+    # Report table
+    print("\n=== Per-file pT resolution ===")
+    header = f"{'pT_truth [GeV]':>14} | {'Ntracks':>8} | {'Nused':>6} | {'bias <Δ(q/pT)> [1/GeV]':>24} | {'σ_core[1/GeV]':>14} | {'σ(pT)/pT':>10} | source"
     print(header)
-    print("-" * len(header))
+    print("-"*len(header))
 
-    for ib in range(len(pt_edges) - 1):
-        lo, hi = pt_edges[ib], pt_edges[ib+1]
-        vals = bin_residuals.get(ib, [])
-        n_den = n_truth_den.get(ib, 0)
-        n = len(vals)
-        bias = float(np.mean(vals)) if n > 0 else float("nan")
-        sig = robust_sigma(vals) if n > 0 else float("nan")
-        eff = (n / n_den) if n_den > 0 else float("nan")
-        print(f"[{lo:5.1f},{hi:5.1f}] | {n:7d} | {bias:15.4e} | {sig:18.4e} | {eff:18.3f}")
+    for path, r in sorted(results, key=lambda x: x[1]["pt_truth"]):
+        pt_truth = r["pt_truth"]
+        ntr = r["n_tracks"]
+        nuse = r["n_used"]
+        bias = r["bias_dqopT"]
+        sigc = r["sigcore_dqopT"]
+        rel  = r["rel_sigma_pt"]
+        src  = r["source"]
 
-    print("\nNotes:")
-    print(" • Matching is done by nearest SimTrackerHit to each spacepoint (ΔR_xy<=drXY, |Δz|<=dz);"
-          " dominant MC by votes per track, with a purity cut.")
-    print(" • Denominator counts MCParticles with ≥ minSimHits in the DCH per pT bin.")
-    print(" • Convert to σ(pT)/pT by multiplying σ(Δ(q/pT)) by pT_truth in each bin.")
+        pts.append(pt_truth)
+        rels.append(rel)
+
+        if args.bootstrap > 0 and r["n_used"] > 5:
+            sig_err = boot_sigma(r["residuals"], n_boot=args.bootstrap)
+            yerr = sig_err * pt_truth if np.isfinite(sig_err) else float("nan")
+        else:
+            yerr = float("nan")
+        yerrs.append(yerr)
+
+        print(f"{pt_truth:14.6g} | {ntr:8d} | {nuse:6d} | {bias:24.4e} | {sigc:14.4e} | {rel:10.4e} | {src}")
+
+    pts  = np.asarray(pts, dtype=float)
+    rels = np.asarray(rels, dtype=float)
+    yerrs = np.asarray(yerrs, dtype=float)
+
+    # ---- Plot: σ(pT)/pT vs pT_truth ----
+    plt.figure(figsize=(7.5, 5.0))
+    if np.any(np.isfinite(yerrs)):
+        plt.errorbar(pts, rels, yerr=np.where(np.isfinite(yerrs), yerrs, 0.0),
+                     fmt="o", capsize=3, label=r"$\sigma(p_T)/p_T$")
+    else:
+        plt.plot(pts, rels, "o", label=r"$\sigma(p_T)/p_T$")
+
+    # Optional: join points for readability (monotonic pT grid typical for guns)
+    order = np.argsort(pts)
+    plt.plot(pts[order], rels[order], "-", alpha=0.5)
+
+    plt.xlabel(r"$p_T^{\mathrm{truth}}\ \mathrm{[GeV]}$")
+    plt.ylabel(r"$\sigma(p_T)/p_T$")
+    plt.title(r"$\sigma(p_T)/p_T$ vs $p_T^{\mathrm{truth}}$ (from $\Delta(q/p_T)$ core width)")
+    plt.grid(True, alpha=0.3)
+    plt.legend(loc="best")
+    plt.tight_layout()
+    plt.savefig(args.png, dpi=170)
+    print(f"\nSaved figure: {args.png}")
 
 if __name__ == "__main__":
     main()

@@ -36,14 +36,6 @@ class extension::SenseWireHitSimTrackerHitLinkData
 class extension::Track
 class extension::TrackCollection
 class extension::TrackData
-class extension::v1::DriftChamberDigiData
-class extension::v1::DriftChamberDigiLocalData
-class extension::v1::DriftChamberDigiV2Data
-class extension::v1::MCRecoDriftChamberDigiAssociationData
-class extension::v1::MCRecoDriftChamberDigiV2AssociationData
-class extension::v1::SenseWireHitData
-class extension::v1::SenseWireHitSimTrackerHitLinkData
-class extension::v1::TrackData
 class vector<extension::DriftChamberDigiData>
 class vector<extension::DriftChamberDigiLocalData>
 class vector<extension::DriftChamberDigiV2Data>
@@ -52,16 +44,7 @@ class vector<extension::MCRecoDriftChamberDigiV2AssociationData>
 class vector<extension::SenseWireHitData>
 class vector<extension::SenseWireHitSimTrackerHitLinkData>
 class vector<extension::TrackData>
-class vector<extension::v1::DriftChamberDigiData>
-class vector<extension::v1::DriftChamberDigiLocalData>
-class vector<extension::v1::DriftChamberDigiV2Data>
-class vector<extension::v1::MCRecoDriftChamberDigiAssociationData>
-class vector<extension::v1::MCRecoDriftChamberDigiV2AssociationData>
-class vector<extension::v1::SenseWireHitData>
-class vector<extension::v1::SenseWireHitSimTrackerHitLinkData>
-class vector<extension::v1::TrackData>
 header extension/MutableSenseWireHit.h
 header extension/SenseWireHit.h
 header extension/SenseWireHitCollection.h
 header extension/SenseWireHitData.h
-# List of selected typedefs and outer classes

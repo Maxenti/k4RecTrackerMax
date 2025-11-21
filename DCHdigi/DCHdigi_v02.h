@@ -70,7 +70,7 @@
 
 // edm4hep
 #include "edm4hep/EventHeaderCollection.h"
-#include "edm4hep/SenseWireHitCollection.h"
+#include "extension/SenseWireHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "edm4hep/TrackerHitSimTrackerHitLinkCollection.h"
 
@@ -88,13 +88,13 @@
 
 class DCHdigi_v02 final
     : public k4FWCore::MultiTransformer<
-          std::tuple<edm4hep::SenseWireHitCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>(
+          std::tuple<extension::SenseWireHitCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>(
               const edm4hep::SimTrackerHitCollection&, const edm4hep::EventHeaderCollection&)> {
 
 public:
   DCHdigi_v02(const std::string& name, ISvcLocator* svcLoc);
 
-  std::tuple<edm4hep::SenseWireHitCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>
+  std::tuple<extension::SenseWireHitCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>
   operator()(const edm4hep::SimTrackerHitCollection& input,
              const edm4hep::EventHeaderCollection& header) const override;
 

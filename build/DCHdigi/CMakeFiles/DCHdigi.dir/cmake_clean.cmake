@@ -2,8 +2,6 @@ file(REMOVE_RECURSE
   "../.plugins/libDCHdigi.so"
   "CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o"
   "CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o.d"
-  "CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o"
-  "CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o.d"
   "CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o"
   "CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o.d"
   "CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o"

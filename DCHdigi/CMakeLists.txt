@@ -108,8 +108,4 @@ ADD_TEST(NAME ${test_name} COMMAND sh +x test_DCHdigi.sh )
 set_test_env(${test_name})
 set_tests_properties(${test_name} PROPERTIES WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/DCHdigi/test/test_DCHdigi")
 
-SET(test_name "test_runDCHdigiV2")
-ADD_TEST(NAME ${test_name} COMMAND k4run runDCHdigiV2.py )
-set_test_env(${test_name})
-set_tests_properties(${test_name} PROPERTIES DEPENDS test_runDCHdigiV1)
-set_tests_properties(${test_name} PROPERTIES WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/DCHdigi/test/test_DCHdigi")
+

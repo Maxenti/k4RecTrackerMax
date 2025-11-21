@@ -34,7 +34,7 @@ endif()
 set(__QT_DEPLOY_SYSTEM_NAME "Linux")
 set(__QT_DEPLOY_IS_SHARED_LIBS_BUILD "ON")
 set(__QT_DEPLOY_TOOL "GRD")
-set(__QT_DEPLOY_IMPL_DIR "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/.qt")
+set(__QT_DEPLOY_IMPL_DIR "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/.qt")
 set(__QT_DEPLOY_VERBOSE "")
 set(__QT_CMAKE_EXPORT_NAMESPACE "Qt6")
 set(__QT_DEPLOY_GENERATOR_IS_MULTI_CONFIG "0")
@@ -58,7 +58,7 @@ set(__QT_DEPLOY_QT_DEBUG_POSTFIX "")
 
 # Define the CMake commands to be made available during deployment.
 set(__qt_deploy_support_files
-    "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/.qt/QtDeployTargets.cmake"
+    "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/.qt/QtDeployTargets.cmake"
     "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/qt-base/6.9.1-j4l3ro/lib/cmake/Qt6Core/Qt6CoreDeploySupport.cmake"
 )
 foreach(__qt_deploy_support_file IN LISTS __qt_deploy_support_files)

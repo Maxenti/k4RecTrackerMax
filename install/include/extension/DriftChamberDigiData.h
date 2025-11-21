@@ -28,12 +28,6 @@ public:
 
 };
 
-
-namespace v1 {
-using DriftChamberDigiData = extension::DriftChamberDigiData;
-} // namespace v1
-
-
 } // namespace extension
 
 

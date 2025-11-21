@@ -17,12 +17,6 @@ public:
 
 };
 
-
-namespace v1 {
-using MCRecoDriftChamberDigiV2AssociationData = extension::MCRecoDriftChamberDigiV2AssociationData;
-} // namespace v1
-
-
 } // namespace extension
 
 

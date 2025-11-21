@@ -35,58 +35,58 @@
 #include "TDataMember.h"
 
 // Header files passed as explicit arguments
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocal.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigiLocal.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigi.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigi.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociation.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableMCRecoDriftChamberDigiAssociation.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Data.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigiV2.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Obj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Collection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2CollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2Association.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableMCRecoDriftChamberDigiV2Association.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/Track.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableTrack.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHit.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHit.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLink.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHitSimTrackerHitLink.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkObj.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkCollection.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkCollectionData.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackerHit.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/TrackerHit_dev.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/DatamodelDefinition.h"
-#include "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/extension/extension.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocal.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigiLocal.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiLocalCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigi.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigi.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociation.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableMCRecoDriftChamberDigiAssociation.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiAssociationCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Data.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableDriftChamberDigiV2.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Obj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2Collection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DriftChamberDigiV2CollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2Association.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableMCRecoDriftChamberDigiV2Association.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MCRecoDriftChamberDigiV2AssociationCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/Track.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableTrack.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHit.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHit.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLink.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/MutableSenseWireHitSimTrackerHitLink.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkObj.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkCollection.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/SenseWireHitSimTrackerHitLinkCollectionData.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackerHit.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/TrackerHit_dev.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/DatamodelDefinition.h"
+#include "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/extension/extension.h"
 
 // Header files passed via #pragma extra_include
 
@@ -117,8 +117,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLDriftChamberDigiLocalData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLDriftChamberDigiLocalData);
       instance.SetDestructor(&destruct_extensioncLcLDriftChamberDigiLocalData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::DriftChamberDigiLocalData","extension::v1::DriftChamberDigiLocalData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::DriftChamberDigiLocalData*)
@@ -155,7 +153,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiLocal *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiLocal));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiLocal", 1, "", 83,
+         instance("extension::DriftChamberDigiLocal", 1, "", 77,
                   typeid(::extension::DriftChamberDigiLocal), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiLocal_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiLocal) );
@@ -200,7 +198,7 @@ namespace ROOT {
       ::extension::MutableDriftChamberDigiLocal *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableDriftChamberDigiLocal));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableDriftChamberDigiLocal", 1, "", 253,
+         instance("extension::MutableDriftChamberDigiLocal", 1, "", 247,
                   typeid(::extension::MutableDriftChamberDigiLocal), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableDriftChamberDigiLocal_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableDriftChamberDigiLocal) );
@@ -245,7 +243,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiLocalCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiLocalCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiLocalCollection", 1, "", 597,
+         instance("extension::DriftChamberDigiLocalCollection", 1, "", 591,
                   typeid(::extension::DriftChamberDigiLocalCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiLocalCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiLocalCollection) );
@@ -290,7 +288,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiData *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiData));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiData", 1, "", 924,
+         instance("extension::DriftChamberDigiData", 1, "", 912,
                   typeid(::extension::DriftChamberDigiData), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiData_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiData) );
@@ -299,8 +297,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLDriftChamberDigiData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLDriftChamberDigiData);
       instance.SetDestructor(&destruct_extensioncLcLDriftChamberDigiData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::DriftChamberDigiData","extension::v1::DriftChamberDigiData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::DriftChamberDigiData*)
@@ -337,7 +333,7 @@ namespace ROOT {
       ::extension::DriftChamberDigi *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigi));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigi", 1, "", 992,
+         instance("extension::DriftChamberDigi", 1, "", 974,
                   typeid(::extension::DriftChamberDigi), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigi_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigi) );
@@ -382,7 +378,7 @@ namespace ROOT {
       ::extension::MutableDriftChamberDigi *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableDriftChamberDigi));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableDriftChamberDigi", 1, "", 1173,
+         instance("extension::MutableDriftChamberDigi", 1, "", 1155,
                   typeid(::extension::MutableDriftChamberDigi), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableDriftChamberDigi_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableDriftChamberDigi) );
@@ -427,7 +423,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiCollection", 1, "", 1550,
+         instance("extension::DriftChamberDigiCollection", 1, "", 1532,
                   typeid(::extension::DriftChamberDigiCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiCollection) );
@@ -472,7 +468,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiAssociationData *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiAssociationData));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiAssociationData", 1, "", 1878,
+         instance("extension::MCRecoDriftChamberDigiAssociationData", 1, "", 1854,
                   typeid(::extension::MCRecoDriftChamberDigiAssociationData), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiAssociationData_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiAssociationData) );
@@ -481,8 +477,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLMCRecoDriftChamberDigiAssociationData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLMCRecoDriftChamberDigiAssociationData);
       instance.SetDestructor(&destruct_extensioncLcLMCRecoDriftChamberDigiAssociationData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::MCRecoDriftChamberDigiAssociationData","extension::v1::MCRecoDriftChamberDigiAssociationData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::MCRecoDriftChamberDigiAssociationData*)
@@ -519,7 +513,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiAssociation *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiAssociation));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiAssociation", 1, "", 1940,
+         instance("extension::MCRecoDriftChamberDigiAssociation", 1, "", 1910,
                   typeid(::extension::MCRecoDriftChamberDigiAssociation), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiAssociation_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiAssociation) );
@@ -564,7 +558,7 @@ namespace ROOT {
       ::extension::MutableMCRecoDriftChamberDigiAssociation *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableMCRecoDriftChamberDigiAssociation));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableMCRecoDriftChamberDigiAssociation", 1, "", 2101,
+         instance("extension::MutableMCRecoDriftChamberDigiAssociation", 1, "", 2071,
                   typeid(::extension::MutableMCRecoDriftChamberDigiAssociation), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableMCRecoDriftChamberDigiAssociation_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableMCRecoDriftChamberDigiAssociation) );
@@ -609,7 +603,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiAssociationCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiAssociationCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiAssociationCollection", 1, "", 2396,
+         instance("extension::MCRecoDriftChamberDigiAssociationCollection", 1, "", 2366,
                   typeid(::extension::MCRecoDriftChamberDigiAssociationCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiAssociationCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiAssociationCollection) );
@@ -654,7 +648,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiV2Data *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiV2Data));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiV2Data", 1, "", 2721,
+         instance("extension::DriftChamberDigiV2Data", 1, "", 2685,
                   typeid(::extension::DriftChamberDigiV2Data), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiV2Data_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiV2Data) );
@@ -663,8 +657,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLDriftChamberDigiV2Data);
       instance.SetDeleteArray(&deleteArray_extensioncLcLDriftChamberDigiV2Data);
       instance.SetDestructor(&destruct_extensioncLcLDriftChamberDigiV2Data);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::DriftChamberDigiV2Data","extension::v1::DriftChamberDigiV2Data"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::DriftChamberDigiV2Data*)
@@ -701,7 +693,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiV2 *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiV2));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiV2", 1, "", 2792,
+         instance("extension::DriftChamberDigiV2", 1, "", 2750,
                   typeid(::extension::DriftChamberDigiV2), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiV2_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiV2) );
@@ -746,7 +738,7 @@ namespace ROOT {
       ::extension::MutableDriftChamberDigiV2 *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableDriftChamberDigiV2));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableDriftChamberDigiV2", 1, "", 2979,
+         instance("extension::MutableDriftChamberDigiV2", 1, "", 2937,
                   typeid(::extension::MutableDriftChamberDigiV2), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableDriftChamberDigiV2_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableDriftChamberDigiV2) );
@@ -791,7 +783,7 @@ namespace ROOT {
       ::extension::DriftChamberDigiV2Collection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::DriftChamberDigiV2Collection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::DriftChamberDigiV2Collection", 1, "", 3365,
+         instance("extension::DriftChamberDigiV2Collection", 1, "", 3323,
                   typeid(::extension::DriftChamberDigiV2Collection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLDriftChamberDigiV2Collection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::DriftChamberDigiV2Collection) );
@@ -836,7 +828,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiV2AssociationData *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiV2AssociationData));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiV2AssociationData", 1, "", 3699,
+         instance("extension::MCRecoDriftChamberDigiV2AssociationData", 1, "", 3651,
                   typeid(::extension::MCRecoDriftChamberDigiV2AssociationData), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiV2AssociationData_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiV2AssociationData) );
@@ -845,8 +837,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLMCRecoDriftChamberDigiV2AssociationData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLMCRecoDriftChamberDigiV2AssociationData);
       instance.SetDestructor(&destruct_extensioncLcLMCRecoDriftChamberDigiV2AssociationData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::MCRecoDriftChamberDigiV2AssociationData","extension::v1::MCRecoDriftChamberDigiV2AssociationData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::MCRecoDriftChamberDigiV2AssociationData*)
@@ -883,7 +873,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiV2Association *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiV2Association));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiV2Association", 1, "", 3761,
+         instance("extension::MCRecoDriftChamberDigiV2Association", 1, "", 3707,
                   typeid(::extension::MCRecoDriftChamberDigiV2Association), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiV2Association_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiV2Association) );
@@ -928,7 +918,7 @@ namespace ROOT {
       ::extension::MutableMCRecoDriftChamberDigiV2Association *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableMCRecoDriftChamberDigiV2Association));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableMCRecoDriftChamberDigiV2Association", 1, "", 3922,
+         instance("extension::MutableMCRecoDriftChamberDigiV2Association", 1, "", 3868,
                   typeid(::extension::MutableMCRecoDriftChamberDigiV2Association), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableMCRecoDriftChamberDigiV2Association_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableMCRecoDriftChamberDigiV2Association) );
@@ -973,7 +963,7 @@ namespace ROOT {
       ::extension::MCRecoDriftChamberDigiV2AssociationCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MCRecoDriftChamberDigiV2AssociationCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MCRecoDriftChamberDigiV2AssociationCollection", 1, "", 4217,
+         instance("extension::MCRecoDriftChamberDigiV2AssociationCollection", 1, "", 4163,
                   typeid(::extension::MCRecoDriftChamberDigiV2AssociationCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMCRecoDriftChamberDigiV2AssociationCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MCRecoDriftChamberDigiV2AssociationCollection) );
@@ -1018,7 +1008,7 @@ namespace ROOT {
       ::extension::TrackData *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::TrackData));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::TrackData", 1, "", 4541,
+         instance("extension::TrackData", 1, "", 4481,
                   typeid(::extension::TrackData), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLTrackData_Dictionary, isa_proxy, 12,
                   sizeof(::extension::TrackData) );
@@ -1027,8 +1017,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLTrackData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLTrackData);
       instance.SetDestructor(&destruct_extensioncLcLTrackData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::TrackData","extension::v1::TrackData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::TrackData*)
@@ -1074,8 +1062,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLSenseWireHitData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLSenseWireHitData);
       instance.SetDestructor(&destruct_extensioncLcLSenseWireHitData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::SenseWireHitData","extension::v1::SenseWireHitData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::SenseWireHitData*)
@@ -1247,7 +1233,7 @@ namespace ROOT {
       ::extension::Track *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::Track));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::Track", 1, "", 4616,
+         instance("extension::Track", 1, "", 4550,
                   typeid(::extension::Track), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLTrack_Dictionary, isa_proxy, 12,
                   sizeof(::extension::Track) );
@@ -1292,7 +1278,7 @@ namespace ROOT {
       ::extension::MutableTrack *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableTrack));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableTrack", 1, "", 4811,
+         instance("extension::MutableTrack", 1, "", 4745,
                   typeid(::extension::MutableTrack), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableTrack_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableTrack) );
@@ -1337,7 +1323,7 @@ namespace ROOT {
       ::extension::TrackCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::TrackCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::TrackCollection", 1, "", 5184,
+         instance("extension::TrackCollection", 1, "", 5118,
                   typeid(::extension::TrackCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLTrackCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::TrackCollection) );
@@ -1382,7 +1368,7 @@ namespace ROOT {
       ::extension::SenseWireHitSimTrackerHitLinkData *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::SenseWireHitSimTrackerHitLinkData));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::SenseWireHitSimTrackerHitLinkData", 1, "", 6549,
+         instance("extension::SenseWireHitSimTrackerHitLinkData", 1, "", 6465,
                   typeid(::extension::SenseWireHitSimTrackerHitLinkData), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLSenseWireHitSimTrackerHitLinkData_Dictionary, isa_proxy, 12,
                   sizeof(::extension::SenseWireHitSimTrackerHitLinkData) );
@@ -1391,8 +1377,6 @@ namespace ROOT {
       instance.SetDelete(&delete_extensioncLcLSenseWireHitSimTrackerHitLinkData);
       instance.SetDeleteArray(&deleteArray_extensioncLcLSenseWireHitSimTrackerHitLinkData);
       instance.SetDestructor(&destruct_extensioncLcLSenseWireHitSimTrackerHitLinkData);
-
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("extension::SenseWireHitSimTrackerHitLinkData","extension::v1::SenseWireHitSimTrackerHitLinkData"));
       return &instance;
    }
    TGenericClassInfo *GenerateInitInstance(const ::extension::SenseWireHitSimTrackerHitLinkData*)
@@ -1429,7 +1413,7 @@ namespace ROOT {
       ::extension::SenseWireHitSimTrackerHitLink *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::SenseWireHitSimTrackerHitLink));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::SenseWireHitSimTrackerHitLink", 1, "", 6611,
+         instance("extension::SenseWireHitSimTrackerHitLink", 1, "", 6521,
                   typeid(::extension::SenseWireHitSimTrackerHitLink), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLSenseWireHitSimTrackerHitLink_Dictionary, isa_proxy, 12,
                   sizeof(::extension::SenseWireHitSimTrackerHitLink) );
@@ -1474,7 +1458,7 @@ namespace ROOT {
       ::extension::MutableSenseWireHitSimTrackerHitLink *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::MutableSenseWireHitSimTrackerHitLink));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::MutableSenseWireHitSimTrackerHitLink", 1, "", 6772,
+         instance("extension::MutableSenseWireHitSimTrackerHitLink", 1, "", 6682,
                   typeid(::extension::MutableSenseWireHitSimTrackerHitLink), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLMutableSenseWireHitSimTrackerHitLink_Dictionary, isa_proxy, 12,
                   sizeof(::extension::MutableSenseWireHitSimTrackerHitLink) );
@@ -1519,7 +1503,7 @@ namespace ROOT {
       ::extension::SenseWireHitSimTrackerHitLinkCollection *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::extension::SenseWireHitSimTrackerHitLinkCollection));
       static ::ROOT::TGenericClassInfo 
-         instance("extension::SenseWireHitSimTrackerHitLinkCollection", 1, "", 7067,
+         instance("extension::SenseWireHitSimTrackerHitLinkCollection", 1, "", 6977,
                   typeid(::extension::SenseWireHitSimTrackerHitLinkCollection), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &extensioncLcLSenseWireHitSimTrackerHitLinkCollection_Dictionary, isa_proxy, 12,
                   sizeof(::extension::SenseWireHitSimTrackerHitLinkCollection) );
@@ -2755,15 +2739,15 @@ namespace {
 nullptr
     };
     static const char* includePaths[] = {
-"/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi",
-"/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi",
-"/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/include",
+"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi",
+"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi",
+"/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/include",
 "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/python/3.13.5-vselov/include/python3.13",
-"/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/include",
+"/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/include",
 "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/nlohmann-json/3.12.0-z5fmi3/include",
 "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/include/root",
 "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/include/root",
-"/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/",
+"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
@@ -2806,14 +2790,6 @@ namespace extension{class TrackCollection;}
 namespace extension{class SenseWireHitSimTrackerHitLink;}
 namespace extension{class MutableSenseWireHitSimTrackerHitLink;}
 namespace extension{class SenseWireHitSimTrackerHitLinkCollection;}
-namespace extension{namespace v1{using DriftChamberDigiLocalData = extension::DriftChamberDigiLocalData;}}
-namespace extension{namespace v1{using DriftChamberDigiData = extension::DriftChamberDigiData;}}
-namespace extension{namespace v1{using MCRecoDriftChamberDigiAssociationData = extension::MCRecoDriftChamberDigiAssociationData;}}
-namespace extension{namespace v1{using DriftChamberDigiV2Data = extension::DriftChamberDigiV2Data;}}
-namespace extension{namespace v1{using MCRecoDriftChamberDigiV2AssociationData = extension::MCRecoDriftChamberDigiV2AssociationData;}}
-namespace extension{namespace v1{using TrackData = extension::TrackData;}}
-namespace extension{namespace v1{using SenseWireHitData __attribute__((annotate("$clingAutoload$extension/SenseWireHitData.h")))  __attribute__((annotate("$clingAutoload$extension/TrackObj.h")))  = extension::SenseWireHitData;}}
-namespace extension{namespace v1{using SenseWireHitSimTrackerHitLinkData = extension::SenseWireHitSimTrackerHitLinkData;}}
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "libextensionDict dictionary payload"
@@ -2849,12 +2825,6 @@ public:
   std::uint32_t clusterCount{}; ///< number of clusters associated to this hit
 
 };
-
-
-namespace v1 {
-using DriftChamberDigiLocalData = extension::DriftChamberDigiLocalData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -3508,22 +3478,15 @@ public:
                   [ID] (DriftChamberDigiLocalObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -3582,6 +3545,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class DriftChamberDigiLocalCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -3750,12 +3714,6 @@ public:
   ::edm4hep::Vector3d position{}; ///< hit position [mm]
 
 };
-
-
-namespace v1 {
-using DriftChamberDigiData = extension::DriftChamberDigiData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -4455,22 +4413,15 @@ public:
                   [ID] (DriftChamberDigiObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -4532,6 +4483,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class DriftChamberDigiCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -4689,12 +4641,6 @@ public:
   float weight{}; ///< weight of this association
 
 };
-
-
-namespace v1 {
-using MCRecoDriftChamberDigiAssociationData = extension::MCRecoDriftChamberDigiAssociationData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -5295,22 +5241,15 @@ public:
                   [ID] (MCRecoDriftChamberDigiAssociationObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -5363,6 +5302,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class MCRecoDriftChamberDigiAssociationCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -5537,12 +5477,6 @@ public:
   unsigned int nElectrons_begin{};
   unsigned int nElectrons_end{};
 };
-
-
-namespace v1 {
-using DriftChamberDigiV2Data = extension::DriftChamberDigiV2Data;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -6258,22 +6192,15 @@ public:
                   [ID] (DriftChamberDigiV2Obj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -6335,6 +6262,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class DriftChamberDigiV2CollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -6498,12 +6426,6 @@ public:
   float weight{}; ///< weight of this association
 
 };
-
-
-namespace v1 {
-using MCRecoDriftChamberDigiV2AssociationData = extension::MCRecoDriftChamberDigiV2AssociationData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -7104,22 +7026,15 @@ public:
                   [ID] (MCRecoDriftChamberDigiV2AssociationObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -7172,6 +7087,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class MCRecoDriftChamberDigiV2AssociationCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -7349,12 +7265,6 @@ public:
   unsigned int tracks_begin{};
   unsigned int tracks_end{};
 };
-
-
-namespace v1 {
-using TrackData = extension::TrackData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -8065,22 +7975,15 @@ public:
                   [ID] (TrackObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -8138,6 +8041,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class TrackCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -8329,12 +8233,6 @@ public:
   unsigned int nElectrons_begin{};
   unsigned int nElectrons_end{};
 };
-
-
-namespace v1 {
-using SenseWireHitData = extension::SenseWireHitData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -9088,22 +8986,15 @@ public:
                   [ID] (SenseWireHitObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -9167,6 +9058,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class SenseWireHitCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -9330,12 +9222,6 @@ public:
   float weight{}; ///< weight of this link
 
 };
-
-
-namespace v1 {
-using SenseWireHitSimTrackerHitLinkData = extension::SenseWireHitSimTrackerHitLinkData;
-} // namespace v1
-
 
 } // namespace extension
 
@@ -9936,22 +9822,15 @@ public:
                   [ID] (SenseWireHitSimTrackerHitLinkObj* obj) { obj->id = {obj->id.index, static_cast<uint32_t>(ID)}; }
       );
     }
+    m_isValid = true;
   }
 
   uint32_t getID() const final {
     return m_collectionID;
   }
 
-  /// check if the collection has a valid ID
-  bool hasID() const final {
-    return getID() != static_cast<uint32_t>(podio::ObjectID::untracked) &&
-        getID() != static_cast<uint32_t>(podio::ObjectID::invalid);
-  }
-
-  [[deprecated("isValid will be removed, use hasID() if you want to check if it has an ID, otherwise assume the "
-               "collection is valid")]]
   bool isValid() const final {
-    return hasID();
+    return m_isValid;
   }
 
   size_t getDatamodelRegistryIndex() const final;
@@ -10004,6 +9883,7 @@ private:
   // that gives access to the Obj* which is definitely not what we want
   friend class SenseWireHitSimTrackerHitLinkCollectionData;
 
+  bool m_isValid{false};
   mutable bool m_isPrepared{false};
   bool m_isSubsetColl{false};
   uint32_t m_collectionID{static_cast<uint32_t>(podio::ObjectID::untracked)};
@@ -10826,14 +10706,6 @@ using extensionInterfaceTypes = podio::utils::TypeList<
 "extension::Track", payloadCode, "@",
 "extension::TrackCollection", payloadCode, "@",
 "extension::TrackData", payloadCode, "@",
-"extension::v1::DriftChamberDigiData", payloadCode, "@",
-"extension::v1::DriftChamberDigiLocalData", payloadCode, "@",
-"extension::v1::DriftChamberDigiV2Data", payloadCode, "@",
-"extension::v1::MCRecoDriftChamberDigiAssociationData", payloadCode, "@",
-"extension::v1::MCRecoDriftChamberDigiV2AssociationData", payloadCode, "@",
-"extension::v1::SenseWireHitData", payloadCode, "@",
-"extension::v1::SenseWireHitSimTrackerHitLinkData", payloadCode, "@",
-"extension::v1::TrackData", payloadCode, "@",
 nullptr
 };
     static bool isInitialized = false;

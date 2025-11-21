@@ -4,14 +4,14 @@
 
 
 # Configuration directories and files
-SourceDirectory: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
-BuildDirectory: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+SourceDirectory: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
+BuildDirectory: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Where to place the cost data store
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: lxplus944.cern.ch
+Site: lxplus935.cern.ch
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
 BuildName: Linux-g++
@@ -27,7 +27,7 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake" "/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker"
+ConfigureCommand: "/cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake" "/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker"
 MakeCommand: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 

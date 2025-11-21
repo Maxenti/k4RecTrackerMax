@@ -2,7 +2,9 @@
 // SimpleFitDCHFitter.cpp  -- ultra-light DCH track fitter + ROOT histos
 //   * Input: GGTF_3DHits (edm4hep::TrackerHit3DCollection)
 //   * Cluster (tiny DBSCAN in mm)  -> circle in XY (Kåsa) -> z(phi) slope
-//   * Export one EDM4hep Track/cluster with TrackState(AtIP) (omega set)
+//   * Export one EDM4hep Track/cluster with TrackState(AtIP)
+//     - omega = q/pT  [GeV^-1]   (EDM/LCIO convention)
+//     - time  = pT    [GeV]      (direct pT for downstream resolution)
 //   * Book/fill ROOT histograms via THistSvc (1D + 2D vs event index)
 //   * OPTIONAL: lightweight "material effects" covariance inflation
 //     - Estimate X/X0 per cluster (TGeo midpoint sampling or fallback)
@@ -38,6 +40,8 @@
 #include "TGeoManager.h"
 
 namespace {
+
+inline double PI() { return std::acos(-1.0); }
 
 struct CircleXY { double cx{0}, cy{0}, R{1e9}; bool ok{false}; };
 
@@ -78,8 +82,8 @@ static CircleXY kasa_circle_xy(const std::vector<TVector3>& P) {
 
 static double unwrap(double a, double ref) {
   double d = a - ref;
-  while (d >  M_PI) d -= 2*M_PI;
-  while (d < -M_PI) d += 2*M_PI;
+  while (d >  PI()) d -= 2*PI();
+  while (d < -PI()) d += 2*PI();
   return ref + d;
 }
 
@@ -113,9 +117,6 @@ static int chargeFromPDG(int pdg) {
 }
 
 // --- tiny helper to estimate X/X0 along a polyline of points in mm ---
-// Strategy: for each consecutive pair, sample the material at the midpoint
-// (in TGeo coordinates, i.e. cm), get X0, and add |dl|/X0. If TGeo missing,
-// or X0 invalid, fall back to provided constant.
 static double estimate_x_over_x0_midpoint(const std::vector<TVector3>& P_mm, double fallbackXOverX0) {
   if (!gGeoManager || P_mm.size() < 2) return fallbackXOverX0;
   double x_over_x0 = 0.0;
@@ -131,18 +132,15 @@ static double estimate_x_over_x0_midpoint(const std::vector<TVector3>& P_mm, dou
     const double z_cm = mid.Z() * 0.1;
 
     TGeoNode* node = gGeoManager->FindNode(x_cm, y_cm, z_cm);
-    if (!node) { x_over_x0 += dl_mm / (100.0 * 1000.0); continue; } // wildly small X0 → almost zero add
-    const TGeoMaterial* mat = node->GetMedium() ? node->GetMedium()->GetMaterial() : nullptr;
+    const TGeoMaterial* mat = (node && node->GetMedium()) ? node->GetMedium()->GetMaterial() : nullptr;
     const double X0_cm = (mat ? mat->GetRadLen() : 0.0);
     if (X0_cm <= 0 || !std::isfinite(X0_cm)) {
-      // fall back contribution for this segment only
       x_over_x0 += (dl_mm * fallbackXOverX0) / std::max(1.0, (double)P_mm.size());
     } else {
       const double X0_mm = 10.0 * X0_cm;
       x_over_x0 += dl_mm / X0_mm;
     }
   }
-  // If TGeo sampling found nothing meaningful, use global fallback
   if (!(x_over_x0 > 0.0)) x_over_x0 = fallbackXOverX0;
   return x_over_x0;
 }
@@ -150,13 +148,15 @@ static double estimate_x_over_x0_midpoint(const std::vector<TVector3>& P_mm, dou
 static void addAtIPStateWithCov(edm4hep::MutableTrack& trk,
                                 const TVector3& Pmin, const TVector3& tangentUnit,
                                 double R_mm, double tanL, int qSign,
+                                double Bz_T,
                                 // base cov (diagonal) and optional smearing additions
                                 float cov_d0, float cov_phi, float cov_omega, float cov_z0, float cov_tanL,
                                 float add_var_phi = 0.f, float add_var_d0 = 0.f, float add_var_z0 = 0.f)
 {
   using TP = edm4hep::TrackParams;
+
   const double phi   = std::atan2(tangentUnit.Y(), tangentUnit.X());
-  const double omega = (R_mm>1e-6 ? (qSign / R_mm) : 0.0); // 1/mm
+  const double ptGeV = 0.0003 * Bz_T * R_mm;               // GeV  (R in mm)
   const double d0    = -( Pmin.X()*std::sin(phi) - Pmin.Y()*std::cos(phi) );
   const double z0    =   Pmin.Z() - ( Pmin.X()*std::cos(phi) + Pmin.Y()*std::sin(phi) ) * tanL;
 
@@ -164,22 +164,25 @@ static void addAtIPStateWithCov(edm4hep::MutableTrack& trk,
   ts.location        = edm4hep::TrackState::AtIP;
   ts.referencePoint  = {0.f,0.f,0.f};
   ts.phi             = float(phi);
-  ts.omega           = float(omega);
   ts.tanLambda       = float(tanL);
   ts.D0              = float(d0);
   ts.Z0              = float(z0);
-  ts.time            = 0.f;
 
-  // base diagonal covariances
+  // Store EDM/LCIO convention + convenience pT
+  const double omega_qOverPt = (ptGeV > 1e-12) ? (qSign / ptGeV) : 0.0; // GeV^-1
+  ts.omega = float(omega_qOverPt);
+  ts.time  = float(ptGeV); // direct pT [GeV]
+
+  // base diagonal covariances (+ optional MS inflations)
   float v_phi = cov_phi + add_var_phi;
   float v_d0  = cov_d0  + add_var_d0;
   float v_z0  = cov_z0  + add_var_z0;
 
-  ts.setCovMatrix(std::max(1e-12f, v_d0),   TP::d0,        TP::d0);
-  ts.setCovMatrix(std::max(1e-12f, v_phi),  TP::phi,       TP::phi);
-  ts.setCovMatrix(std::max(1e-12f, cov_omega), TP::omega,  TP::omega);
-  ts.setCovMatrix(std::max(1e-12f, v_z0),   TP::z0,        TP::z0);
-  ts.setCovMatrix(std::max(1e-12f, cov_tanL), TP::tanLambda, TP::tanLambda);
+  ts.setCovMatrix(std::max(1e-12f, v_d0),      TP::d0,        TP::d0);
+  ts.setCovMatrix(std::max(1e-12f, v_phi),     TP::phi,       TP::phi);
+  ts.setCovMatrix(std::max(1e-12f, cov_omega), TP::omega,     TP::omega);
+  ts.setCovMatrix(std::max(1e-12f, v_z0),      TP::z0,        TP::z0);
+  ts.setCovMatrix(std::max(1e-12f, cov_tanL),  TP::tanLambda, TP::tanLambda);
 
   trk.addToTrackStates(ts);
 }
@@ -199,11 +202,9 @@ struct SimpleFitDCHFitter final
       std::tuple<KeyValues>{ KeyValues{"inputHits",  std::vector<std::string>{"GGTF_3DHits"}} },
       std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"SimpleTracks"}} }),
     m_histSvc("THistSvc", name)
-  {
-    // NOTE: No declareProperty(...) — all config via Gaudi::Property below.
-  }
+  {}
 
-  // --------------- knobs (Gaudi::Property only — no declareProperty) ---------------
+  // --------------- knobs ---------------
 
   // physics / clustering
   Gaudi::Property<double>   m_Bz        {this, "Bz", 2.0,  "Uniform Bz [T] (for pT conversion/logging)"};
@@ -236,7 +237,7 @@ struct SimpleFitDCHFitter final
   // base covariances for exported TrackState (diagonal)
   Gaudi::Property<float>  m_cov_d0     {this, "BaseVar_d0",        1.0f,   "base var(d0) [mm^2]"};
   Gaudi::Property<float>  m_cov_phi    {this, "BaseVar_phi",       1e-3f,  "base var(phi) [rad^2]"};
-  Gaudi::Property<float>  m_cov_omega  {this, "BaseVar_omega",     1e-8f,  "base var(omega) [(1/mm)^2]"};
+  Gaudi::Property<float>  m_cov_omega  {this, "BaseVar_omega",     1e-8f,  "base var(omega) [(GeV^-1)^2] (placeholder)"};
   Gaudi::Property<float>  m_cov_z0     {this, "BaseVar_z0",        1.0f,   "base var(z0) [mm^2]"};
   Gaudi::Property<float>  m_cov_tanL   {this, "BaseVar_tanLambda", 1e-2f,  "base var(tanLambda) [1]"};
 
@@ -291,24 +292,30 @@ struct SimpleFitDCHFitter final
       const double yMin   = 0.0, yMax = double(nEvtY);
 
       h_pt     = mk1("pt",     "p_{T} [GeV]",          m_ptBins.value(), 0.0, m_ptMax.value());
-      h_phi    = mk1("phi",    "#phi [rad]",           72, -M_PI, M_PI);
-      h_theta  = mk1("theta",  "#theta [rad]",         90, 0.0, M_PI);
+      h_phi    = mk1("phi",    "#phi [rad]",           72, -PI(), PI());
+      h_theta  = mk1("theta",  "#theta [rad]",         90, 0.0, PI());
       h_eta    = mk1("eta",    "#eta",                 60, -m_etaMax.value(), m_etaMax.value());
-      h_omega  = mk1("omega",  "#omega [1/mm]",       200, -0.02, 0.02);
-      h_radius = mk1("radius_mm", "R [mm]",           150, 0.0, m_ptMax.value() * 1000.0/(0.3*m_Bz.value()));
+      h_omega  = mk1("omega",  "#omega [GeV^{-1}]",   200, -0.1, 0.1);
+
+      // radius axis upper bound: pT_max -> R_max (mm) = pT / (0.0003 * Bz)
+      const double Rmax_mm = (m_ptMax.value() > 0 && m_Bz.value() > 1e-9)
+                             ? (m_ptMax.value() / (0.0003 * m_Bz.value()))
+                             : 1e6;
+      h_radius = mk1("radius_mm", "R [mm]",           150, 0.0, Rmax_mm);
+
       h_tanL   = mk1("tanLambda", "tan#lambda",       120, -6.0, 6.0);
       h_nTrk   = mk1("nTracksPerEvent", "tracks / event", 51, -0.5, 50.5);
 
       h_pt_vs_evt    = mk2("pt_vs_evt",    "p_{T} vs event; p_{T} [GeV]; event index",
                            m_ptBins.value(), 0.0, m_ptMax.value(), nEvtY, yMin, yMax);
       h_phi_vs_evt   = mk2("phi_vs_evt",   "#phi vs event; #phi [rad]; event index",
-                           72, -M_PI, M_PI, nEvtY, yMin, yMax);
+                           72, -PI(), PI(), nEvtY, yMin, yMax);
       h_theta_vs_evt = mk2("theta_vs_evt", "#theta vs event; #theta [rad]; event index",
-                           90, 0.0, M_PI, nEvtY, yMin, yMax);
+                           90, 0.0, PI(), nEvtY, yMin, yMax);
       h_eta_vs_evt   = mk2("eta_vs_evt",   "#eta vs event; #eta; event index",
                            60, -m_etaMax.value(), m_etaMax.value(), nEvtY, yMin, yMax);
-      h_omega_vs_evt = mk2("omega_vs_evt", "#omega vs event; #omega [1/mm]; event index",
-                           200, -0.02, 0.02, nEvtY, yMin, yMax);
+      h_omega_vs_evt = mk2("omega_vs_evt", "#omega vs event; #omega [GeV^{-1}]; event index",
+                           200, -0.1, 0.1, nEvtY, yMin, yMax);
     }
 
     return StatusCode::SUCCESS;
@@ -387,23 +394,22 @@ struct SimpleFitDCHFitter final
       TVector3 that(-rhat.Y(), rhat.X(), 0.0);  // 90° CCW
       TVector3 tangent = TVector3(that.X(), that.Y(), tanL).Unit();
 
-      // basic kinematics
+      // kinematics (pt for histos only; state will store pt/time anyway)
       const double pt = 0.0003 * m_Bz.value() * R_mm;              // GeV (R in mm)
-      const double p  = pt * std::sqrt(1.0 + tanL*tanL);           // GeV (beta≈1)
       const double theta = std::atan2(1.0, tanL);                  // 0..pi
       const double eta   = -std::log(std::tan(0.5*theta));
+      const double omega_qOverPt = (pt>1e-12) ? (qSign/pt) : 0.0;  // GeV^-1
 
       // --- lightweight material effects: add MS to phi/d0/z0 variances
       float add_var_phi = 0.f, add_var_d0 = 0.f, add_var_z0 = 0.f;
       if (m_useMatEff.value()) {
+        const double p  = pt * std::sqrt(1.0 + tanL*tanL); // GeV
         double XoX0 = m_fallbackXOverX0.value();
         if (m_useTGeoPath.value() && gGeoManager) {
           XoX0 = estimate_x_over_x0_midpoint(Pc, m_fallbackXOverX0.value());
         }
         XoX0 = std::max(0.0, XoX0);
 
-        // Highland: theta0 ≈ (13.6 MeV / p) sqrt(X/X0) * [1 + 0.038 ln(X/X0)]
-        // Use p in GeV; msK in GeV.
         const double msK = m_msK_GeV.value();
         double theta0 = 0.0;
         if (p > 1e-6 && XoX0 > 0.0) {
@@ -412,9 +418,9 @@ struct SimpleFitDCHFitter final
         }
         theta0 *= m_msScale.value();
 
-        const double Lchar_mm = R_mm; // a crude length scale for transverse blow-up
-        add_var_phi = float(theta0*theta0);                 // rad^2
-        add_var_d0  = float((Lchar_mm*theta0)*(Lchar_mm*theta0)); // mm^2
+        const double Lchar_mm = R_mm;
+        add_var_phi = float(theta0*theta0);                                 // rad^2
+        add_var_d0  = float((Lchar_mm*theta0)*(Lchar_mm*theta0));           // mm^2
         add_var_z0  = float((Lchar_mm*theta0*tanL)*(Lchar_mm*theta0*tanL)); // mm^2
       }
 
@@ -423,19 +429,18 @@ struct SimpleFitDCHFitter final
       trk.setType(m_pdg.value());
       for (auto k: idx) trk.addToTrackerHits(hits[k]);
 
-      addAtIPStateWithCov(trk, Pmin, tangent, R_mm, tanL, qSign,
+      addAtIPStateWithCov(trk, Pmin, tangent, R_mm, tanL, qSign, m_Bz.value(),
                           m_cov_d0.value(), m_cov_phi.value(), m_cov_omega.value(),
                           m_cov_z0.value(), m_cov_tanL.value(),
                           add_var_phi, add_var_d0, add_var_z0);
 
       // fill histos
       const double phi_xy= std::atan2(tangent.Y(), tangent.X());
-      const double omega = (R_mm>1e-6 ? (qSign / R_mm) : 0.0);       // 1/mm
       if (h_pt)     h_pt->Fill(pt);
       if (h_phi)    h_phi->Fill(phi_xy);
       if (h_theta)  h_theta->Fill(theta);
       if (h_eta)    h_eta->Fill(eta);
-      if (h_omega)  h_omega->Fill(omega);
+      if (h_omega)  h_omega->Fill(omega_qOverPt);
       if (h_radius) h_radius->Fill(R_mm);
       if (h_tanL)   h_tanL->Fill(tanL);
 
@@ -444,7 +449,7 @@ struct SimpleFitDCHFitter final
       if (h_phi_vs_evt)   h_phi_vs_evt->Fill(phi_xy, yevt);
       if (h_theta_vs_evt) h_theta_vs_evt->Fill(theta, yevt);
       if (h_eta_vs_evt)   h_eta_vs_evt->Fill(eta,   yevt);
-      if (h_omega_vs_evt) h_omega_vs_evt->Fill(omega, yevt);
+      if (h_omega_vs_evt) h_omega_vs_evt->Fill(omega_qOverPt, yevt);
 
       ++nTrkThisEvent;
     }

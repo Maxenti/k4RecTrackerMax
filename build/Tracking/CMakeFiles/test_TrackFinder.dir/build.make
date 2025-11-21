@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Utility rule file for test_TrackFinder.
 
@@ -68,9 +68,9 @@ include Tracking/CMakeFiles/test_TrackFinder.dir/progress.make
 
 Tracking/CMakeFiles/test_TrackFinder: Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx-hash-stamp
 
-Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx-hash-stamp: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx.md5
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -Drelative_top=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build -Dfile=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx -Dname=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx -Dexts=.md5 -DExternalData_ACTION=fetch -DExternalData_SHOW_PROGRESS=ON -DExternalData_CONFIG=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/test_TrackFinder_config.cmake -P /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/share/cmake-3.31/Modules/ExternalData.cmake
+Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx-hash-stamp: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx.md5
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -Drelative_top=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build -Dfile=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx -Dname=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx -Dexts=.md5 -DExternalData_ACTION=fetch -DExternalData_SHOW_PROGRESS=ON -DExternalData_CONFIG=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/test_TrackFinder_config.cmake -P /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/share/cmake-3.31/Modules/ExternalData.cmake
 
 Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx: Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx-hash-stamp
 	@$(CMAKE_COMMAND) -E touch_nocreate Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx
@@ -89,10 +89,10 @@ Tracking/CMakeFiles/test_TrackFinder.dir/build: test_TrackFinder
 .PHONY : Tracking/CMakeFiles/test_TrackFinder.dir/build
 
 Tracking/CMakeFiles/test_TrackFinder.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/test_TrackFinder.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking && $(CMAKE_COMMAND) -P CMakeFiles/test_TrackFinder.dir/cmake_clean.cmake
 .PHONY : Tracking/CMakeFiles/test_TrackFinder.dir/clean
 
 Tracking/CMakeFiles/test_TrackFinder.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking/CMakeFiles/test_TrackFinder.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking/CMakeFiles/test_TrackFinder.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : Tracking/CMakeFiles/test_TrackFinder.dir/depend
 

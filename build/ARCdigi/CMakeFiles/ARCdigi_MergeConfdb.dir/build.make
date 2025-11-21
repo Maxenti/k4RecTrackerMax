@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Utility rule file for ARCdigi_MergeConfdb.
 
@@ -69,8 +69,8 @@ include ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/progress.make
 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb: ARCdigi.confdb
 
 ARCdigi.confdb: ARCdigi/genConfDir/ARCdigi/ARCdigi.confdb
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .confdb files for ARCdigi"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && cat /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi/genConfDir/ARCdigi/ARCdigi.confdb > /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi.confdb
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Merging .confdb files for ARCdigi"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && cat /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi/genConfDir/ARCdigi/ARCdigi.confdb > /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi.confdb
 
 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/codegen:
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/codegen
@@ -85,10 +85,10 @@ ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build: ARCdigi_MergeConfdb
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/build
 
 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -P CMakeFiles/ARCdigi_MergeConfdb.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi && $(CMAKE_COMMAND) -P CMakeFiles/ARCdigi_MergeConfdb.dir/cmake_clean.cmake
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/clean
 
 ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : ARCdigi/CMakeFiles/ARCdigi_MergeConfdb.dir/depend
 

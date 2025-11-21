@@ -1,18 +1,21 @@
-// ThreePointFitter.cpp
-// Ultra-minimal, trigger-style 3-point fitter for GGTF 3D hits.
-// - One track per label/type group
-// - Pick 3 points: inner (min R), middle (median R), outer (max R)
-// - Parabola in local XY (s: along A→C; u: ⟂) and z line fit
-// - Exports an EDM4hep Track with one TrackState (AtIP)
-// - Pure-geometry (no Kalman). Material effects knob is informational only.
+// ======================================================================
+// ThreePointFitter.cpp  -- ultra-simple 3-point pT fitter for GGTF 3D hits
+//   * Groups by GGTF label stored in TrackerHit3D::type
+//   * For each group: pick three XY points (min-r, max-r, mid-angle)
+//   * Circle from 3 points (XY) -> R_mm -> pT = 0.0003 * B[T] * R[mm]
+//   * Optional crude tanLambda via linear z(phi) regression
+//   * Writes one EDM4hep Track per group with TrackState(AtIP):
+//       - ts.time  = pT [GeV]   (for easy downstream pT use)
+//       - ts.omega = q / pT     [GeV^-1] (EDM/LCIO convention)
+// ======================================================================
 
 #include <vector>
-#include <unordered_map>
-#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <algorithm>
+#include <unordered_map>
+#include <numeric>
 #include <string>
-#include <type_traits>  // <-- added for void_t/true_type/false_type
 
 #include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
@@ -25,74 +28,73 @@
 #include "edm4hep/TrackState.h"
 
 #include "TVector3.h"
-#include "TGeoManager.h"
 
 namespace {
 
-// trait helpers to read label from EDM4hep variations
-template <typename, typename = void> struct has_getQuality : std::false_type {};
-template <typename T> struct has_getQuality<T, std::void_t<decltype(std::declval<T>().getQuality())>> : std::true_type {};
-template <typename, typename = void> struct has_getType    : std::false_type {};
-template <typename T> struct has_getType<T, std::void_t<decltype(std::declval<T>().getType())>>       : std::true_type {};
-
-template <typename HitT>
-inline int hitLabel(const HitT& h) {
-  if constexpr (has_getQuality<HitT>::value) return int(h.getQuality());
-  else if constexpr (has_getType<HitT>::value) return int(h.getType());
-  else return 0;
+inline int chargeFromPDG(int pdg) {
+  const int a = std::abs(pdg);
+  if (a==11||a==13||a==15) return (pdg>0?-1:+1);
+  if (a==211||a==321||a==2212) return (pdg>0?+1:-1);
+  return (pdg>=0?+1:-1);
 }
 
-struct Group { std::vector<size_t> idx; };
+struct CircRes { TVector3 C; double R{1e12}; bool ok{false}; };
 
-// Accept both float and double EDM4hep vectors (different EDM4hep versions)
-inline TVector3 toV3(const edm4hep::Vector3f& p, double scale) {
-  return TVector3(scale*p.x, scale*p.y, scale*p.z);
-}
-inline TVector3 toV3(const edm4hep::Vector3d& p, double scale) {
-  return TVector3(scale*p.x, scale*p.y, scale*p.z);
+// 3-point circle in XY; returns false if nearly colinear
+inline CircRes circle_from_3pts_xy(const TVector3& A, const TVector3& B, const TVector3& C) {
+  const double x1=A.X(), y1=A.Y(), x2=B.X(), y2=B.Y(), x3=C.X(), y3=C.Y();
+  const double a = x1*(y2 - y3) - y1*(x2 - x3) + x2*y3 - x3*y2;
+  const double d = 2.0 * a;
+  CircRes r;
+  if (std::abs(d) < 1e-9) return r;
+  const double x1s=x1*x1, y1s=y1*y1, x2s=x2*x2, y2s=y2*y2, x3s=x3*x3, y3s=y3*y3;
+  const double cx = ((x1s+y1s)*(y2-y3) + (x2s+y2s)*(y3-y1) + (x3s+y3s)*(y1-y2)) / d;
+  const double cy = ((x1s+y1s)*(x3-x2) + (x2s+y2s)*(x1-x3) + (x3s+y3s)*(x2-x1)) / d;
+  const double R  = std::hypot(x1-cx, y1-cy);
+  if (!(std::isfinite(R) && R>1e-6)) return r;
+  r.C = TVector3(cx, cy, 0.0);
+  r.R = R;
+  r.ok = true;
+  return r;
 }
 
-// solve 2x2: [a b; c d] [x;y] = [e;f]
-inline bool solve2x2(double a,double b,double c,double d,double e,double f,double& x,double& y){
-  const double det = a*d - b*c;
-  if (std::abs(det) < 1e-12) return false;
-  x = ( e*d - b*f)/det;
-  y = (-e*c + a*f)/det;
-  return true;
+inline double unwrap_to_ref(double a, double ref) {
+  double d = a - ref;
+  while (d >  M_PI) d -= 2*M_PI;
+  while (d < -M_PI) d += 2*M_PI;
+  return ref + d;
 }
 
-// fill TrackState (approximate perigee from position+direction)
-inline void fillTrackState(edm4hep::MutableTrack& trk,
-                           const TVector3& pos_mm,    // mm
-                           const TVector3& dir_xy,    // XY direction (not necessarily unit)
-                           double omega_1_per_mm,
-                           double tanL)
+// Fill an EDM4hep TrackState at IP using perigee-like definitions.
+// Convention: omega = q/pT [GeV^-1]; time = pT [GeV]
+inline void addAtIPState(edm4hep::MutableTrack& trk,
+                         const TVector3& Pmin,
+                         const TVector3& tangentUnit,
+                         double pT_GeV,
+                         double tanL,
+                         int qSign)
 {
   using TP = edm4hep::TrackParams;
-  TVector3 txy = dir_xy;
-  if (txy.Perp2() < 1e-24) txy = TVector3(1,0,0);
-  const double norm = std::sqrt(txy.X()*txy.X() + txy.Y()*txy.Y());
-  const double tx = txy.X()/norm, ty = txy.Y()/norm;
 
-  const double phi = std::atan2(ty, tx);
-
-  const double x = pos_mm.X(), y = pos_mm.Y(), z = pos_mm.Z();
-  const double d0 = -( x*std::sin(phi) - y*std::cos(phi) );
-  const double z0 =   z - ( x*std::cos(phi) + y*std::sin(phi) ) * tanL;
+  const double phi = std::atan2(tangentUnit.Y(), tangentUnit.X());
+  const double d0  = -( Pmin.X()*std::sin(phi) - Pmin.Y()*std::cos(phi) );
+  const double z0  =   Pmin.Z() - ( Pmin.X()*std::cos(phi) + Pmin.Y()*std::sin(phi) ) * tanL;
+  const double omega = (pT_GeV>1e-12 ? (qSign / pT_GeV) : 0.0); // GeV^-1
 
   edm4hep::TrackState ts;
-  ts.location = edm4hep::TrackState::AtIP;
+  ts.location       = edm4hep::TrackState::AtIP;
   ts.referencePoint = {0.f,0.f,0.f};
-  ts.phi = float(phi);
-  ts.omega = float(omega_1_per_mm);
-  ts.tanLambda = float(tanL);
-  ts.D0 = float(d0);
-  ts.Z0 = float(z0);
+  ts.phi            = float(phi);
+  ts.tanLambda      = float(tanL);
+  ts.D0             = float(d0);
+  ts.Z0             = float(z0);
+  ts.omega          = float(omega);
+  ts.time           = float(pT_GeV); // store pT directly for convenience
 
-  // loose diagonal covariances
+  // simple diagonal covariances (placeholders; tune if desired)
   ts.setCovMatrix(1.0f,   TP::d0,        TP::d0);
   ts.setCovMatrix(1e-3f,  TP::phi,       TP::phi);
-  ts.setCovMatrix(1e-8f,  TP::omega,     TP::omega);
+  ts.setCovMatrix(1e-6f,  TP::omega,     TP::omega); // GeV^-2
   ts.setCovMatrix(1.0f,   TP::z0,        TP::z0);
   ts.setCovMatrix(1e-2f,  TP::tanLambda, TP::tanLambda);
 
@@ -101,8 +103,9 @@ inline void fillTrackState(edm4hep::MutableTrack& trk,
 
 } // namespace
 
+// ----------------- Algorithm -----------------
 struct ThreePointFitter final
- : k4FWCore::Transformer<edm4hep::TrackCollection (const edm4hep::TrackerHit3DCollection&)> {
+  : k4FWCore::Transformer<edm4hep::TrackCollection (const edm4hep::TrackerHit3DCollection&)> {
 
   using Traits    = Gaudi::Functional::Traits::use_<>;
   using KeyValues = Gaudi::Functional::details::DataHandleMixin<
@@ -111,29 +114,25 @@ struct ThreePointFitter final
   ThreePointFitter(const std::string& name, ISvcLocator* svcLoc)
   : Transformer(name, svcLoc,
       std::tuple<KeyValues>{ KeyValues{"inputHits",  std::vector<std::string>{"GGTF_3DHits"}} },
-      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"ThreePointTracks"}} }) {}
+      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"ThreePointTracks"}} })
+  {}
 
-  // Knobs (no declareProperty calls; only Gaudi::Property)
-  Gaudi::Property<double> m_posScale {this, "PositionUnitScale", 0.1, "Multiply EDM positions (0.1: mm->cm)."};
-  Gaudi::Property<int>    m_pdg      {this, "PDG", 13,           "PDG hypothesis (charge sign)."};
-  Gaudi::Property<double> m_Bz       {this, "Bz",  2.0,          "Magnetic field Bz [T] (sign convention only)."};
-  Gaudi::Property<bool>   m_useMat   {this, "UseMaterialEffects", true,
-                                      "Informational: checks TGeo presence for consistency with other fitters."};
+  // ---- knobs ----
+  Gaudi::Property<double>  m_Bz      {this, "Bz", 2.0, "Uniform B [Tesla] for pT conversion"};
+  Gaudi::Property<int>     m_pdg     {this, "PDG", 13, "PDG hypothesis (charge sign only)"};
+  Gaudi::Property<unsigned> m_minHits{this, "MinHitsPerGroup", 3u, "Minimum hits per GGTF label to fit"};
+  Gaudi::Property<double>  m_minChord{this, "MinChordMM", 5.0, "Min chord length among the 3 picked points [mm]"};
+  Gaudi::Property<double>  m_minRmm  {this, "MinRadiusMM", 100.0, "Reject tiny circles R < this [mm]"};
+  Gaudi::Property<bool>    m_doTanL  {this, "FitTanLambda", true, "Estimate tanLambda from z(phi) linear fit"};
 
   StatusCode initialize() override {
-    info() << "ThreePointFitter init | posScale=" << m_posScale.value()
+    info() << "ThreePointFitter init | Bz[T]=" << m_Bz.value()
            << " | PDG=" << m_pdg.value()
-           << " | Bz=" << m_Bz.value()
-           << " | UseMaterialEffects=" << (m_useMat.value() ? "true":"false")
+           << " | MinHitsPerGroup=" << m_minHits.value()
+           << " | MinChordMM=" << m_minChord.value()
+           << " | MinRadiusMM=" << m_minRmm.value()
+           << " | FitTanLambda=" << (m_doTanL.value()?"true":"false")
            << endmsg;
-
-    if (m_useMat.value()) {
-      if (!gGeoManager) {
-        warning() << "UseMaterialEffects=True but gGeoManager is null — continuing (no MS/dE/dx applied in this fitter)." << endmsg;
-      } else {
-        info() << "TGeo detected (UseMaterialEffects=True). Note: ThreePointFitter is geometric-only; no MS/dE/dx used." << endmsg;
-      }
-    }
     return StatusCode::SUCCESS;
   }
 
@@ -141,108 +140,108 @@ struct ThreePointFitter final
     edm4hep::TrackCollection out;
     if (hits.empty()) return out;
 
-    // 1) group by label (quality/type)
-    std::unordered_map<int, Group> groups;
-    groups.reserve(hits.size()/8 + 1);
+    // 1) Bucket hits by their GGTF label stored in 'type'.
+    std::unordered_map<int, std::vector<size_t>> groups;
+    groups.reserve(hits.size()/6 + 1);
+    bool anyNonZero = false;
+
     for (size_t i=0;i<hits.size();++i) {
-      groups[ hitLabel(hits[i]) ].idx.push_back(i);
+      int label = 0;
+      try { label = int(hits[i].getType()); } catch (...) { label = 0; }
+      if (label != 0) anyNonZero = true;
+      groups[label].push_back(i);
     }
 
-    // 2) per group, build one track from 3 points (inner/middle/outer)
+    // If we have any non-zero labels, drop the 0/noise bucket.
+    if (anyNonZero && groups.count(0)) groups.erase(0);
+
+    const int qSign = chargeFromPDG(m_pdg.value());
+
+    // 2) Per-group 3-point fit
     for (auto& kv : groups) {
-      const auto& idx = kv.second.idx;
-      if (idx.size() < 3) continue;
+      auto& idxs = kv.second;
+      if (idxs.size() < m_minHits.value()) continue;
 
-      struct Item{ size_t i; double R2; };
-      std::vector<Item> order; order.reserve(idx.size());
-      for (auto i : idx) {
-        const auto p = hits[i].getPosition();
-        const double x = p.x, y = p.y;
-        order.push_back({i, x*x + y*y});
+      // Build a local array of points
+      std::vector<TVector3> P; P.reserve(idxs.size());
+      for (auto k : idxs) {
+        const auto p = hits[k].getPosition();
+        P.emplace_back(p.x, p.y, p.z); // mm
       }
-      std::sort(order.begin(), order.end(), [](const Item& a, const Item& b){ return a.R2 < b.R2; });
 
-      const size_t iA = order.front().i;
-      const size_t iC = order.back().i;
-      const size_t iB = order[ order.size()/2 ].i;
+      // Indices of min-r and max-r (about origin)
+      size_t iMinR=0, iMaxR=0;
+      double r2min=std::numeric_limits<double>::infinity(), r2max=-1.0;
+      for (size_t i=0;i<P.size();++i) {
+        const double r2 = P[i].Perp2();
+        if (r2 < r2min) { r2min = r2; iMinR = i; }
+        if (r2 > r2max) { r2max = r2; iMaxR = i; }
+      }
+      const TVector3 A = P[iMinR];
+      const TVector3 B = P[iMaxR];
 
-      const auto pA = toV3(hits[iA].getPosition(), m_posScale.value()); // internal cm
-      const auto pB = toV3(hits[iB].getPosition(), m_posScale.value());
-      const auto pC = toV3(hits[iC].getPosition(), m_posScale.value());
+      // Mid-angle point around origin: pick by angle median
+      std::vector<std::pair<double,size_t>> ang; ang.reserve(P.size());
+      for (size_t i=0;i<P.size();++i) ang.emplace_back(std::atan2(P[i].Y(), P[i].X()), i);
+      std::sort(ang.begin(), ang.end(), [](auto& a, auto& b){return a.first < b.first;});
+      const size_t iMed = ang[ang.size()/2].second;
+      const TVector3 C = P[iMed];
 
-      // 2D frame in XY: e_s along chord A->C, e_u perpendicular in XY
-      TVector3 AC = pC - pA;
-      TVector3 e_s(AC.X(), AC.Y(), 0.0);    // XY projection
-      if (e_s.Mag2() < 1e-12) e_s = TVector3(1,0,0);
-      e_s = e_s.Unit();
-      TVector3 zhat(0,0,1);
-      TVector3 e_u = zhat.Cross(e_s);       // in XY, perpendicular
-      e_u = TVector3(e_u.X(), e_u.Y(), 0.0).Unit();
+      // Guard: min chord lengths
+      const double ab = (A-B).Mag();
+      const double bc = (B-C).Mag();
+      const double ca = (C-A).Mag();
+      const double minChord = std::min({ab,bc,ca});
+      if (!(minChord >= m_minChord.value())) continue;
 
-      auto projXY = [](const TVector3& v){ return TVector3(v.X(), v.Y(), 0.0); };
-      const TVector3 rA = projXY(pA), rB = projXY(pB), rC = projXY(pC);
+      // Circle from these 3 points
+      CircRes cir = circle_from_3pts_xy(A,B,C);
+      if (!cir.ok) continue;
+      const double R_mm = cir.R;
+      if (R_mm < m_minRmm.value()) continue; // reject tiny R
 
-      // set s=0 at projection of B on the chord line, u towards e_u
-      const TVector3 rAtoB = rB - rA;
-      const double sB_on_line = rAtoB.X()*e_s.X() + rAtoB.Y()*e_s.Y();
-      const TVector3 r0 = rA + sB_on_line*e_s;     // (s,u) origin
-      auto su = [&](const TVector3& r)->std::pair<double,double>{
-        TVector3 d = r - r0;
-        double s = d.X()*e_s.X() + d.Y()*e_s.Y();
-        double u = d.X()*e_u.X() + d.Y()*e_u.Y();
-        return {s,u};
-      };
-      const auto [sA,uA] = su(rA);
-      const auto [sB,uB] = su(rB);
-      const auto [sC,uC] = su(rC);
+      // Choose a "perigee-like" point as Pmin (closest to origin)
+      size_t iPmin = 0; double r2Pmin = std::numeric_limits<double>::infinity();
+      for (size_t i=0;i<P.size();++i){ const double r2=P[i].Perp2(); if (r2<r2Pmin){r2Pmin=r2; iPmin=i;} }
+      const TVector3 Pmin = P[iPmin];
 
-      // Fit u(s) = α s^2 + β s + γ; since sB≈0 => γ = uB.
-      double alpha=0, beta=0;
-      {
-        const double rhsA = uA - uB;
-        const double rhsC = uC - uB;
-        if (!solve2x2(sA*sA, sA, sC*sC, sC, rhsA, rhsC, alpha, beta)) {
-          alpha = 0.0; beta = 0.0;
+      // Tangent at Pmin: perpendicular to the radius vector from center
+      TVector3 rvec(Pmin.X()-cir.C.X(), Pmin.Y()-cir.C.Y(), 0.0);
+      if (rvec.Perp2() == 0) rvec = TVector3(1,0,0);
+      const TVector3 rhat = rvec.Unit();
+      TVector3 that(-rhat.Y(), rhat.X(), 0.0); // 90° CCW
+      that = that.Unit();
+
+      // crude tanLambda: linear fit z(phi) across all points using this center
+      double tanL = 0.0;
+      if (m_doTanL.value() && R_mm > 1e-6) {
+        std::vector<double> phi(P.size());
+        for (size_t j=0;j<P.size();++j) phi[j]=std::atan2(P[j].Y()-cir.C.Y(), P[j].X()-cir.C.X());
+        for (size_t j=1;j<P.size();++j) phi[j]=unwrap_to_ref(phi[j], phi[j-1]);
+        // simple linear regression z = a + b*phi
+        double S1=0, Sph=0, Sz=0, Sphp=0, Sphz=0;
+        for (size_t j=0;j<P.size();++j) {
+          const double ph = phi[j];
+          const double z  = P[j].Z();
+          S1+=1; Sph+=ph; Sz+=z; Sphp+=ph*ph; Sphz+=ph*z;
+        }
+        const double det = S1*Sphp - Sph*Sph;
+        if (std::fabs(det) > 1e-12) {
+          const double b = (S1*Sphz - Sph*Sz)/det; // dz/dphi
+          tanL = b / R_mm;
         }
       }
 
-      // tangent in XY at s=0 is: e_s + β e_u  (not normalized)
-      TVector3 tXY = e_s + beta*e_u;
+      // pT from radius (R in mm, B in Tesla)
+      const double pT = 0.0003 * m_Bz.value() * R_mm; // GeV
 
-      // curvature at s=0: κ = 2α / (1+β^2)^(3/2)   [1/cm]
-      const double denom = std::pow(1.0 + beta*beta, 1.5);
-      const double kappa_cm = (denom > 0.0) ? (2.0*alpha / denom) : 0.0;
-
-      // sign convention: area orientation (A,B,C) and Bz sign
-      const double orient = ( (rC - rA).X()*(rB - rA).Y() - (rC - rA).Y()*(rB - rA).X() );
-      const int signGeom = (orient >= 0 ? +1 : -1);
-      const int absPDG = std::abs(m_pdg.value());
-      const int qSign = (m_pdg.value() > 0 ? ((absPDG==11||absPDG==13||absPDG==15)? -1:+1)
-                                           : ((absPDG==11||absPDG==13||absPDG==15)? +1:-1));
-      const int bzSign = (m_Bz.value() >= 0 ? +1 : -1);
-      const double omega_1_per_mm = 0.1 * kappa_cm * double(signGeom * qSign * bzSign); // cm^-1 -> mm^-1
-
-      // z(s): simple line using A and C
-      double slope_z = 0.0;
-      {
-        const double sAC = sC - sA;
-        if (std::abs(sAC) > 1e-9) slope_z = (pC.Z() - pA.Z()) / sAC; // unitless
-      }
-      // tanLambda ~ (dz/ds)/|dXY/ds| ; |dXY/ds| = |e_s + β e_u| = sqrt(1+β^2)
-      const double tanL = slope_z / std::sqrt(1.0 + beta*beta);
-
-      // perigee approximation at middle point (convert back to mm)
-      const TVector3 rB_cm = r0 + uB*e_u;       // middle in XY (cm)
-      const TVector3 pos_mid_mm( 10.0*rB_cm.X(), 10.0*rB_cm.Y(), 10.0*pB.Z() );
-      const TVector3 dir_xy_mm(tXY.X(), tXY.Y(), 0.0);
-
-      // export
+      // Emit track
       auto trk = out.create();
       trk.setType(m_pdg.value());
-      try { trk.setChi2(0.0f); trk.setNdf(2); } catch (...) {}
+      for (auto k : idxs) trk.addToTrackerHits(hits[k]);
 
-      for (auto i : idx) trk.addToTrackerHits( hits[i] );
-      fillTrackState(trk, pos_mid_mm, dir_xy_mm, omega_1_per_mm, tanL);
+      // TrackState with pT in time, omega = q/pT
+      addAtIPState(trk, Pmin, that, pT, tanL, qSign);
     }
 
     return out;

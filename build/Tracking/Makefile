@@ -57,10 +57,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,14 +142,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/Tracking//CMakeFiles/progress.marks
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/Tracking//CMakeFiles/progress.marks
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/clean
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/clean
 .PHONY : clean
 
 # The main clean target
@@ -158,22 +158,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/preinstall
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 Tracking/CMakeFiles/Tracking.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking.dir/rule
 .PHONY : Tracking/CMakeFiles/Tracking.dir/rule
 
 # Convenience name for target.
@@ -182,12 +182,12 @@ Tracking: Tracking/CMakeFiles/Tracking.dir/rule
 
 # fast build rule for target.
 Tracking/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/build
 .PHONY : Tracking/fast
 
 # Convenience name for target.
 Tracking/CMakeFiles/Tracking_MergeComponents.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeComponents.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeComponents.dir/rule
 .PHONY : Tracking/CMakeFiles/Tracking_MergeComponents.dir/rule
 
 # Convenience name for target.
@@ -196,12 +196,12 @@ Tracking_MergeComponents: Tracking/CMakeFiles/Tracking_MergeComponents.dir/rule
 
 # fast build rule for target.
 Tracking_MergeComponents/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeComponents.dir/build.make Tracking/CMakeFiles/Tracking_MergeComponents.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeComponents.dir/build.make Tracking/CMakeFiles/Tracking_MergeComponents.dir/build
 .PHONY : Tracking_MergeComponents/fast
 
 # Convenience name for target.
 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeConfdb.dir/rule
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfdb.dir/rule
 
 # Convenience name for target.
@@ -210,12 +210,12 @@ Tracking_MergeConfdb: Tracking/CMakeFiles/Tracking_MergeConfdb.dir/rule
 
 # fast build rule for target.
 Tracking_MergeConfdb/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build.make Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build.make Tracking/CMakeFiles/Tracking_MergeConfdb.dir/build
 .PHONY : Tracking_MergeConfdb/fast
 
 # Convenience name for target.
 Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/rule
 .PHONY : Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/rule
 
 # Convenience name for target.
@@ -224,12 +224,12 @@ Tracking_MergeConfDB2: Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/rule
 
 # fast build rule for target.
 Tracking_MergeConfDB2/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/build.make Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/build.make Tracking/CMakeFiles/Tracking_MergeConfDB2.dir/build
 .PHONY : Tracking_MergeConfDB2/fast
 
 # Convenience name for target.
 Tracking/CMakeFiles/test_TrackFinder.dir/rule:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/test_TrackFinder.dir/rule
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/test_TrackFinder.dir/rule
 .PHONY : Tracking/CMakeFiles/test_TrackFinder.dir/rule
 
 # Convenience name for target.
@@ -238,15 +238,29 @@ test_TrackFinder: Tracking/CMakeFiles/test_TrackFinder.dir/rule
 
 # fast build rule for target.
 test_TrackFinder/fast:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/test_TrackFinder.dir/build.make Tracking/CMakeFiles/test_TrackFinder.dir/build
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/test_TrackFinder.dir/build.make Tracking/CMakeFiles/test_TrackFinder.dir/build
 .PHONY : test_TrackFinder/fast
+
+# Convenience name for target.
+Tracking/CMakeFiles/Noddsim_track_test.dir/rule:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Tracking/CMakeFiles/Noddsim_track_test.dir/rule
+.PHONY : Tracking/CMakeFiles/Noddsim_track_test.dir/rule
+
+# Convenience name for target.
+Noddsim_track_test: Tracking/CMakeFiles/Noddsim_track_test.dir/rule
+.PHONY : Noddsim_track_test
+
+# fast build rule for target.
+Noddsim_track_test/fast:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Noddsim_track_test.dir/build.make Tracking/CMakeFiles/Noddsim_track_test.dir/build
+.PHONY : Noddsim_track_test/fast
 
 components/GGTF_tracking.o: components/GGTF_tracking.cpp.o
 .PHONY : components/GGTF_tracking.o
 
 # target to build an object file
 components/GGTF_tracking.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.o
 .PHONY : components/GGTF_tracking.cpp.o
 
 components/GGTF_tracking.i: components/GGTF_tracking.cpp.i
@@ -254,7 +268,7 @@ components/GGTF_tracking.i: components/GGTF_tracking.cpp.i
 
 # target to preprocess a source file
 components/GGTF_tracking.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.i
 .PHONY : components/GGTF_tracking.cpp.i
 
 components/GGTF_tracking.s: components/GGTF_tracking.cpp.s
@@ -262,15 +276,39 @@ components/GGTF_tracking.s: components/GGTF_tracking.cpp.s
 
 # target to generate assembly for a file
 components/GGTF_tracking.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GGTF_tracking.cpp.s
 .PHONY : components/GGTF_tracking.cpp.s
+
+components/GenFit2DCHFitter.o: components/GenFit2DCHFitter.cpp.o
+.PHONY : components/GenFit2DCHFitter.o
+
+# target to build an object file
+components/GenFit2DCHFitter.cpp.o:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.o
+.PHONY : components/GenFit2DCHFitter.cpp.o
+
+components/GenFit2DCHFitter.i: components/GenFit2DCHFitter.cpp.i
+.PHONY : components/GenFit2DCHFitter.i
+
+# target to preprocess a source file
+components/GenFit2DCHFitter.cpp.i:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.i
+.PHONY : components/GenFit2DCHFitter.cpp.i
+
+components/GenFit2DCHFitter.s: components/GenFit2DCHFitter.cpp.s
+.PHONY : components/GenFit2DCHFitter.s
+
+# target to generate assembly for a file
+components/GenFit2DCHFitter.cpp.s:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/GenFit2DCHFitter.cpp.s
+.PHONY : components/GenFit2DCHFitter.cpp.s
 
 components/PlotTrackHitResiduals.o: components/PlotTrackHitResiduals.cpp.o
 .PHONY : components/PlotTrackHitResiduals.o
 
 # target to build an object file
 components/PlotTrackHitResiduals.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.o
 .PHONY : components/PlotTrackHitResiduals.cpp.o
 
 components/PlotTrackHitResiduals.i: components/PlotTrackHitResiduals.cpp.i
@@ -278,7 +316,7 @@ components/PlotTrackHitResiduals.i: components/PlotTrackHitResiduals.cpp.i
 
 # target to preprocess a source file
 components/PlotTrackHitResiduals.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.i
 .PHONY : components/PlotTrackHitResiduals.cpp.i
 
 components/PlotTrackHitResiduals.s: components/PlotTrackHitResiduals.cpp.s
@@ -286,15 +324,63 @@ components/PlotTrackHitResiduals.s: components/PlotTrackHitResiduals.cpp.s
 
 # target to generate assembly for a file
 components/PlotTrackHitResiduals.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/PlotTrackHitResiduals.cpp.s
 .PHONY : components/PlotTrackHitResiduals.cpp.s
+
+components/SimpleFitDCHFitter.o: components/SimpleFitDCHFitter.cpp.o
+.PHONY : components/SimpleFitDCHFitter.o
+
+# target to build an object file
+components/SimpleFitDCHFitter.cpp.o:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.o
+.PHONY : components/SimpleFitDCHFitter.cpp.o
+
+components/SimpleFitDCHFitter.i: components/SimpleFitDCHFitter.cpp.i
+.PHONY : components/SimpleFitDCHFitter.i
+
+# target to preprocess a source file
+components/SimpleFitDCHFitter.cpp.i:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.i
+.PHONY : components/SimpleFitDCHFitter.cpp.i
+
+components/SimpleFitDCHFitter.s: components/SimpleFitDCHFitter.cpp.s
+.PHONY : components/SimpleFitDCHFitter.s
+
+# target to generate assembly for a file
+components/SimpleFitDCHFitter.cpp.s:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/SimpleFitDCHFitter.cpp.s
+.PHONY : components/SimpleFitDCHFitter.cpp.s
+
+components/ThreePointFitter.o: components/ThreePointFitter.cpp.o
+.PHONY : components/ThreePointFitter.o
+
+# target to build an object file
+components/ThreePointFitter.cpp.o:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.o
+.PHONY : components/ThreePointFitter.cpp.o
+
+components/ThreePointFitter.i: components/ThreePointFitter.cpp.i
+.PHONY : components/ThreePointFitter.i
+
+# target to preprocess a source file
+components/ThreePointFitter.cpp.i:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.i
+.PHONY : components/ThreePointFitter.cpp.i
+
+components/ThreePointFitter.s: components/ThreePointFitter.cpp.s
+.PHONY : components/ThreePointFitter.s
+
+# target to generate assembly for a file
+components/ThreePointFitter.cpp.s:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/ThreePointFitter.cpp.s
+.PHONY : components/ThreePointFitter.cpp.s
 
 components/TrackdNdxDelphesBased.o: components/TrackdNdxDelphesBased.cpp.o
 .PHONY : components/TrackdNdxDelphesBased.o
 
 # target to build an object file
 components/TrackdNdxDelphesBased.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.o
 .PHONY : components/TrackdNdxDelphesBased.cpp.o
 
 components/TrackdNdxDelphesBased.i: components/TrackdNdxDelphesBased.cpp.i
@@ -302,7 +388,7 @@ components/TrackdNdxDelphesBased.i: components/TrackdNdxDelphesBased.cpp.i
 
 # target to preprocess a source file
 components/TrackdNdxDelphesBased.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.i
 .PHONY : components/TrackdNdxDelphesBased.cpp.i
 
 components/TrackdNdxDelphesBased.s: components/TrackdNdxDelphesBased.cpp.s
@@ -310,7 +396,7 @@ components/TrackdNdxDelphesBased.s: components/TrackdNdxDelphesBased.cpp.s
 
 # target to generate assembly for a file
 components/TrackdNdxDelphesBased.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TrackdNdxDelphesBased.cpp.s
 .PHONY : components/TrackdNdxDelphesBased.cpp.s
 
 components/TracksFromGenParticles.o: components/TracksFromGenParticles.cpp.o
@@ -318,7 +404,7 @@ components/TracksFromGenParticles.o: components/TracksFromGenParticles.cpp.o
 
 # target to build an object file
 components/TracksFromGenParticles.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.o
 .PHONY : components/TracksFromGenParticles.cpp.o
 
 components/TracksFromGenParticles.i: components/TracksFromGenParticles.cpp.i
@@ -326,7 +412,7 @@ components/TracksFromGenParticles.i: components/TracksFromGenParticles.cpp.i
 
 # target to preprocess a source file
 components/TracksFromGenParticles.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.i
 .PHONY : components/TracksFromGenParticles.cpp.i
 
 components/TracksFromGenParticles.s: components/TracksFromGenParticles.cpp.s
@@ -334,15 +420,39 @@ components/TracksFromGenParticles.s: components/TracksFromGenParticles.cpp.s
 
 # target to generate assembly for a file
 components/TracksFromGenParticles.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/TracksFromGenParticles.cpp.s
 .PHONY : components/TracksFromGenParticles.cpp.s
+
+components/fit_ggtf_tracks.o: components/fit_ggtf_tracks.cpp.o
+.PHONY : components/fit_ggtf_tracks.o
+
+# target to build an object file
+components/fit_ggtf_tracks.cpp.o:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.o
+.PHONY : components/fit_ggtf_tracks.cpp.o
+
+components/fit_ggtf_tracks.i: components/fit_ggtf_tracks.cpp.i
+.PHONY : components/fit_ggtf_tracks.i
+
+# target to preprocess a source file
+components/fit_ggtf_tracks.cpp.i:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.i
+.PHONY : components/fit_ggtf_tracks.cpp.i
+
+components/fit_ggtf_tracks.s: components/fit_ggtf_tracks.cpp.s
+.PHONY : components/fit_ggtf_tracks.s
+
+# target to generate assembly for a file
+components/fit_ggtf_tracks.cpp.s:
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/components/fit_ggtf_tracks.cpp.s
+.PHONY : components/fit_ggtf_tracks.cpp.s
 
 src/GenFitter.o: src/GenFitter.cpp.o
 .PHONY : src/GenFitter.o
 
 # target to build an object file
 src/GenFitter.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.o
 .PHONY : src/GenFitter.cpp.o
 
 src/GenFitter.i: src/GenFitter.cpp.i
@@ -350,7 +460,7 @@ src/GenFitter.i: src/GenFitter.cpp.i
 
 # target to preprocess a source file
 src/GenFitter.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.i
 .PHONY : src/GenFitter.cpp.i
 
 src/GenFitter.s: src/GenFitter.cpp.s
@@ -358,7 +468,7 @@ src/GenFitter.s: src/GenFitter.cpp.s
 
 # target to generate assembly for a file
 src/GenFitter.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/GenFitter.cpp.s
 .PHONY : src/GenFitter.cpp.s
 
 src/utils.o: src/utils.cpp.o
@@ -366,7 +476,7 @@ src/utils.o: src/utils.cpp.o
 
 # target to build an object file
 src/utils.cpp.o:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.o
 .PHONY : src/utils.cpp.o
 
 src/utils.i: src/utils.cpp.i
@@ -374,7 +484,7 @@ src/utils.i: src/utils.cpp.i
 
 # target to preprocess a source file
 src/utils.cpp.i:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.i
 .PHONY : src/utils.cpp.i
 
 src/utils.s: src/utils.cpp.s
@@ -382,7 +492,7 @@ src/utils.s: src/utils.cpp.s
 
 # target to generate assembly for a file
 src/utils.cpp.s:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(MAKE) $(MAKESILENT) -f Tracking/CMakeFiles/Tracking.dir/build.make Tracking/CMakeFiles/Tracking.dir/src/utils.cpp.s
 .PHONY : src/utils.cpp.s
 
 # Help Target
@@ -398,6 +508,7 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... Noddsim_track_test"
 	@echo "... Tracking_MergeComponents"
 	@echo "... Tracking_MergeConfDB2"
 	@echo "... Tracking_MergeConfdb"
@@ -406,15 +517,27 @@ help:
 	@echo "... components/GGTF_tracking.o"
 	@echo "... components/GGTF_tracking.i"
 	@echo "... components/GGTF_tracking.s"
+	@echo "... components/GenFit2DCHFitter.o"
+	@echo "... components/GenFit2DCHFitter.i"
+	@echo "... components/GenFit2DCHFitter.s"
 	@echo "... components/PlotTrackHitResiduals.o"
 	@echo "... components/PlotTrackHitResiduals.i"
 	@echo "... components/PlotTrackHitResiduals.s"
+	@echo "... components/SimpleFitDCHFitter.o"
+	@echo "... components/SimpleFitDCHFitter.i"
+	@echo "... components/SimpleFitDCHFitter.s"
+	@echo "... components/ThreePointFitter.o"
+	@echo "... components/ThreePointFitter.i"
+	@echo "... components/ThreePointFitter.s"
 	@echo "... components/TrackdNdxDelphesBased.o"
 	@echo "... components/TrackdNdxDelphesBased.i"
 	@echo "... components/TrackdNdxDelphesBased.s"
 	@echo "... components/TracksFromGenParticles.o"
 	@echo "... components/TracksFromGenParticles.i"
 	@echo "... components/TracksFromGenParticles.s"
+	@echo "... components/fit_ggtf_tracks.o"
+	@echo "... components/fit_ggtf_tracks.i"
+	@echo "... components/fit_ggtf_tracks.s"
 	@echo "... src/GenFitter.o"
 	@echo "... src/GenFitter.i"
 	@echo "... src/GenFitter.s"
@@ -432,6 +555,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

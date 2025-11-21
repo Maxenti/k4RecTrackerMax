@@ -1,0 +1,293 @@
+// ======================================================================
+// ThreePointFitter.cpp  -- ultra-minimal DCH fitter using 3 points/track
+//   * Input: GGTF_3DHits (edm4hep::TrackerHit3DCollection)
+//   * For each DBSCAN cluster: pick A,B,C = first, middle, last (in input order)
+//   * Circle from (A,B,C) in XY  -> R
+//   * Pitch from z(φ) using the same 3 points -> tanLambda = (dz/dφ)/R
+//   * Export one EDM4hep Track with TrackState(AtIP)
+//     - omega = q/pT  [GeV^-1]   (EDM/LCIO convention)
+//     - time  = pT    [GeV]      (direct pT for downstream resolution)
+//   * Intentionally no material effects and no histograms.
+//   * Properties match your runner; unused knobs are accepted and ignored.
+// ======================================================================
+
+#include <vector>
+#include <cmath>
+#include <limits>
+#include <queue>
+#include <algorithm>
+#include <numeric>
+#include <string>
+
+#include "Gaudi/Algorithm.h"
+#include "Gaudi/Property.h"
+#include "GaudiKernel/ISvcLocator.h"
+
+#include "k4FWCore/Transformer.h"
+
+#include "edm4hep/TrackerHit3DCollection.h"
+#include "edm4hep/TrackCollection.h"
+#include "edm4hep/TrackState.h"
+
+#include "TVector3.h"
+
+namespace {
+
+inline int chargeFromPDG(int pdg) {
+  const int a = std::abs(pdg);
+  if (a==11||a==13||a==15) return (pdg>0 ? -1 : +1);
+  if (a==211||a==321||a==2212) return (pdg>0 ? +1 : -1);
+  return (pdg>=0 ? +1 : -1);
+}
+
+// 3-point circle in XY; returns false if nearly colinear
+inline bool circle_from_3pts_xy(const TVector3& A, const TVector3& B, const TVector3& C,
+                                TVector3& center_xy, double& R) {
+  const double x1=A.X(), y1=A.Y(), x2=B.X(), y2=B.Y(), x3=C.X(), y3=C.Y();
+  const double a = x1*(y2 - y3) - y1*(x2 - x3) + x2*y3 - x3*y2;
+  const double d = 2.0 * a;
+  if (std::abs(d) < 1e-12) return false;
+  const double x1s=x1*x1, y1s=y1*y1, x2s=x2*x2, y2s=y2*y2, x3s=x3*x3, y3s=y3*y3;
+  const double cx = ((x1s+y1s)*(y2-y3) + (x2s+y2s)*(y3-y1) + (x3s+y3s)*(y1-y2)) / d;
+  const double cy = ((x1s+y1s)*(x3-x2) + (x2s+y2s)*(x1-x3) + (x3s+y3s)*(x2-x1)) / d;
+  center_xy = TVector3(cx, cy, 0.0);
+  R = std::hypot(x1-cx, y1-cy);
+  return std::isfinite(R) && R > 1e-6;
+}
+
+inline double unwrap_next(double phi_next, double phi_ref) {
+  double d = phi_next - phi_ref;
+  while (d >  M_PI) d -= 2*M_PI;
+  while (d < -M_PI) d += 2*M_PI;
+  return phi_ref + d;
+}
+
+// Tiny DBSCAN in mm
+static std::vector<int> dbscan_mm(const std::vector<TVector3>& P, double eps_mm, unsigned minPts) {
+  const int N = (int)P.size(); const double e2 = eps_mm*eps_mm;
+  std::vector<int> label(N, -99); int cid=0;
+  auto region = [&](int i, std::vector<int>& out){
+    out.clear();
+    for (int j=0;j<N;++j) if ((P[j]-P[i]).Mag2()<=e2) out.push_back(j);
+  };
+  for (int i=0;i<N;++i) {
+    if (label[i]!=-99) continue;
+    std::vector<int> neigh; region(i, neigh);
+    if (neigh.size()<minPts){ label[i]=-1; continue; }
+    label[i]=cid; std::queue<int> q;
+    for (int n:neigh) if (label[n]==-99 || label[n]==-1){ label[n]=cid; q.push(n); }
+    while(!q.empty()){
+      int k=q.front(); q.pop();
+      std::vector<int> n2; region(k,n2);
+      if (n2.size()>=minPts){
+        for (int n:n2) if (label[n]==-99 || label[n]==-1){ label[n]=cid; q.push(n); }
+      }
+    }
+    ++cid;
+  }
+  return label;
+}
+
+inline void addAtIPState(edm4hep::MutableTrack& trk,
+                         const TVector3& Pmin,
+                         const TVector3& tangentUnit,
+                         double R_mm, double tanL, int qSign, double Bz_T)
+{
+  using TP = edm4hep::TrackParams;
+
+  const double phi   = std::atan2(tangentUnit.Y(), tangentUnit.X());
+  const double ptGeV = 0.0003 * Bz_T * R_mm;        // GeV  (R in mm)
+  const double d0    = -( Pmin.X()*std::sin(phi) - Pmin.Y()*std::cos(phi) );
+  const double z0    =   Pmin.Z() - ( Pmin.X()*std::cos(phi) + Pmin.Y()*std::sin(phi) ) * tanL;
+
+  edm4hep::TrackState ts;
+  ts.location        = edm4hep::TrackState::AtIP;
+  ts.referencePoint  = {0.f,0.f,0.f};
+  ts.phi             = float(phi);
+  ts.tanLambda       = float(tanL);
+  ts.D0              = float(d0);
+  ts.Z0              = float(z0);
+
+  // Store EDM/LCIO convention + convenience pT
+  const double omega_qOverPt = (ptGeV > 1e-12) ? (qSign / ptGeV) : 0.0; // GeV^-1
+  ts.omega = float(omega_qOverPt);
+  ts.time  = float(ptGeV); // direct pT [GeV]
+
+  // Minimal diagonal covariances (tunable if desired)
+  ts.setCovMatrix(1.0f,   TP::d0,        TP::d0);
+  ts.setCovMatrix(1e-3f,  TP::phi,       TP::phi);
+  ts.setCovMatrix(1e-6f,  TP::omega,     TP::omega);   // GeV^-2
+  ts.setCovMatrix(1.0f,   TP::z0,        TP::z0);
+  ts.setCovMatrix(1e-2f,  TP::tanLambda, TP::tanLambda);
+
+  trk.addToTrackStates(ts);
+}
+
+} // namespace
+
+struct ThreePointFitter final
+  : k4FWCore::Transformer<edm4hep::TrackCollection (const edm4hep::TrackerHit3DCollection&)> {
+
+  using Traits    = Gaudi::Functional::Traits::use_<>;
+  using KeyValues = Gaudi::Functional::details::DataHandleMixin<
+                      std::tuple<>, std::tuple<>, Traits>::KeyValues;
+
+  ThreePointFitter(const std::string& name, ISvcLocator* svcLoc)
+  : Transformer(name, svcLoc,
+      std::tuple<KeyValues>{ KeyValues{"inputHits",  std::vector<std::string>{"GGTF_3DHits"}} },
+      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"ThreePointTracks"}} })
+  {}
+
+  // ---- Properties (accept the knobs your runner passes; many are no-ops) ----
+  Gaudi::Property<double>   m_Bz        {this, "Bz", 2.0, "Uniform Bz [T] for pT conversion"};
+  Gaudi::Property<int>      m_pdg       {this, "PDG", 13, "PDG hypothesis (charge sign only)"};
+
+  // clustering (DBSCAN fallback like SimpleFit/GenFit wrapper uses)
+  Gaudi::Property<unsigned> m_minGroup  {this, "MinGroupSize", 3u, "Minimum hits per cluster"};
+  Gaudi::Property<bool>     m_useFallback{this, "UseFallbackClustering", true, "Enable DBSCAN grouping"};
+  Gaudi::Property<double>   m_fallbackEpsCM {this, "FallbackEpsCM", 3.0, "DBSCAN epsilon [cm]"};
+  Gaudi::Property<unsigned> m_fallbackMinPts{this, "FallbackMinPts", 3u,  "DBSCAN minPts"};
+
+  // sorting/dedup (light)
+  Gaudi::Property<bool>     m_sortHits  {this, "SortHits", true, "Sort hits by increasing radius"};
+  Gaudi::Property<bool>     m_dedup     {this, "DeduplicateHits", true, "Drop near-duplicate consecutive hits"};
+  Gaudi::Property<double>   m_dedupTolMM{this, "DedupTolMM", 0.25, "Dedup tolerance [mm]"};
+  Gaudi::Property<unsigned> m_maxMeasPerGroup {this, "MaxMeasPerGroup", 0u, "If >0, downsample to this many"};
+
+  // No-ops to match runner’s signature (accepted but unused)
+  Gaudi::Property<double>   m_PositionUnitScale{this, "PositionUnitScale", 0.1, "No-op (kept for compatibility)"};
+  Gaudi::Property<double>   m_InternalLengthToMeters{this, "InternalLengthToMeters", 0.01, "No-op (compat)"};
+  Gaudi::Property<bool>     m_UseMaterialEffects{this, "UseMaterialEffects", false, "No-op (compat)"};
+  Gaudi::Property<bool>     m_UseTGeoPath{this, "UseTGeoPath", false, "No-op (compat)"};
+  Gaudi::Property<std::string> m_OutputHistoFile{this, "OutputHistoFile", "", "No-op (compat)"};
+
+  StatusCode initialize() override {
+    info() << "ThreePointFitter init | Bz=" << m_Bz.value()
+           << " | PDG=" << m_pdg.value()
+           << " | UseFallback=" << (m_useFallback.value() ? "true":"false")
+           << " | eps(cm)=" << m_fallbackEpsCM.value()
+           << " | minPts=" << m_fallbackMinPts.value()
+           << " | MinGroup=" << m_minGroup.value()
+           << endmsg;
+    return StatusCode::SUCCESS;
+  }
+
+  edm4hep::TrackCollection operator()(const edm4hep::TrackerHit3DCollection& hits) const override {
+    edm4hep::TrackCollection out;
+    if (hits.size() < 3u) return out;
+
+    // Collect all points (mm)
+    std::vector<TVector3> P; P.reserve(hits.size());
+    for (size_t i=0;i<hits.size();++i) {
+      const auto p = hits[i].getPosition();
+      P.emplace_back(p.x, p.y, p.z);
+    }
+
+    // Group: either DBSCAN or single group of all hits
+    std::vector<int> labels(hits.size(), 0);
+    int maxLbl = 0;
+    if (m_useFallback.value()) {
+      const double eps_mm = m_fallbackEpsCM.value() * 10.0;
+      labels = dbscan_mm(P, eps_mm, m_fallbackMinPts.value());
+      maxLbl = -1; for (int L : labels) maxLbl = std::max(maxLbl, L);
+      if (maxLbl < 0) return out; // nothing clustered
+    }
+
+    const int qSign = chargeFromPDG(m_pdg.value());
+
+    for (int L=0; L<=maxLbl; ++L) {
+      // gather indices in this cluster
+      std::vector<size_t> idx;
+      idx.reserve(P.size());
+      for (size_t i=0;i<labels.size();++i) if (labels[i]==L) idx.push_back(i);
+      if (idx.size() < m_minGroup.value()) continue;
+
+      // optional sorting (by increasing radius to origin)
+      if (m_sortHits.value() && idx.size()>=2) {
+        std::sort(idx.begin(), idx.end(), [&](size_t a, size_t b){
+          return P[a].Perp2() < P[b].Perp2();
+        });
+      }
+
+      // dedup consecutive
+      if (m_dedup.value() && idx.size()>=2) {
+        const double tol2 = m_dedupTolMM.value()*m_dedupTolMM.value();
+        std::vector<size_t> idx2; idx2.reserve(idx.size());
+        TVector3 prev(1e99,1e99,1e99);
+        for (auto k : idx) {
+          if ((P[k]-prev).Mag2() >= tol2) { idx2.push_back(k); prev = P[k]; }
+        }
+        if (idx2.size() >= 3) idx.swap(idx2);
+      }
+      if (idx.size() < 3) continue;
+
+      // cap measurements if requested (even spacing across the sequence)
+      if (m_maxMeasPerGroup.value() > 0 && idx.size() > m_maxMeasPerGroup.value()) {
+        const unsigned cap = m_maxMeasPerGroup.value();
+        std::vector<size_t> idx2; idx2.reserve(cap);
+        const size_t N = idx.size();
+        for (size_t j = 0; j < cap; ++j) {
+          size_t k = static_cast<size_t>( std::round( double(j) * (N-1) / double(cap-1) ) );
+          idx2.push_back(idx[k]);
+        }
+        idx.swap(idx2);
+      }
+
+      // 3 points: first, middle, last
+      const TVector3 A = P[idx.front()];
+      const TVector3 B = P[idx[idx.size()/2]];
+      const TVector3 C = P[idx.back()];
+
+      TVector3 Cxy(0,0,0); double R_mm = 1e9;
+      if (!circle_from_3pts_xy(A,B,C,Cxy,R_mm)) continue;
+
+      // Compute φ for A,B,C around center, unwrap
+      double phA = std::atan2(A.Y()-Cxy.Y(), A.X()-Cxy.X());
+      double phB = unwrap_next(std::atan2(B.Y()-Cxy.Y(), B.X()-Cxy.X()), phA);
+      double phC = unwrap_next(std::atan2(C.Y()-Cxy.Y(), C.X()-Cxy.X()), phB);
+
+      // Linear slope in z(φ) using 3 points (OLS or simple two-segment average)
+      // Here we do exact 3-point OLS:
+      const double zA=A.Z(), zB=B.Z(), zC=C.Z();
+      const double S1   = 3.0;
+      const double Sph  = (phA + phB + phC);
+      const double Sz   = (zA  + zB  + zC);
+      const double Sphp = (phA*phA + phB*phB + phC*phC);
+      const double Sphz = (phA*zA  + phB*zB  + phC*zC);
+      const double det  = S1*Sphp - Sph*Sph;
+      double b = 0.0; // slope dz/dφ
+      if (std::fabs(det) > 1e-12) b = (S1*Sphz - Sph*Sz)/det;
+
+      const double tanL = (R_mm>1e-9) ? (b / R_mm) : 0.0;
+
+      // Choose perigee-like reference = point closest to origin
+      const TVector3 Pmin = ([&](){
+        const double r2A=A.Perp2(), r2B=B.Perp2(), r2C=C.Perp2();
+        if (r2A<=r2B && r2A<=r2C) return A;
+        if (r2B<=r2A && r2B<=r2C) return B;
+        return C;
+      })();
+
+      // Tangent at Pmin: radial from center, rotate +90° CCW in XY and add z-component via tanL
+      TVector3 rvec(Pmin.X()-Cxy.X(), Pmin.Y()-Cxy.Y(), 0.0);
+      if (rvec.Perp2()==0) rvec=TVector3(1,0,0);
+      const TVector3 rhat = rvec.Unit();
+      TVector3 that(-rhat.Y(), rhat.X(), 0.0);
+      TVector3 tangent = TVector3(that.X(), that.Y(), tanL).Unit();
+
+      // Create track and attach all hits from the cluster
+      auto trk = out.create();
+      trk.setType(m_pdg.value());
+      for (auto k : idx) trk.addToTrackerHits(hits[k]);
+
+      // Fill state (pT into time; omega=q/pT)
+      addAtIPState(trk, Pmin, tangent, R_mm, tanL, chargeFromPDG(m_pdg.value()), m_Bz.value());
+    }
+
+    return out;
+  }
+
+  StatusCode finalize() override { return StatusCode::SUCCESS; }
+};
+
+DECLARE_COMPONENT(ThreePointFitter)

@@ -53,10 +53,10 @@ RM = /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-g
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker
+CMAKE_SOURCE_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build
+CMAKE_BINARY_DIR = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build
 
 # Include any dependencies generated for this target.
 include DCHdigi/CMakeFiles/DCHdigi.dir/depend.make
@@ -73,65 +73,50 @@ DCHdigi/CMakeFiles/DCHdigi.dir/codegen:
 .PHONY : DCHdigi/CMakeFiles/DCHdigi.dir/codegen
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/flags.make
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp
+DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp > CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp > CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.i
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.s
-
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/flags.make
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v02.cpp
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v02.cpp
-
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v02.cpp > CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.i
-
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHdigi_v02.cpp -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHdigi_v01.cpp -o CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.s
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/flags.make
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp
+DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp > CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp > CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.i
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizer.cpp -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.s
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/flags.make
-DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp
+DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o: DCHdigi/CMakeFiles/DCHdigi.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o -MF CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o.d -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o -c /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.i"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp > CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.i
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp > CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.i
 
 DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.s"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.s
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw.hsf.org/contrib/x86_64-almalinux9-gcc11.4.1-opt/gcc/14.2.0-yuyjov/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi/src/DCHsimpleDigitizerExtendedEdm.cpp -o CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.s
 
 # Object files for target DCHdigi
 DCHdigi_OBJECTS = \
 "CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o" \
-"CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o" \
 "CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o" \
 "CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o"
 
@@ -139,18 +124,17 @@ DCHdigi_OBJECTS = \
 DCHdigi_EXTERNAL_OBJECTS =
 
 DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v01.cpp.o
-DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHdigi_v02.cpp.o
 DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizer.cpp.o
 DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/src/DCHsimpleDigitizerExtendedEdm.cpp.o
 DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/build.make
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/c79b7a8a158c72483dd5577a20177602a5ce753c_develop-t673qg/lib/libk4FWCore.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/k4fwcore/a56d9f63caec4c8c036ec6cc53107973701af7c0_develop-2bvzew/lib/libk4FWCore.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/lib/libGaudiKernel.so
 DCHdigi/libDCHdigi.so: DCHdigi/libextensionDict.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDRec.so.1.33
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDCore.so.1.33
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDRec.so.1.32
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDCore.so.1.32
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libMathMore.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gsl/2.8-tphaa5/lib/libgsl.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/delphes/5a60982c470a9eb0e20a24ce9d71480abc0b7947_develop-37rmcc/lib/libDelphes.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/delphes/2dcc5a41ceebfea467ec3f7cb4295c117f2a1388_develop-3jt55n/lib/libDelphes.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/lib/libGaudiPluginService.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/boost/1.88.0-pfej4w/lib/libboost_fiber.so.1.88.0
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/boost/1.88.0-pfej4w/lib/libboost_context.so.1.88.0
@@ -162,19 +146,19 @@ DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/intel-tbb/2022.0.0-sjg44y/lib64/libtbb.so.12.14
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/fmt/10.2.1-7y6px4/lib64/libfmt.a
 DCHdigi/libDCHdigi.so: /usr/lib64/librt.a
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioIO.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioRootIO.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioIO.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioRootIO.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTNTuple.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libROOTVecOps.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/vdt/0.4.6-rviadr/lib/libvdt.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodioSioIO.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodioSioIO.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/sio/9368e91bb3f4a99e8286d26dc7a425f216ff97d7_develop-5awric/lib64/libsio.so.0.2.0
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hepUtils.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hepUtils.so
 DCHdigi/libDCHdigi.so: DCHdigi/libextension.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/4d2242478347716d05b86c927fa6337764a5af62_develop-pbsm2k/lib64/libedm4hep.so
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/podio/ec612dee213f0e0ef3584dcd6028f8a2427577a1_develop-uizlar/lib64/libpodio.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/edm4hep/0964912cd4b79b5458ba0e51e443255fc9bbb1a5_develop-gkayi5/lib64/libedm4hep.so
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/podio/6bd80b0d94fe8fb1da4dab9999fd2d4411f7f8dd_develop-owl64a/lib64/libpodio.so
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libTree.so.6.36.04
-DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-11-12/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/e369490a18a9857d5a61771f340c1791e8f9f7a3_develop-c5qfjn/lib/libDDParsers.so.1.33
+DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/dd4hep/16a675dacf8711220768c096f6cb8e2f9e473698_develop-d7koo2/lib/libDDParsers.so.1.32
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libRint.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libPhysics.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libGeom.so.6.36.04
@@ -191,21 +175,21 @@ DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/root/6.36.04-6qfi76/lib/root/libCore.so.6.36.04
 DCHdigi/libDCHdigi.so: /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gsl/2.8-tphaa5/lib/libgslcblas.so
 DCHdigi/libDCHdigi.so: DCHdigi/CMakeFiles/DCHdigi.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX shared module libDCHdigi.so"
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/DCHdigi.dir/link.txt --verbose=$(VERBOSE)
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/libDCHdigi.so /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/.plugins/libDCHdigi.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output DCHdigi.components libDCHdigi.so
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/DCHdigi -p DCHdigi -i /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/libDCHdigi.so
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX shared module libDCHdigi.so"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/DCHdigi.dir/link.txt --verbose=$(VERBOSE)
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/cmake/3.31.8-36nqaa/bin/cmake -E create_symlink /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/libDCHdigi.so /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/.plugins/libDCHdigi.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/listcomponents --output DCHdigi.components libDCHdigi.so
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && ../run /cvmfs/sw-nightlies.hsf.org/key4hep/releases/2025-09-21/x86_64-almalinux9-gcc14.2.0-opt/gaudi/40.0-hqgvjz/bin/genconf --configurable-module=GaudiKernel.Proxy --configurable-default-name=Configurable.DefaultName --configurable-algorithm=ConfigurableAlgorithm --configurable-algtool=ConfigurableAlgTool --configurable-auditor=ConfigurableAuditor --configurable-service=ConfigurableService -o genConfDir/DCHdigi -p DCHdigi -i /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/libDCHdigi.so
 
 # Rule to build all files generated by this target.
 DCHdigi/CMakeFiles/DCHdigi.dir/build: DCHdigi/libDCHdigi.so
 .PHONY : DCHdigi/CMakeFiles/DCHdigi.dir/build
 
 DCHdigi/CMakeFiles/DCHdigi.dir/clean:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi && $(CMAKE_COMMAND) -P CMakeFiles/DCHdigi.dir/cmake_clean.cmake
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi && $(CMAKE_COMMAND) -P CMakeFiles/DCHdigi.dir/cmake_clean.cmake
 .PHONY : DCHdigi/CMakeFiles/DCHdigi.dir/clean
 
 DCHdigi/CMakeFiles/DCHdigi.dir/depend:
-	cd /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/DCHdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi /afs/cern.ch/user/c/cglenn/FCCWork/GGTF_tracking/k4RecTracker/build/DCHdigi/CMakeFiles/DCHdigi.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/DCHdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/DCHdigi/CMakeFiles/DCHdigi.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : DCHdigi/CMakeFiles/DCHdigi.dir/depend
 

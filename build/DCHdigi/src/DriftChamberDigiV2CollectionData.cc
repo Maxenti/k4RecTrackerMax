@@ -23,21 +23,6 @@ DriftChamberDigiV2CollectionData::DriftChamberDigiV2CollectionData(podio::Collec
   if (!isSubsetColl) {
     m_data.reset(buffers.dataAsVector<extension::DriftChamberDigiV2Data>());
 
-  // The following is ugly code for the case when reading garbage data from ROOT
-  // after calling dataAsVector, which can trigger infinite loops that consume
-  // all the available memory and this works at least for GCC 15 and Clang 20 in
-  // {Debug,RelWithDebInfo,Release} modes.
-  // https://github.com/AIDASoft/podio/pull/817#issuecomment-3266748609 and
-  // https://github.com/AIDASoft/podio/pull/842
-  volatile std::uint64_t s = m_data->size();
-  if (s > 1e15) throw std::runtime_error("Bad data after reading: a collection is too big (extension::DriftChamberDigiV2)");
-  else
-    if (s == 0)
-      for ([[maybe_unused]] const auto& _ : *m_data.get())
-        throw std::runtime_error("Bad data after reading: zero-sized collection with data (extension::DriftChamberDigiV2)");
-  // end of ugly
-
-
   m_vec_nElectrons.reset(podio::CollectionReadBuffers::asVector<std::uint16_t>(m_vecmem_info[0].second));
   }
 
