@@ -1,4 +1,4 @@
-#Tue Nov 18 23:26:38 2025"""Automatically generated. DO NOT EDIT please"""
+#Fri Nov 21 17:28:11 2025"""Automatically generated. DO NOT EDIT please"""
 from GaudiKernel.DataHandle import DataHandle
 from GaudiKernel.Proxy.Configurable import *
 
@@ -446,7 +446,10 @@ class ThreePointFitter( ConfigurableAlgorithm ) :
     'MinHitsPerGroup' : 3,
     'MinChordMM' : 5.0000000,
     'MinRadiusMM' : 100.00000,
+    'MinDeltaPhi' : 0.10000000,
     'FitTanLambda' : True,
+    'PrintDiagnostics' : True,
+    'DiagEveryN' : 1,
   }
   _propertyDocDct = { 
     'ExtraInputs' : """  [DataHandleHolderBase<PropertyHolder<CommonMessaging<implements<IAlgorithm,IDataHandleHolder,IProperty,IStateful> > > >] """,
@@ -475,9 +478,12 @@ class ThreePointFitter( ConfigurableAlgorithm ) :
     'MinHitsPerGroup' : """ Minimum hits per GGTF label to fit [ThreePointFitter] """,
     'MinChordMM' : """ Min chord length among the 3 picked points [mm] [ThreePointFitter] """,
     'MinRadiusMM' : """ Reject tiny circles R < this [mm] [ThreePointFitter] """,
+    'MinDeltaPhi' : """ Require φ_max-φ_min >= this [rad] (about origin) [ThreePointFitter] """,
     'FitTanLambda' : """ Estimate tanLambda from z(phi) linear fit [ThreePointFitter] """,
+    'PrintDiagnostics' : """ Print per-track geometry diagnostics [ThreePointFitter] """,
+    'DiagEveryN' : """ Print every N-th track (per event grouping) [ThreePointFitter] """,
   }
-  __declaration_location__ = 'ThreePointFitter.cpp:253'
+  __declaration_location__ = 'ThreePointFitter.cpp:300'
   def __init__(self, name = Configurable.DefaultName, **kwargs):
       super(ThreePointFitter, self).__init__(name)
       for n,v in kwargs.items():

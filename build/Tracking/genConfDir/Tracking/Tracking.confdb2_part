@@ -204,7 +204,7 @@
     },
     'ThreePointFitter': {
         '__component_type__': 'Algorithm',
-        '__declaration_location__': 'ThreePointFitter.cpp:253',
+        '__declaration_location__': 'ThreePointFitter.cpp:300',
         '__interfaces__': ('IDataHandleHolder', 'IStateful', ),
         'properties': {
             'ExtraInputs': ('std::unordered_set<DataObjID,DataObjID_Hasher,std::equal_to<DataObjID>,std::allocator<DataObjID> >', set(), ''' [DataHandleHolderBase<PropertyHolder<CommonMessaging<implements<IAlgorithm,IDataHandleHolder,IProperty,IStateful> > > >]'''),
@@ -233,7 +233,10 @@
             'MinHitsPerGroup': ('unsigned int', 3, '''Minimum hits per GGTF label to fit [ThreePointFitter]'''),
             'MinChordMM': ('double', 5.0000000, '''Min chord length among the 3 picked points [mm] [ThreePointFitter]'''),
             'MinRadiusMM': ('double', 100.00000, '''Reject tiny circles R < this [mm] [ThreePointFitter]'''),
+            'MinDeltaPhi': ('double', 0.10000000, '''Require φ_max-φ_min >= this [rad] (about origin) [ThreePointFitter]'''),
             'FitTanLambda': ('bool', True, '''Estimate tanLambda from z(phi) linear fit [ThreePointFitter]'''),
+            'PrintDiagnostics': ('bool', True, '''Print per-track geometry diagnostics [ThreePointFitter]'''),
+            'DiagEveryN': ('int', 1, '''Print every N-th track (per event grouping) [ThreePointFitter]'''),
         },
     },
     'TrackdNdxDelphesBased': {

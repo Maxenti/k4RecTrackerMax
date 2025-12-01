@@ -154,6 +154,22 @@ parser.add_argument("--tp-dedupTol",    type=float, default=0.50, help="Dedup to
 parser.add_argument("--tp-maxMeasPerGroup", type=int, default=24, help="Downsample cap (0=off)")
 parser.add_argument("--tp-outHisto",    default="", help="If set, write QA histos here (root)")
 
+# >>> New, finer-grained ThreePointFitter controls <<<
+parser.add_argument("--tp-minDeltaPhi", type=float, default=0.02,
+                    help="Minimum |Δphi| between any chosen pair among the 3 points [rad]")
+parser.add_argument("--tp-minChordMM",  type=float, default=5.0,
+                    help="Minimum chord length among the 3 chosen points [mm]")
+parser.add_argument("--tp-minRadiusMM", type=float, default=100.0,
+                    help="Reject tiny circles with R < this [mm]")
+parser.add_argument("--tp-fitTanLambda", dest="tp_fitTanLambda", action="store_true", default=True,
+                    help="If set, estimate tanLambda via z(phi) regression")
+parser.add_argument("--no-tp-fitTanLambda", dest="tp_fitTanLambda", action="store_false")
+parser.add_argument("--tp-printDiag", dest="tp_printDiag", action="store_true", default=False,
+                    help="If set, fitter prints diagnostic info for first N events/groups")
+parser.add_argument("--no-tp-printDiag", dest="tp_printDiag", action="store_false")
+parser.add_argument("--tp-diagEveryN", type=int, default=100,
+                    help="Diagnostic print frequency (events) when tp-printDiag is enabled")
+
 args = parser.parse_args()
 
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
@@ -518,11 +534,17 @@ def _configure_threepoint():
     for prop, val in (("outputTracks", [args.fitOut]), ("outputTracks", args.fitOut)):
         if _set_if_has(alg, prop, val): break
 
+    # Core physics/units
     _set_if_has(alg, "Bz", args.tp_bz)
+    _set_if_has(alg, "PDG", args.gf_pdg)  # reuse PDG choice for sign convention
     _set_if_has(alg, "PositionUnitScale", args.tp_posScale)
     _set_if_has(alg, "InternalLengthToMeters", args.tp_len2m)
+
+    # Common toggles (harmless if not present)
     _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
     _set_if_has(alg, "UseTGeoPath", True)
+
+    # Grouping / fallback / housekeeping
     _set_if_has(alg, "MinGroupSize",            args.tp_minGroup)
     _set_if_has(alg, "UseFallbackClustering",   args.tp_useFallback)
     _set_if_has(alg, "FallbackEpsCM",           args.tp_fallbackEpsCM)
@@ -534,6 +556,14 @@ def _configure_threepoint():
 
     if args.tp_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.tp_outHisto)
+
+    # >>> New: pass through fine-grained selection / diagnostics <<<
+    _set_if_has(alg, "MinDeltaPhi",  args.tp_minDeltaPhi)
+    _set_if_has(alg, "MinChordMM",   args.tp_minChordMM)
+    _set_if_has(alg, "MinRadiusMM",  args.tp_minRadiusMM)
+    _set_if_has(alg, "FitTanLambda", args.tp_fitTanLambda)
+    _set_if_has(alg, "PrintDiagnostics", args.tp_printDiag)
+    _set_if_has(alg, "DiagEveryN", args.tp_diagEveryN)
 
     print(f"[fitter] ThreePointFitter configured; output -> '{args.fitOut}'")
     return alg

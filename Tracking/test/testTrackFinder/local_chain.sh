@@ -4,10 +4,8 @@ set -euo pipefail
 
 ########## defaults  ##########
 DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E200.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples/eta_+0.00/100mmGATE_reco_eta+0.00_E200.root"
-#DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/inputFiles/SimpleGatrIDEAv3o1.onnx.md5"
-#Model is exactly the same as before, previously I downloaded it for local use and called it model.onnx but it hasn't changed
-#since PR65 began to now when it's merged.
+DEFAULT_OUTPUT="/eos/user/c/cglenn/threepoint_reco_samples/eta_+0.00/11_21_25_v02_GGTFThreshLoose_reco_eta+0.00_E200.root"
+# Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
@@ -23,64 +21,65 @@ DCH_SIMHITS="${5:-$DEFAULT_DCH_SIMHITS}"
 DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # ----------------- pipeline controls -----------------
-# Stage: which blocks to run in runDCHTestTrackFinder.py
-#   digi  -> digitizer only
-#   ggtf  -> digitizer + GGTF
-#   fit   -> digitizer + GGTF + fitter
 : "${STAGE:=fit}"              # digi|ggtf|fit
 
 # Fitter choice:
-#   none       -> no fitter
-#   genfit2    -> GenFit2DCHFitter (consumes GGTF_3DHits)
-#   simple     -> SimpleFitDCHFitter (straight-ish minimal fit)
-#   threepoint -> ThreePointFitter (3-point fast fit)
-: "${FITTER:=genfit2}"
+: "${FITTER:=threepoint}"      # genfit2|simple|threepoint|none
 
 # Output collection name from fitter
-# You can set FIT_OUT explicitly; if "auto", it will adapt to the fitter.
 : "${FIT_OUT:=auto}"
 
 # ----------------- logging & runtime -----------------
-: "${GGTF_LOG:=INFO}"          # INFO|DEBUG
-: "${PRODUCE_3DHITS:=1}"       # 0|1
-: "${MAX_HITS:=100000}"          # hard-cap per event to avoid OOM on huge spikes
-: "${TIMEOUT_K4RUN:=0}"
+: "${GGTF_LOG:=DEBUG}"           # INFO|DEBUG
+: "${PRODUCE_3DHITS:=1}"         # 0|1
+: "${MAX_HITS:=100000}"          # cap input hits/event (0=off)
+: "${TIMEOUT_K4RUN:=0}"          # seconds (0=off)
 
 # GGTF clustering thresholds
-: "${TBETA:=0.6}"             # default 0.05; slightly tighter by default
-: "${TD:=0.3}"                # default 0.05
+: "${TBETA:=0.05}"
+: "${TD:=0.05}"
 
 # GGTF runtime
-: "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
-: "${WIRE_GATE_MM:=100.0}"      # gate for wire->circle projection
-: "${MAX_3D_PER_EVT:=200000}"  # cap spacepoints per event
-: "${MAX_3D_PER_TRK:=20000}"   # cap spacepoints per track
+: "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
+: "${WIRE_GATE_MM:=100.0}"       # wire→circle gate [mm]
+: "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
+: "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
 
-# GenFit “stability profile” (only used when Fitter=genfit2)
-: "${GF_POS_SCALE:=0.1}"       # mm -> cm internally
-: "${GF_LEN2M:=0.01}"          # cm -> m for pT seeding
-: "${GF_HIT_SIGMA_XY:=0.8}"    # mm
-: "${GF_HIT_SIGMA_Z:=6.0}"     # mm
-: "${GF_SEED_POS_SIGMA:=100}"  # mm
-: "${GF_SEED_MOM_SIGMA:=10.0}" # GeV
-: "${GF_DEDUP_TOL:=0.50}"      # mm
-: "${GF_USE_MAT:=1}"           # 0/1 (material effects)
+# GenFit2 “stability profile” (used when FITTER=genfit2)
+: "${GF_POS_SCALE:=0.1}"           # mm→cm internally
+: "${GF_LEN2M:=0.01}"           # cm→m
+: "${GF_HIT_SIGMA_XY:=0.8}"      # mm
+: "${GF_HIT_SIGMA_Z:=6.0}"       # mm
+: "${GF_SEED_POS_SIGMA:=100}"    # mm
+: "${GF_SEED_MOM_SIGMA:=10.0}"   # GeV
+: "${GF_DEDUP_TOL:=0.50}"        # mm
+: "${GF_USE_MAT:=1}"             # 0/1
 : "${GF_SEED_PT_MIN:=0.2}"
 : "${GF_SEED_PT_MAX:=200.0}"
-: "${GF_SEED_P_MIN:=1.2}"      # lower bound on |p| seed [GeV]
+: "${GF_SEED_P_MIN:=1.2}"        # GeV
 
 # Fitter grouping / fallback / retry (GenFit2)
 : "${GF_MIN_GROUP:=4}"
-: "${GF_USE_FALLBACK:=1}"      # 1=on, 0=off
+: "${GF_USE_FALLBACK:=1}"
 : "${GF_FALLBACK_EPS_CM:=4}"
 : "${GF_FALLBACK_MINPTS:=4}"
-: "${GF_RETRY:=1}"             # 1=on, 0=off
-: "${GF_RETRY_MEAS_INFL:=5.0}" # variance k (C' = k*C)
-: "${GF_RETRY_SEED_POS:=5.0}"  # seed pos sigma ×
-: "${GF_RETRY_SEED_MOM:=5.0}"  # seed mom sigma ×
+: "${GF_RETRY:=1}"
+: "${GF_RETRY_MEAS_INFL:=5.0}"
+: "${GF_RETRY_SEED_POS:=5.0}"
+: "${GF_RETRY_SEED_MOM:=5.0}"
 : "${GF_MAX_MEAS_PER_GROUP:=0}"
 
-# Field / PDG (GenFit2 uses these; harmless otherwise)
+# ThreePointFitter args (match new tp-* names in Python)
+: "${FITTER_LOG:=DEBUG}"
+: "${TP_MIN_DELTA_PHI:=0.10}"     # rad
+: "${TP_MIN_CHORD_MM:=5}"         # mm
+: "${TP_MIN_HITS:=3}"
+: "${TP_MIN_RADIUS_MM:=100}"      # mm
+: "${TP_FIT_TANLAMBDA:=true}"     # true|false
+: "${TP_PRINT_DIAG:=false}"       # true|false
+: "${TP_DIAG_EVERY_N:=100}"
+
+# Field / PDG (used generally)
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
@@ -107,6 +106,8 @@ echo "[cfg] GF_SEED_PT_MIN=$GF_SEED_PT_MIN GF_SEED_PT_MAX=$GF_SEED_PT_MAX GF_SEE
 echo "[cfg] GF_MIN_GROUP=$GF_MIN_GROUP GF_USE_FALLBACK=$GF_USE_FALLBACK GF_FALLBACK_EPS_CM=$GF_FALLBACK_EPS_CM GF_FALLBACK_MINPTS=$GF_FALLBACK_MINPTS"
 echo "[cfg] GF_RETRY=$GF_RETRY GF_RETRY_MEAS_INFL=$GF_RETRY_MEAS_INFL GF_RETRY_SEED_POS=$GF_RETRY_SEED_POS GF_RETRY_SEED_MOM=$GF_RETRY_SEED_MOM GF_MAX_MEAS_PER_GROUP=$GF_MAX_MEAS_PER_GROUP"
 echo "[cfg] GF_BZ=$GF_BZ GF_PDG=$GF_PDG"
+echo "[cfg] TP_MIN_DELTA_PHI=$TP_MIN_DELTA_PHI TP_MIN_CHORD_MM=$TP_MIN_CHORD_MM TP_MIN_HITS=$TP_MIN_HITS TP_MIN_RADIUS_MM=$TP_MIN_RADIUS_MM"
+echo "[cfg] TP_FIT_TANLAMBDA=$TP_FIT_TANLAMBDA TP_PRINT_DIAG=$TP_PRINT_DIAG TP_DIAG_EVERY_N=$TP_DIAG_EVERY_N"
 
 # --- keep memory tame ---
 export OMP_NUM_THREADS=1
@@ -138,6 +139,7 @@ K4_ARGS=(
   --tbeta      "${TBETA}"
   --td         "${TD}"
   --fitter     "${FITTER}"
+  --fitterLog  "${FITTER_LOG}"
   --fitOut     "${FIT_OUT}"
   --stage      "${STAGE}"
   --onnxChunk  "${ONNX_CHUNK}"
@@ -146,6 +148,7 @@ K4_ARGS=(
   --max3DPerTrack     "${MAX_3D_PER_TRK}"
 )
 
+# Optional toggles converted to presence/absence
 [[ "${PRODUCE_3DHITS}" == "1" ]] && K4_ARGS+=( --produce3DHits )
 [[ "${MAX_HITS}" -gt 0 ]]        && K4_ARGS+=( --maxHitsPerEvent "${MAX_HITS}" )
 
@@ -183,6 +186,23 @@ if [[ "${GF_RETRY}" == "1" ]]; then
   K4_ARGS+=( --gf-retry )
 else
   K4_ARGS+=( --no-gf-retry )
+fi
+
+# --- ThreePointFitter-specific args (NEW) ---
+K4_ARGS+=( --tp-minDeltaPhi "${TP_MIN_DELTA_PHI}" )
+K4_ARGS+=( --tp-minChordMM  "${TP_MIN_CHORD_MM}" )
+K4_ARGS+=( --tp-minGroup    "${TP_MIN_HITS}" )
+K4_ARGS+=( --tp-minRadiusMM "${TP_MIN_RADIUS_MM}" )
+# booleans for tp-fitTanLambda / tp-printDiag
+if [[ "${TP_FIT_TANLAMBDA}" == "true" ]]; then
+  K4_ARGS+=( --tp-fitTanLambda )
+else
+  K4_ARGS+=( --no-tp-fitTanLambda )
+fi
+if [[ "${TP_PRINT_DIAG}" == "true" ]]; then
+  K4_ARGS+=( --tp-printDiag --tp-diagEveryN "${TP_DIAG_EVERY_N}" )
+else
+  K4_ARGS+=( --no-tp-printDiag )
 fi
 
 echo "[k4run] args: ${K4_ARGS[*]}" | tee -a k4run.log

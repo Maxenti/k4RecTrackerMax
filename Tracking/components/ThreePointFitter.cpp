@@ -1,12 +1,13 @@
 // ======================================================================
 // ThreePointFitter.cpp  -- ultra-simple 3-point pT fitter for GGTF 3D hits
 //   * Groups by GGTF label stored in TrackerHit3D::type
-//   * For each group: pick three XY points (min-r, max-r, mid-angle)
+//   * For each group: pick three XY points (min-φ, median-φ, max-φ) about origin
 //   * Circle from 3 points (XY) -> R_mm -> pT = 0.0003 * B[T] * R[mm]
 //   * Optional crude tanLambda via linear z(phi) regression
 //   * Writes one EDM4hep Track per group with TrackState(AtIP):
 //       - ts.time  = pT [GeV]   (for easy downstream pT use)
 //       - ts.omega = q / pT     [GeV^-1] (EDM/LCIO convention)
+//   * Verbose diagnostics (toggleable) dump the chosen points and geometry
 // ======================================================================
 
 #include <vector>
@@ -16,6 +17,7 @@
 #include <unordered_map>
 #include <numeric>
 #include <string>
+#include <tuple>
 
 #include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
@@ -63,6 +65,17 @@ inline double unwrap_to_ref(double a, double ref) {
   while (d >  M_PI) d -= 2*M_PI;
   while (d < -M_PI) d += 2*M_PI;
   return ref + d;
+}
+
+// signed distance of point P to line AB in XY (mm)
+inline double signed_dist_to_chord_xy(const TVector3& A, const TVector3& B, const TVector3& P) {
+  const TVector3 AB = B - A;
+  const TVector3 AP = P - A;
+  const double   L  = std::hypot(AB.X(), AB.Y());
+  if (L < 1e-12) return 0.0;
+  // 2D cross product magnitude divided by |AB|
+  const double cross = AB.X()*AP.Y() - AB.Y()*AP.X();
+  return cross / L;
 }
 
 // Fill an EDM4hep TrackState at IP using perigee-like definitions.
@@ -118,12 +131,17 @@ struct ThreePointFitter final
   {}
 
   // ---- knobs ----
-  Gaudi::Property<double>  m_Bz      {this, "Bz", 2.0, "Uniform B [Tesla] for pT conversion"};
-  Gaudi::Property<int>     m_pdg     {this, "PDG", 13, "PDG hypothesis (charge sign only)"};
-  Gaudi::Property<unsigned> m_minHits{this, "MinHitsPerGroup", 3u, "Minimum hits per GGTF label to fit"};
-  Gaudi::Property<double>  m_minChord{this, "MinChordMM", 5.0, "Min chord length among the 3 picked points [mm]"};
-  Gaudi::Property<double>  m_minRmm  {this, "MinRadiusMM", 100.0, "Reject tiny circles R < this [mm]"};
-  Gaudi::Property<bool>    m_doTanL  {this, "FitTanLambda", true, "Estimate tanLambda from z(phi) linear fit"};
+  Gaudi::Property<double>   m_Bz        {this, "Bz", 2.0, "Uniform B [Tesla] for pT conversion"};
+  Gaudi::Property<int>      m_pdg       {this, "PDG", 13, "PDG hypothesis (charge sign only)"};
+  Gaudi::Property<unsigned> m_minHits   {this, "MinHitsPerGroup", 3u, "Minimum hits per GGTF label to fit"};
+  Gaudi::Property<double>   m_minChord  {this, "MinChordMM", 5.0, "Min chord length among the 3 picked points [mm]"};
+  Gaudi::Property<double>   m_minRmm    {this, "MinRadiusMM", 100.0, "Reject tiny circles R < this [mm]"};
+  Gaudi::Property<double>   m_minDeltaPhi {this, "MinDeltaPhi", 0.10, "Require φ_max-φ_min >= this [rad] (about origin)"};
+  Gaudi::Property<bool>     m_doTanL    {this, "FitTanLambda", true, "Estimate tanLambda from z(phi) linear fit"};
+
+  // Diagnostics
+  Gaudi::Property<bool>     m_printDiag {this, "PrintDiagnostics", true, "Print per-track geometry diagnostics"};
+  Gaudi::Property<int>      m_diagEvery {this, "DiagEveryN", 1, "Print every N-th track (per event grouping)"};
 
   StatusCode initialize() override {
     info() << "ThreePointFitter init | Bz[T]=" << m_Bz.value()
@@ -131,7 +149,10 @@ struct ThreePointFitter final
            << " | MinHitsPerGroup=" << m_minHits.value()
            << " | MinChordMM=" << m_minChord.value()
            << " | MinRadiusMM=" << m_minRmm.value()
+           << " | MinDeltaPhi=" << m_minDeltaPhi.value()
            << " | FitTanLambda=" << (m_doTanL.value()?"true":"false")
+           << " | PrintDiagnostics=" << (m_printDiag.value()?"true":"false")
+           << " | DiagEveryN=" << m_diagEvery.value()
            << endmsg;
     return StatusCode::SUCCESS;
   }
@@ -156,49 +177,49 @@ struct ThreePointFitter final
     if (anyNonZero && groups.count(0)) groups.erase(0);
 
     const int qSign = chargeFromPDG(m_pdg.value());
+    int trkCount = 0;
 
     // 2) Per-group 3-point fit
     for (auto& kv : groups) {
       auto& idxs = kv.second;
       if (idxs.size() < m_minHits.value()) continue;
 
-      // Build a local array of points
+      // Build a local array of points (mm) and angles about the origin
       std::vector<TVector3> P; P.reserve(idxs.size());
+      std::vector<double>   PHI; PHI.reserve(idxs.size());
       for (auto k : idxs) {
         const auto p = hits[k].getPosition();
         P.emplace_back(p.x, p.y, p.z); // mm
+        PHI.emplace_back(std::atan2(p.y, p.x));     // about origin
       }
 
-      // Indices of min-r and max-r (about origin)
-      size_t iMinR=0, iMaxR=0;
-      double r2min=std::numeric_limits<double>::infinity(), r2max=-1.0;
-      for (size_t i=0;i<P.size();++i) {
-        const double r2 = P[i].Perp2();
-        if (r2 < r2min) { r2min = r2; iMinR = i; }
-        if (r2 > r2max) { r2max = r2; iMaxR = i; }
-      }
-      const TVector3 A = P[iMinR];
-      const TVector3 B = P[iMaxR];
+      // Order by φ and choose min-φ, median-φ, max-φ
+      std::vector<size_t> ord(P.size()); std::iota(ord.begin(), ord.end(), 0);
+      std::sort(ord.begin(), ord.end(), [&](size_t a, size_t b){ return PHI[a] < PHI[b]; });
 
-      // Mid-angle point around origin: pick by angle median
-      std::vector<std::pair<double,size_t>> ang; ang.reserve(P.size());
-      for (size_t i=0;i<P.size();++i) ang.emplace_back(std::atan2(P[i].Y(), P[i].X()), i);
-      std::sort(ang.begin(), ang.end(), [](auto& a, auto& b){return a.first < b.first;});
-      const size_t iMed = ang[ang.size()/2].second;
-      const TVector3 C = P[iMed];
+      const size_t iMinPhi = ord.front();
+      const size_t iMaxPhi = ord.back();
+      const size_t iMedPhi = ord[ord.size()/2];
+
+      const TVector3 A = P[iMinPhi];
+      const TVector3 C = P[iMedPhi];
+      const TVector3 B = P[iMaxPhi];
+
+      const double dPhi = PHI[iMaxPhi] - PHI[iMinPhi];
+      if (dPhi < m_minDeltaPhi.value()) continue; // too little lever arm in φ
 
       // Guard: min chord lengths
-      const double ab = (A-B).Mag();
-      const double bc = (B-C).Mag();
-      const double ca = (C-A).Mag();
-      const double minChord = std::min({ab,bc,ca});
+      const double L_AB = (A-B).Mag();
+      const double L_BC = (B-C).Mag();
+      const double L_CA = (C-A).Mag();
+      const double minChord = std::min({L_AB, L_BC, L_CA});
       if (!(minChord >= m_minChord.value())) continue;
 
       // Circle from these 3 points
       CircRes cir = circle_from_3pts_xy(A,B,C);
       if (!cir.ok) continue;
       const double R_mm = cir.R;
-      if (R_mm < m_minRmm.value()) continue; // reject tiny R
+      if (R_mm < m_minRmm.value()) continue; // reject tiny R (degenerate)
 
       // Choose a "perigee-like" point as Pmin (closest to origin)
       size_t iPmin = 0; double r2Pmin = std::numeric_limits<double>::infinity();
@@ -218,7 +239,6 @@ struct ThreePointFitter final
         std::vector<double> phi(P.size());
         for (size_t j=0;j<P.size();++j) phi[j]=std::atan2(P[j].Y()-cir.C.Y(), P[j].X()-cir.C.X());
         for (size_t j=1;j<P.size();++j) phi[j]=unwrap_to_ref(phi[j], phi[j-1]);
-        // simple linear regression z = a + b*phi
         double S1=0, Sph=0, Sz=0, Sphp=0, Sphz=0;
         for (size_t j=0;j<P.size();++j) {
           const double ph = phi[j];
@@ -235,15 +255,42 @@ struct ThreePointFitter final
       // pT from radius (R in mm, B in Tesla)
       const double pT = 0.0003 * m_Bz.value() * R_mm; // GeV
 
+      // Geometric sagitta (middle point C relative to chord AB)
+      const double sag_signed = signed_dist_to_chord_xy(A, B, C);
+      const double sag = std::fabs(sag_signed);
+
       // Emit track
       auto trk = out.create();
       trk.setType(m_pdg.value());
       for (auto k : idxs) trk.addToTrackerHits(hits[k]);
 
-      // TrackState with pT in time, omega = q/pT
       addAtIPState(trk, Pmin, that, pT, tanL, qSign);
+
+      // Diagnostics
+      if (m_printDiag.value()) {
+        const bool doPrint = (m_diagEvery.value() <= 1) ? true : ((trkCount % m_diagEvery.value()) == 0);
+        if (doPrint) {
+          info()
+            << "[TPFit] label=" << kv.first
+            << "  N=" << idxs.size()
+            << "  dPhi=" << dPhi
+            << "  L_AB=" << L_AB << "mm"
+            << "  sag=" << sag << "mm"
+            << "  R=" << R_mm << "mm"
+            << "  pT=" << pT << " GeV"
+            << " | A(" << A.X() << "," << A.Y() << ")"
+            << "  C(" << C.X() << "," << C.Y() << ")"
+            << "  B(" << B.X() << "," << B.Y() << ")"
+            << endmsg;
+        }
+      }
+
+      ++trkCount;
     }
 
+    if (m_printDiag.value()) {
+      info() << "[TPFit] tracks emitted: " << trkCount << endmsg;
+    }
     return out;
   }
 
