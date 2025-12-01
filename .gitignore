@@ -1,1 +1,4 @@
 *.root
+*.tar.gz
+*.onnx
+*.onnx.md5
