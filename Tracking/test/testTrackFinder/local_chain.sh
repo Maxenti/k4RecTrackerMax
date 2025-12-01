@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E200.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/threepoint_reco_samples/eta_+0.00/11_21_25_v02_GGTFThreshLoose_reco_eta+0.00_E200.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples2/gun_eta+0.00_E100.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/gun_samples2/reco_eta+0.00_E100.root"
 # Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
@@ -24,7 +24,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${STAGE:=fit}"              # digi|ggtf|fit
 
 # Fitter choice:
-: "${FITTER:=threepoint}"      # genfit2|simple|threepoint|none
+: "${FITTER:=genfit2}"      # genfit2|simple|threepoint|none
 
 # Output collection name from fitter
 : "${FIT_OUT:=auto}"

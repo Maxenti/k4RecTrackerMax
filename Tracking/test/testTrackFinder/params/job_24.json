@@ -1,1 +1,1 @@
-{"pt": 0.8157721730960482, "eta": 0.5, "p": 0.9198858840759381, "theta": 1.0904152476611673, "nev": 3000, "particle": "mu-", "phi_uniform": true, "theta_smear": 0.0, "seed": 1020004, "job_id": 24}
+{"pt": 0.8157721730960482, "eta": 0.5, "p": 0.9198858840759381, "theta": 1.0904152476611673, "nev": 1000, "particle": "mu-", "phi_uniform": true, "theta_smear": 0.0, "seed": 1020004, "job_id": 24}
