@@ -306,22 +306,22 @@ except Exception:
 
 GGTF = GGTF_tracking(
     "GGTF_tracking",
-    inputWireHits=["DCH_DigiCollection"],
-    inputPlanarHits=[],
-    outputTracks=["CDCHTracks"],
-    output3DHits=["GGTF_3DHits"],
+    InputWireHitCollections=["DCH_DigiCollection"],
+    InputPlanarHitCollections=[],
+    OutputTracksGGTF=["CDCHTracks"],
+    Output3DHits=["GGTF_3DHits"],
     OutputLevel=INFO,
 )
 
-GGTF.modelPath = stage_model(args.modelPath)
-GGTF.tbeta = args.tbeta
-GGTF.td    = args.td
+GGTF.ModelPath = stage_model(args.modelPath)
+GGTF.Tbeta = args.tbeta
+GGTF.Td    = args.td
 
 for name, val in [
-    ("wireGateMM", args.wireGateMM),
-    ("onnxChunk", args.onnxChunk),
-    ("max3DHitsPerEvent", args.max3DHitsPerEvent),
-    ("max3DPerTrack", args.max3DPerTrack),
+    ("WireGateMM", args.wireGateMM),
+    ("OnnxChunk", args.onnxChunk),
+    ("Max3DHitsPerEvent", args.max3DHitsPerEvent),
+    ("Max3DPerTrack", args.max3DPerTrack),
 ]:
     try: setattr(GGTF, name, val)
     except Exception as e: print(f"[warn] could not set GGTF.{name}: {e}")
@@ -336,13 +336,13 @@ except Exception:
     print("[warn] GGTF.maxHitsPerEvent property not present; ignoring.")
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
-print(f"[GGTF] stage={args.stage} modelPath={GGTF.modelPath} tbeta={GGTF.tbeta} td={GGTF.td} "
-      f"produce3DHits={getattr(GGTF,'produce3DHits','n/a')} "
-      f"maxHitsPerEvent={getattr(GGTF,'maxHitsPerEvent',0)} "
-      f"wireGateMM={getattr(GGTF,'wireGateMM','n/a')} "
-      f"onnxChunk={getattr(GGTF,'onnxChunk','n/a')} "
-      f"max3DHitsPerEvent={getattr(GGTF,'max3DHitsPerEvent','n/a')} "
-      f"max3DPerTrack={getattr(GGTF,'max3DPerTrack','n/a')} "
+print(f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
+      f"produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
+      f"maxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',0)} "
+      f"wireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
+      f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
+      f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
+      f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
       f"log={args.ggtfLog}")
 
 # ----------------- Helper: quiet property setter -----------------

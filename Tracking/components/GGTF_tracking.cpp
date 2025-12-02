@@ -1,84 +1,111 @@
-// (same license/header as yours)
+//======================================================================
+// GGTF_tracking.cpp  (tracks + optional 3D hits output)  [merged]
+//  * Upstream I/O names + your controls (caps, chunking, gates, covariances)
+//  * Tracks + optional edm4hep::TrackerHit3D ("GGTF_3DHits")
+//  * Chunked ONNX -> clustering -> grouping
+//  * Wire 3D positions via XY drift circle projection (seeded by 3 points)
+//  * Outlier gate; scalar propagation; default covariances
+//======================================================================
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
-#include <cstdlib>
-#include <filesystem>
 #include <fstream>
-#include <iostream>
-#include <iterator>
-#include <map>
+#include <limits>
 #include <memory>
 #include <numeric>
-#include <queue>
-#include <random>
-#include <sstream>
 #include <string>
-#include <typeinfo>
+#include <tuple>
 #include <vector>
 
-// ONNX & Torch
-#include "onnxruntime_cxx_api.h"
-#include "onnxruntime_run_options_config_keys.h"
 #include <ATen/ATen.h>
 #include <torch/torch.h>
+#include "onnxruntime_cxx_api.h"
 
-// ROOT
-#include "TFile.h"
-#include "TGeoMatrix.h"
-#include "TH1D.h"
-#include "TRandom3.h"
 #include "TVector3.h"
 
-// === Gaudi Framework ===
+// Gaudi + k4FWCore
 #include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
-#include "GaudiKernel/IRndmGenSvc.h"
-#include "GaudiKernel/RndmGenerators.h"
-
-// === k4FWCore / k4Interface ===
-#include "k4FWCore/DataHandle.h"
+#include "GaudiKernel/ISvcLocator.h"
+#include "GaudiKernel/SmartIF.h"
 #include "k4FWCore/Transformer.h"
 #include "k4Interface/IGeoSvc.h"
 #include "k4Interface/IUniqueIDGenSvc.h"
 
-// === EDM4HEP & PODIO ===
-#include "edm4hep/EventHeaderCollection.h"
-#include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/ParticleIDData.h"
-#include "edm4hep/SimTrackerHitCollection.h"
+// EDM4hep & extensions
 #include "edm4hep/TrackerHitPlaneCollection.h"
 #include "edm4hep/TrackerHit3DCollection.h"
-#include "podio/UserDataCollection.h"
-
-// === EDM4HEP Extensions ===
-#include "extension/DriftChamberDigiCollection.h"
-#include "extension/DriftChamberDigiLocalCollection.h"
-#include "extension/MCRecoDriftChamberDigiAssociationCollection.h"
 #include "extension/SenseWireHitCollection.h"
-#include "extension/SenseWireHitSimTrackerHitLinkCollection.h"
 #include "extension/TrackCollection.h"
-#include "extension/TrackerHit.h"
 
-// === DD4hep ===
+// DD4hep (optional)
 #include "DD4hep/Detector.h"
-#include "DDRec/DCH_info.h"
-#include "DDRec/Vector3D.h"
 #include "DDSegmentation/BitFieldCoder.h"
 
-// === Project-specific ===
+// Local
 #include "utils.hpp"
+
+// ---------- helpers ----------
+namespace {
+
+inline edm4hep::CovMatrix3f diag_cov_3d(float sx_mm, float sy_mm, float sz_mm) {
+  edm4hep::CovMatrix3f C;
+  C[0] = sx_mm * sx_mm;  // xx
+  C[1] = 0.f;            // xy
+  C[2] = 0.f;            // xz
+  C[3] = sy_mm * sy_mm;  // yy
+  C[4] = 0.f;            // yz
+  C[5] = sz_mm * sz_mm;  // zz
+  return C;
+}
+
+inline std::pair<long,long> readRSSkB() {
+  std::ifstream f("/proc/self/status");
+  std::string key; long rss=0, hwm=0, val=0; std::string unit;
+  while (f >> key) {
+    if (key == "VmRSS:") { f >> val >> unit; rss = val; }
+    else if (key == "VmHWM:") { f >> val >> unit; hwm = val; }
+    f.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  }
+  return {rss,hwm};
+}
+
+struct StepTimer {
+  std::chrono::steady_clock::time_point t0{std::chrono::steady_clock::now()};
+  double ms() const {
+    auto dt = std::chrono::steady_clock::now() - t0;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+  }
+};
+
+// 3-point circle in XY; returns false if nearly colinear
+inline bool circle_from_3pts_xy(const TVector3& A, const TVector3& B, const TVector3& C,
+                                TVector3& center_xy, double& R) {
+  const double x1=A.X(), y1=A.Y(), x2=B.X(), y2=B.Y(), x3=C.X(), y3=C.Y();
+  const double a = x1*(y2 - y3) - y1*(x2 - x3) + x2*y3 - x3*y2;
+  const double d = 2.0 * a;
+  if (std::abs(d) < 1e-9) return false;
+  const double x1s=x1*x1, y1s=y1*y1, x2s=x2*x2, y2s=y2*y2, x3s=x3*x3, y3s=y3*y3;
+  const double cx = ((x1s+y1s)*(y2-y3) + (x2s+y2s)*(y3-y1) + (x3s+y3s)*(y1-y2)) / d;
+  const double cy = ((x1s+y1s)*(x3-x2) + (x2s+y2s)*(x1-x3) + (x3s+y3s)*(x2-x1)) / d;
+  center_xy = TVector3(cx, cy, 0.0);
+  R = std::hypot(x1-cx, y1-cy);
+  return std::isfinite(R) && R > 1e-6;
+}
+
+} // namespace
 
 /**
  * GGTF_tracking
  *
  * Inputs:
- *   - vector<TrackerHitPlaneCollection*>  (planar/vtx/silicon)
- *   - vector<SenseWireHitCollection*>     (drift chamber wire hits)
+ *   - vector<TrackerHitPlaneCollection*>  (planar/vtx/silicon)   [may be empty]
+ *   - vector<SenseWireHitCollection*>     (drift chamber wires)
  *
  * Outputs:
- *   - extension::TrackCollection          (as before)
- *   - edm4hep::TrackerHit3DCollection     (NEW: "GGTF_3DHits" for fitters)
+ *   - extension::TrackCollection          (as upstream)
+ *   - edm4hep::TrackerHit3DCollection     ("GGTF_3DHits") optional via Produce3DHits
  */
 struct GGTF_tracking final
   : k4FWCore::MultiTransformer<
@@ -91,404 +118,448 @@ struct GGTF_tracking final
                       std::tuple<>, std::tuple<>, Traits>::KeyValues;
 
   GGTF_tracking(const std::string& name, ISvcLocator* svcLoc)
-  : MultiTransformer(name, svcLoc,
-      // Inputs
-      std::tuple<KeyValues>{
-        KeyValues{"InputPlanarHitCollections", std::vector<std::string>{"InputPlanarHitCollections"}},
-        KeyValues{"InputWireHitCollections",   std::vector<std::string>{"InputWireHitCollections"}}
-      },
-      // Outputs
-      std::tuple<KeyValues>{
-        KeyValues{"OutputTracksGGTF", std::vector<std::string>{"OutputTracksGGTF"}},
-        KeyValues{"Output3DHits",     std::vector<std::string>{"GGTF_3DHits"}}
-      })
-  {
+      : MultiTransformer(name, svcLoc,
+          // Inputs (match upstream names)
+          {
+            KeyValues("InputPlanarHitCollections", std::vector<std::string>{"InputPlanarHitCollections"}),
+            KeyValues("InputWireHitCollections",   std::vector<std::string>{"InputWireHitCollections"})
+          },
+          // Outputs (match upstream names)
+          {
+            KeyValues("OutputTracksGGTF", std::vector<std::string>{"OutputTracksGGTF"}),
+            KeyValues("Output3DHits",     std::vector<std::string>{"GGTF_3DHits"})
+          }) {
     m_geoSvc = serviceLocator()->service(m_geoSvcName);
   }
 
+  // ---------- properties ----------
+  // ONNX / clustering
+  Gaudi::Property<std::string> m_modelPath{this, "ModelPath", "", "Path to ONNX model"};
+  Gaudi::Property<double>      m_tbeta    {this, "Tbeta", 0.6, "clustering beta threshold"};
+  Gaudi::Property<double>      m_td       {this, "Td",    0.3, "clustering distance threshold"};
+
+  // Safety + performance
+  Gaudi::Property<int>         m_maxHitsPerEvent{this, "MaxHitsPerEvent", 0, "Cap input hits per event (0=off)"};
+  Gaudi::Property<int>         m_onnxChunk{this, "OnnxChunk", 4096, "Chunk size for ONNX inference"};
+
+  // 3D hits controls
+  Gaudi::Property<bool>        m_produce3DHits{this, "Produce3DHits", true, "Emit GGTF_3DHits"};
+  Gaudi::Property<int>         m_max3DHitsPerEvent{this, "Max3DHitsPerEvent", 200000, "Cap 3D hits per event"};
+  Gaudi::Property<int>         m_max3DPerTrack{this, "Max3DPerTrack", 20000, "Cap 3D hits per track"};
+
+  // Wire projection tuning
+  Gaudi::Property<double>      m_wireGateMM{this, "WireGateMM", 12.0, "XY residual gate / clamp for wires [mm]"};
+
+  // Scalar propagation + default covariances for 3D hits
+  Gaudi::Property<bool>        m_propagateScalars{this, "PropagateScalars", true,
+                                                  "Copy cellID/time/quality/EDep/EDepError into 3D hits"};
+  Gaudi::Property<double>      m_defaultSigmaXYMM{this, "DefaultSigmaXYMM", 0.10, "Fallback σX/Y [mm]"};
+  Gaudi::Property<double>      m_defaultSigmaZMM {this, "DefaultSigmaZMM",  1.00, "Fallback σZ [mm]"};
+
+  // Services / detector
+  Gaudi::Property<std::string> m_geoSvcName{this, "GeoSvcName", "GeoSvc", "GeoSvc name"};
+  Gaudi::Property<std::string> m_uidSvcName{this, "UidSvcName", "uidSvc", "UniqueIDGenSvc name"};
+  Gaudi::Property<std::string> m_dchName   {this, "DchName", "DCH_v2", "Drift chamber detector name"};
+
+  // ---------- state ----------
+  std::unique_ptr<Ort::Env>          m_fEnv;
+  std::unique_ptr<Ort::Session>      m_fSession;
+  Ort::SessionOptions                m_fSessionOptions;
+  std::unique_ptr<Ort::MemoryInfo>   m_fInfo;
+  std::vector<std::string>           m_inNamesStr, m_outNamesStr;
+  std::vector<const char*>           m_inNames, m_outNames;
+
+  SmartIF<IGeoSvc>                   m_geoSvc;
+  dd4hep::DDSegmentation::BitFieldCoder* m_dchDecoder{nullptr};
+
+  mutable int m_evt{0};
+
+  // ---------- init ----------
   StatusCode initialize() override {
-    // --- ONNX init (unchanged) ---
-    m_fInfo = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    auto envLocal = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ONNX_Runtime");
-    m_fEnv = std::move(envLocal);
+    at::set_num_threads(1);
+    at::set_num_interop_threads(1);
+
+    // ONNX
+    m_fInfo = std::make_unique<Ort::MemoryInfo>(
+        Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault));
+    m_fEnv = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ONNX_Runtime");
     m_fSessionOptions.SetIntraOpNumThreads(1);
+    m_fSessionOptions.SetInterOpNumThreads(1);
     m_fSessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
+    m_fSessionOptions.DisableMemPattern();
+    m_fSessionOptions.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
 
-    auto sessionLocal = std::make_unique<Ort::Session>(*m_fEnv, m_modelPath.value().c_str(), m_fSessionOptions);
-    m_fSession = std::move(sessionLocal);
-
-    Ort::AllocatorWithDefaultOptions allocator;
-    std::size_t i = 0;
-    const auto inputNames  = m_fSession->GetInputNameAllocated(i, allocator).release();
-    const auto outputNames = m_fSession->GetOutputNameAllocated(i, allocator).release();
-    m_fInames.push_back(inputNames);
-    m_fOnames.push_back(outputNames);
-
-    // --- DCH info / decoder (best effort) ---
-    try {
-      dd4hep::DetElement dchDet = m_geoSvc->getDetector()->detectors().at(m_dchName.value().c_str());
-      m_dchInfo = dchDet.extension<dd4hep::rec::DCH_info>();
-      dd4hep::SensitiveDetector dchSens = m_geoSvc->getDetector()->sensitiveDetector(m_dchName.value().c_str());
-      dd4hep::Readout dchRed = dchSens.readout();
-      m_dchDecoder = dchRed.idSpec().decoder();
-    } catch (...) {
-      // non-fatal
+    m_fSession = std::make_unique<Ort::Session>(*m_fEnv, m_modelPath.value().c_str(), m_fSessionOptions);
+    {
+      Ort::AllocatorWithDefaultOptions alloc;
+      const std::size_t i = 0;
+      m_inNamesStr.emplace_back(m_fSession->GetInputNameAllocated(i,  alloc).get());
+      m_outNamesStr.emplace_back(m_fSession->GetOutputNameAllocated(i, alloc).get());
+      m_inNames  = { m_inNamesStr.back().c_str() };
+      m_outNames = { m_outNamesStr.back().c_str() };
     }
 
+    // Optional decoder
+    if (m_geoSvc && m_geoSvc->getDetector()) {
+      try {
+        auto sd = m_geoSvc->getDetector()->sensitiveDetector(m_dchName.value());
+        if (sd.isValid()) {
+          auto ro = sd.readout();
+          if (ro.isValid()) m_dchDecoder = ro.idSpec().decoder();
+        }
+      } catch (...) {}
+    }
+
+    auto [rss,hwm] = readRSSkB();
     info() << "GGTF_tracking init | model=" << m_modelPath.value()
-           << " | tbeta=" << m_tbeta.value()
-           << " | td="    << m_td.value()
+           << " | Tbeta=" << m_tbeta.value()
+           << " | Td=" << m_td.value()
            << " | Produce3DHits=" << (m_produce3DHits.value()?"true":"false")
+           << " | OnnxChunk=" << m_onnxChunk.value()
+           << " | MaxHitsPerEvent=" << m_maxHitsPerEvent.value()
+           << " | RSS=" << rss/1024.0 << "MB, Peak=" << hwm/1024.0 << "MB"
            << endmsg;
 
     return StatusCode::SUCCESS;
   }
 
+  // ---------- main ----------
   std::tuple<extension::TrackCollection, edm4hep::TrackerHit3DCollection>
   operator()(const std::vector<const edm4hep::TrackerHitPlaneCollection*>& inputPlanarHitCollections,
              const std::vector<const extension::SenseWireHitCollection*>&   inputWireHitCollections) const override
   {
-    info() << "Processing event number: " << m_indexCounter++ << endmsg;
+    torch::NoGradGuard _nograd;
+    ++m_evt;
+    StepTimer t_all;
 
-    // Outputs
-    extension::TrackCollection     outputTracks;
-    edm4hep::TrackerHit3DCollection output3D; // NEW
+    extension::TrackCollection      outputTracks;
+    edm4hep::TrackerHit3DCollection output3D;
 
-    // Early exit when 3D production is disabled and no tracks expected
-    // (we still produce tracks per clusters below; produce3DHits only gates 3D creation)
-    constexpr int kMaxModelHits = 200000; // absolute guard
+    auto logMem = [&](const char* tag) {
+      auto [rss,hwm] = readRSSkB();
+      info() << "[evt " << m_evt << "] " << tag
+             << " | RSS=" << rss/1024.0 << "MB, Peak=" << hwm/1024.0 << "MB" << endmsg;
+    };
 
-    // --- Flatten inputs for model (unchanged) ---
-    std::vector<float>   listGlobalInputs; listGlobalInputs.reserve(7 * 4096);
-    int globalHitIndex = 0;
+    // -------- flatten inputs --------
+    int64_t nPlanar=0, nWire=0;
+    for (auto c : inputPlanarHitCollections) nPlanar += c ? c->size() : 0;
+    for (auto c : inputWireHitCollections)   nWire   += c ? c->size() : 0;
+    int64_t nEst = nPlanar + nWire;
 
-    // Planar bookkeeping
-    std::vector<int64_t> listHitTypePlanar;
-    std::vector<int64_t> listPlanarHitIndices; // [collIdx, subIdx] pairs
-    int planarHitIndex = 0, planarHitCollectionIndex = 0;
-
-    for (const auto* inputHitCollection : inputPlanarHitCollections) {
-      int planarHitSubCollectionIndex = 0;
-      for (const auto& hit : *inputHitCollection) {
-        // x,y,z
-        listGlobalInputs.push_back(hit.getPosition().x);
-        listGlobalInputs.push_back(hit.getPosition().y);
-        listGlobalInputs.push_back(hit.getPosition().z);
-        // placeholders (unchanged)
-        listGlobalInputs.push_back(1.0f);
-        listGlobalInputs.push_back(0.0f);
-        listGlobalInputs.push_back(0.0f);
-        listGlobalInputs.push_back(0.0f);
-
-        listHitTypePlanar.push_back(globalHitIndex);
-        listPlanarHitIndices.push_back(planarHitCollectionIndex);
-        listPlanarHitIndices.push_back(planarHitSubCollectionIndex);
-
-        ++globalHitIndex;
-        ++planarHitIndex;
-        ++planarHitSubCollectionIndex;
-
-        if (globalHitIndex >= kMaxModelHits) break;
-      }
-      ++planarHitCollectionIndex;
-      if (globalHitIndex >= kMaxModelHits) break;
+    if (m_maxHitsPerEvent > 0 && nEst > m_maxHitsPerEvent) {
+      warning() << "[evt " << m_evt << "] capping hits " << nEst
+                << " -> " << int(m_maxHitsPerEvent) << endmsg;
+      nEst = m_maxHitsPerEvent;
     }
 
-    // Wire bookkeeping
-    std::vector<int64_t> listHitTypeWire;
-    std::vector<int64_t> listWireHitIndices; // [collIdx, subIdx] pairs
-    int wireHitIndex = 0, wireHitCollectionIndex = 0;
+    std::vector<float>    gInputs;   gInputs.reserve(std::max<int64_t>(nEst*7, 128));
+    std::vector<int64_t>  tagType;   tagType.reserve(std::max<int64_t>(nEst, 128));   // 0=planar, 1=wire
+    std::vector<int64_t>  tagA, tagB; // collection idx, hit idx
+    std::vector<TVector3> posCache;  posCache.reserve(tagType.capacity());  // for seeding/projecting
 
-    for (const auto* inputHitCollection : inputWireHitCollections) {
-      int wireHitSubCollectionIndex = 0;
-      for (const auto& inputHit : *inputHitCollection) {
-        // wire position (global)
-        edm4hep::Vector3d wirePos = inputHit.getPosition();
-        TVector3 wirePosV(wirePos.x, wirePos.y, wirePos.z);
+    auto push_planar = [&](int ic, int ih, const edm4hep::TrackerHitPlane& h) {
+      const auto p = h.getPosition();
+      gInputs.insert(gInputs.end(), {float(p.x), float(p.y), float(p.z), 1.f, 0.f, 0.f, 0.f});
+      tagType.push_back(0); tagA.push_back(ic); tagB.push_back(ih);
+      posCache.emplace_back(p.x, p.y, p.z);
+    };
 
-        // drift geometry
-        double distanceToWire     = inputHit.getDistanceToWire();
-        double wireAzimuthalAngle = inputHit.getWireAzimuthalAngle();
-        double wireStereoAngle    = inputHit.getWireStereoAngle();
+    auto push_wire = [&](int ic, int ih, const extension::SenseWireHit& h) {
+      const auto wp = h.getPosition();
+      const double d   = h.getDistanceToWire();
+      const double phi = h.getWireAzimuthalAngle();
+      const double st  = h.getWireStereoAngle();
 
-        // wire direction z'
-        TVector3 direction(0,0,1);
-        direction.RotateX(wireStereoAngle);
-        direction.RotateZ(wireAzimuthalAngle);
-        TVector3 zPrime = direction.Unit();
+      TVector3 wpos(wp.x, wp.y, wp.z);
+      TVector3 dir(0,0,1); dir.RotateX(st); dir.RotateZ(phi); dir = dir.Unit();
 
-        // x' orthogonal to z'
-        TVector3 xPrime(1.0, 0.0, -direction.X()/std::max(1e-9, direction.Z()));
-        xPrime = xPrime.Unit();
-        // y' = z' x x'
-        TVector3 yPrime = zPrime.Cross(xPrime).Unit();
+      TVector3 xprime(1.0, 0.0, -dir.X()/std::max(1e-9, dir.Z())); xprime = xprime.Unit();
+      TVector3 yprime = dir.Cross(xprime).Unit();
 
-        // left/right local/global candidates (mm)
-        TVector3 leftLocal (-distanceToWire, 0.0, 0.0);
-        TVector3 rightLocal( distanceToWire, 0.0, 0.0);
-        TVector3 leftGlobal  = xPrime*leftLocal.X()  + yPrime*leftLocal.Y()  + zPrime*leftLocal.Z()  + wirePosV;
-        TVector3 rightGlobal = xPrime*rightLocal.X() + yPrime*rightLocal.Y() + zPrime*rightLocal.Z() + wirePosV;
+      const TVector3 l(-d,0,0), r(+d,0,0);
+      const auto L = xprime*l.X() + yprime*l.Y() + dir*l.Z() + wpos;
+      const auto R = xprime*r.X() + yprime*r.Y() + dir*r.Z() + wpos;
+      const auto M = 0.5*(L+R);
 
-        // Pack model input (unchanged: base at left, diff = right-left)
-        listGlobalInputs.push_back(leftGlobal.X());
-        listGlobalInputs.push_back(leftGlobal.Y());
-        listGlobalInputs.push_back(leftGlobal.Z());
-        listGlobalInputs.push_back(0.0f);
-        listGlobalInputs.push_back(rightGlobal.X() - leftGlobal.X());
-        listGlobalInputs.push_back(rightGlobal.Y() - leftGlobal.Y());
-        listGlobalInputs.push_back(rightGlobal.Z() - leftGlobal.Z());
+      gInputs.insert(gInputs.end(),
+                     {float(M.X()), float(M.Y()), float(M.Z()),
+                      0.f, float(R.X()-L.X()), float(R.Y()-L.Y()), float(R.Z()-L.Z())});
+      tagType.push_back(1); tagA.push_back(ic); tagB.push_back(ih);
+      posCache.emplace_back(wp.x, wp.y, wp.z); // store wire center (mm)
+    };
 
-        listHitTypeWire.push_back(globalHitIndex);
-        listWireHitIndices.push_back(wireHitCollectionIndex);
-        listWireHitIndices.push_back(wireHitSubCollectionIndex);
-
-        ++globalHitIndex;
-        ++wireHitIndex;
-        ++wireHitSubCollectionIndex;
-
-        if (globalHitIndex >= kMaxModelHits) break;
+    {
+      StepTimer t_flat;
+      int ic=0;
+      for (auto c : inputPlanarHitCollections) {
+        if (!c) { ++ic; continue; }
+        for (int i=0, n=c->size(); i<n; ++i) {
+          if (m_maxHitsPerEvent>0 && (int)tagType.size()>=m_maxHitsPerEvent) break;
+          push_planar(ic, i, (*c)[i]);
+        }
+        ++ic;
+        if (m_maxHitsPerEvent>0 && (int)tagType.size()>=m_maxHitsPerEvent) break;
       }
-      ++wireHitCollectionIndex;
-      if (globalHitIndex >= kMaxModelHits) break;
+      ic=0;
+      for (auto c : inputWireHitCollections) {
+        if (!c) { ++ic; continue; }
+        for (int i=0, n=c->size(); i<n; ++i) {
+          if (m_maxHitsPerEvent>0 && (int)tagType.size()>=m_maxHitsPerEvent) break;
+          push_wire(ic, i, (*c)[i]);
+        }
+        ++ic;
+        if (m_maxHitsPerEvent>0 && (int)tagType.size()>=m_maxHitsPerEvent) break;
+      }
+      info() << "[evt " << m_evt << "] flatten: planar=" << nPlanar
+             << " wire=" << nWire << " -> used=" << tagType.size()
+             << " in " << t_flat.ms() << " ms" << endmsg;
     }
 
-    // Early out: nothing to run
-    if (globalHitIndex <= 0) {
+    const int64_t nHits = (int64_t)tagType.size();
+    if (nHits == 0) {
       return std::make_tuple(std::move(outputTracks), std::move(output3D));
     }
+    logMem("after-flatten");
 
-    // ---- Build tensors for clustering step (unchanged) ----
-    torch::Tensor listHitTypePlanarTensor =
-        torch::from_blob(listHitTypePlanar.data(), {planarHitIndex}, torch::kFloat32);
-    torch::Tensor listPlanarHitIndicesTensor =
-        torch::from_blob(listPlanarHitIndices.data(), {planarHitIndex, 2}, torch::kInt64);
+    // -------- ONNX (chunked) --------
+    std::vector<float> embed; embed.resize(4 * nHits);
+    {
+      StepTimer t_onnx;
+      const int64_t CH = std::max<int>(1, m_onnxChunk.value());
+      int64_t done = 0;
+      while (done < nHits) {
+        const int64_t take = std::min<int64_t>(CH, nHits - done);
+        const std::vector<int64_t> shape{take, 7};
+        Ort::Value in = Ort::Value::CreateTensor<float>(
+            *m_fInfo, const_cast<float*>(gInputs.data() + done*7), take*7, shape.data(), shape.size());
+        auto outs = m_fSession->Run(Ort::RunOptions{nullptr},
+                                    m_inNames.data(), &in, 1,
+                                    m_outNames.data(), m_outNames.size());
+        float* outptr = outs.front().GetTensorMutableData<float>();
+        std::copy(outptr, outptr + 4*take, embed.data() + 4*done);
+        done += take;
+      }
+      std::vector<float>().swap(gInputs); // free
+      info() << "[evt " << m_evt << "] onnx: nHits=" << nHits
+             << " in " << t_onnx.ms() << " ms" << endmsg;
+    }
+    logMem("after-onnx");
 
-    torch::Tensor listHitTypeWireTensor =
-        torch::from_blob(listHitTypeWire.data(), {wireHitIndex}, torch::kFloat32);
-    torch::Tensor listWireHitIndicesTensor =
-        torch::from_blob(listWireHitIndices.data(), {wireHitIndex, 2}, torch::kInt64);
+    // -------- clustering --------
+    torch::Tensor clustering;
+    {
+      StepTimer t_cluster;
+      clustering = get_clustering(embed, nHits, m_tbeta.value(), m_td.value());
+      info() << "[evt " << m_evt << "] clustering in " << t_cluster.ms() << " ms" << endmsg;
+    }
+    std::vector<float>().swap(embed);
+    logMem("after-clustering");
 
-    torch::Tensor planarTypeTensor = torch::zeros({planarHitIndex, 1}, torch::kInt64);
-    torch::Tensor wireTypeTensor   = torch::ones ({wireHitIndex,   1}, torch::kInt64);
-
-    torch::Tensor planarTypeIndexTensor = torch::cat({planarTypeTensor, listPlanarHitIndicesTensor}, 1);
-    torch::Tensor wireTypeIndexTensor   = torch::cat({wireTypeTensor,   listWireHitIndicesTensor}, 1);
-    torch::Tensor listHitIndicesGlobal  = torch::cat({planarTypeIndexTensor, wireTypeIndexTensor}, 0);
-
-    // ---- Run model (unchanged) ----
-    const size_t totalSize = static_cast<size_t>(globalHitIndex) * 7;
-    std::vector<int64_t> inputShape{globalHitIndex, 7};
-
-    std::vector<Ort::Value> inputTensors;
-    inputTensors.emplace_back(Ort::Value::CreateTensor<float>(
-        m_fInfo, listGlobalInputs.data(), totalSize, inputShape.data(), inputShape.size()));
-
-    auto outputModelTensors = m_fSession->Run(Ort::RunOptions{nullptr},
-                                              m_fInames.data(), inputTensors.data(), m_fInames.size(),
-                                              m_fOnames.data(), m_fOnames.size());
-
-    float* outPtr = outputModelTensors.front().GetTensorMutableData<float>();
-    std::vector<float> outputModelVector(outPtr, outPtr + static_cast<size_t>(globalHitIndex) * 4);
-
-    // ---- Clustering (unchanged) ----
-    auto clusteringIndeces = get_clustering(outputModelVector, globalHitIndex, m_tbeta, m_td);
-    torch::Tensor uniqueTensor, inverseIndices;
-    std::tie(uniqueTensor, inverseIndices) = at::_unique(clusteringIndeces, /*sorted=*/true, /*return_inverse=*/true);
-
-    // If there are any clusters at all, create a dummy track when label 0 is not present (matches previous behaviour)
-    const int64_t numTracks = uniqueTensor.numel();
-    const bool hasZero = (uniqueTensor == 0).any().item<bool>();
-    if (!hasZero && numTracks > 0) {
-      auto t = outputTracks.create();
-      t.setType(0);
+    // Unique labels + inverse index
+    torch::Tensor uniques, invIdx;
+    {
+      StepTimer t_uni;
+      std::tie(uniques, invIdx) = at::_unique(clustering, /*sorted=*/true, /*return_inverse=*/true);
+      info() << "[evt " << m_evt << "] unique: nLabels=" << uniques.size(0)
+             << " in " << t_uni.ms() << " ms" << endmsg;
     }
 
-    // --- Helper to fetch planar/wire hit by (coll,sub) ---
-    auto getPlanar = [&](int64_t coll, int64_t sub) -> edm4hep::TrackerHitPlane {
-      const auto* col = inputPlanarHitCollections.at(coll);
-      return col->at(sub);
-    };
-    auto getWire = [&](int64_t coll, int64_t sub) -> extension::SenseWireHit {
-      const auto* col = inputWireHitCollections.at(coll);
-      return col->at(sub);
-    };
+    // Build groups via inverse index
+    std::vector<std::vector<int64_t>> groups;
+    int64_t zeroLabelPos = -1;
+    torch::Tensor uniques_cpu;
+    {
+      StepTimer t_bucket;
+      uniques_cpu = uniques.to(torch::kCPU);
+      auto inv_cpu = invIdx.to(torch::kCPU).contiguous();
+      const int64_t nLabels = uniques_cpu.size(0);
+      groups.resize(nLabels);
 
-    // ---- Per-cluster loop: build tracks and (optionally) GGTF_3DHits ----
-    int total3DThisEvent = 0;
+      for (int64_t i=0; i<nLabels; ++i)
+        if (uniques_cpu[i].item<int64_t>() == 0) { zeroLabelPos = i; break; }
 
-    for (int64_t i = 0; i < numTracks; ++i) {
-      const auto idTrackTensor = uniqueTensor.index({i});
-      const int  idTrack       = idTrackTensor.item<int>();
-
-      // Build a mask and indices for current cluster
-      torch::Tensor mask    = (clusteringIndeces == idTrack);
-      torch::Tensor indices = torch::nonzero(mask).flatten();
-      const int64_t N = indices.size(0);
-      if (N <= 0) continue;
-
-      // Create track
-      auto outTrk = outputTracks.create();
-      outTrk.setType(idTrack);
-
-      // Precompute XY centroid from *wire positions* for LR choice
-      double cx=0.0, cy=0.0; int nWireCent=0;
-
-      auto listHitIndicesGlobalView = listHitIndicesGlobal.accessor<int64_t, 2>();
-      auto idxView = indices.accessor<int64_t, 1>();
-
-      // First pass: accumulate centroid & attach raw hits to Track
-      for (int64_t j = 0; j < N; ++j) {
-        const int64_t row  = idxView[j];
-        const int64_t type = listHitIndicesGlobalView[row][0];
-        const int64_t cidx = listHitIndicesGlobalView[row][1];
-        const int64_t sidx = listHitIndicesGlobalView[row][2];
-
-        if (type == 0) {
-          // planar
-          auto ph = getPlanar(cidx, sidx);
-          outTrk.addToTrackerHits(ph);
-        } else {
-          // wire
-          auto wh = getWire(cidx, sidx);
-          // wire global position (center)
-          const auto wp = wh.getPosition();
-          cx += wp.x; cy += wp.y; ++nWireCent;
-          outTrk.addToTrackerHits(wh);
-        }
+      auto acc = inv_cpu.accessor<int64_t,1>();
+      for (int64_t i=0; i<nHits; ++i) {
+        const int64_t pos = acc[i];
+        if (pos>=0 && pos<nLabels) groups[pos].push_back(i);
       }
-      const bool haveCentroid = (nWireCent > 0);
-      const double cxyx = haveCentroid ? (cx / nWireCent) : 0.0;
-      const double cxyy = haveCentroid ? (cy / nWireCent) : 0.0;
-
-      // Second pass: optionally create GGTF_3DHits
-      int madeForThisTrack = 0;
-      if (m_produce3DHits.value()) {
-        for (int64_t j = 0; j < N; ++j) {
-          if (m_max3DHitsPerEvent.value() > 0 && total3DThisEvent >= m_max3DHitsPerEvent.value()) break;
-          if (m_max3DPerTrack.value() > 0 && madeForThisTrack >= m_max3DPerTrack.value()) break;
-
-          const int64_t row  = idxView[j];
-          const int64_t type = listHitIndicesGlobalView[row][0];
-          const int64_t cidx = listHitIndicesGlobalView[row][1];
-          const int64_t sidx = listHitIndicesGlobalView[row][2];
-
-          if (type == 0) {
-            // planar -> direct 3D point
-            auto ph = getPlanar(cidx, sidx);
-            const auto p = ph.getPosition();
-
-            auto h3 = output3D.create();
-            h3.setPosition({p.x, p.y, p.z});
-            h3.setType(idTrack);
-            h3.setCellID(ph.getCellID());
-            h3.setTime(0.0f);
-            // cov diag in mm^2 (XY 0.5^2, Z 3^2): [xx, xy, xz, yy, yz, zz]
-            h3.setCovMatrix({0.25f, 0.f, 0.f, 0.25f, 0.f, 9.0f});
-
-            ++madeForThisTrack; ++total3DThisEvent;
-          } else {
-            // wire -> choose left/right by proximity to centroid in XY
-            auto wh = getWire(cidx, sidx);
-
-            edm4hep::Vector3d wirePos = wh.getPosition();
-            TVector3 wirePosV(wirePos.x, wirePos.y, wirePos.z);
-
-            const double distanceToWire     = wh.getDistanceToWire();
-            const double wireAzimuthalAngle = wh.getWireAzimuthalAngle();
-            const double wireStereoAngle    = wh.getWireStereoAngle();
-
-            TVector3 direction(0,0,1);
-            direction.RotateX(wireStereoAngle);
-            direction.RotateZ(wireAzimuthalAngle);
-            TVector3 zPrime = direction.Unit();
-
-            TVector3 xPrime(1.0, 0.0, -direction.X()/std::max(1e-9, direction.Z()));
-            xPrime = xPrime.Unit();
-            TVector3 yPrime = zPrime.Cross(xPrime).Unit();
-
-            TVector3 leftLocal (-distanceToWire, 0.0, 0.0);
-            TVector3 rightLocal( distanceToWire, 0.0, 0.0);
-            TVector3 leftGlobal  = xPrime*leftLocal.X()  + yPrime*leftLocal.Y()  + zPrime*leftLocal.Z()  + wirePosV;
-            TVector3 rightGlobal = xPrime*rightLocal.X() + yPrime*rightLocal.Y() + zPrime*rightLocal.Z() + wirePosV;
-
-            TVector3 chosen = leftGlobal;
-            if (haveCentroid) {
-              const double dl = (leftGlobal  - TVector3(cxyx, cxyy, leftGlobal.Z())).Perp2();
-              const double dr = (rightGlobal - TVector3(cxyx, cxyy, rightGlobal.Z())).Perp2();
-              chosen = (dr < dl ? rightGlobal : leftGlobal);
-            }
-
-            auto h3 = output3D.create();
-            h3.setPosition({(double)chosen.X(), (double)chosen.Y(), (double)chosen.Z()});
-            h3.setType(idTrack);
-            h3.setCellID(wh.getCellID());
-            h3.setTime(0.0f);
-            h3.setCovMatrix({0.25f, 0.f, 0.f, 0.25f, 0.f, 9.0f});
-
-            ++madeForThisTrack; ++total3DThisEvent;
-          }
-        }
-      }
+      info() << "[evt " << m_evt << "] bucket in " << t_bucket.ms() << " ms" << endmsg;
     }
+    clustering = torch::Tensor(); invIdx = torch::Tensor();
+    logMem("after-bucket");
 
-    // Cleanup tensors/buffers (as before)
-    inverseIndices.reset();
-    uniqueTensor.reset();
-    clusteringIndeces.reset();
-    inputTensors.clear();
-    outputModelTensors.clear();
+    // Helper lambdas to create 3D hits
+    int total3D = 0;
 
-    listHitTypePlanarTensor.reset();
-    listPlanarHitIndicesTensor.reset();
-    listHitTypeWireTensor.reset();
-    listWireHitIndicesTensor.reset();
+    auto add_planar_3d = [&](const edm4hep::TrackerHitPlane& hp,
+                             int labelValue,
+                             edm4hep::TrackerHit3DCollection& out3Dcoll) -> bool {
+      if (!m_produce3DHits.value()) return false;
+      auto h = out3Dcoll.create();
 
-    std::vector<int64_t>().swap(listHitTypePlanar);
-    std::vector<int64_t>().swap(listPlanarHitIndices);
-    std::vector<int64_t>().swap(listHitTypeWire);
-    std::vector<int64_t>().swap(listWireHitIndices);
-    std::vector<float>().swap(listGlobalInputs);
+      const auto p = hp.getPosition();
+      h.setPosition(edm4hep::Vector3d{p.x, p.y, p.z});
+
+      if (m_propagateScalars.value()) {
+        try { h.setCellID(hp.getCellID()); } catch (...) {}
+        try { h.setTime(hp.getTime()); } catch (...) { h.setTime(0.f); }
+        try { h.setQuality(hp.getQuality()); } catch (...) {}
+        try { h.setEDep(hp.getEDep()); } catch (...) { h.setEDep(0.f); }
+        try { h.setEDepError(hp.getEDepError()); } catch (...) { h.setEDepError(0.f); }
+      }
+      try { h.setType(labelValue); } catch (...) {}
+
+      const float sx = std::max<float>(1e-6f, float(m_defaultSigmaXYMM.value()));
+      const float sz = std::max<float>(1e-6f, float(m_defaultSigmaZMM.value()));
+      h.setCovMatrix(diag_cov_3d(sx, sx, sz));
+      return true;
+    };
+
+    auto add_wire_3d = [&](const extension::SenseWireHit& hw,
+                           const TVector3& M,
+                           int labelValue,
+                           edm4hep::TrackerHit3DCollection& out3Dcol) -> bool {
+      if (!m_produce3DHits.value()) return false;
+      auto h = out3Dcol.create();
+      h.setPosition(edm4hep::Vector3d{double(M.X()), double(M.Y()), double(M.Z())});
+
+      if (m_propagateScalars.value()) {
+        h.setCellID(hw.getCellID());
+        h.setTime(hw.getTime());
+        h.setQuality(hw.getQuality());
+        h.setEDep(hw.getEDep());
+        h.setEDepError(hw.getEDepError());
+      }
+      try { h.setType(labelValue); } catch (...) {}
+
+      double sXY = double(hw.getDistanceToWireError());
+      double sZ  = double(hw.getPositionAlongWireError());
+      if (!(sXY > 0.0)) sXY = m_defaultSigmaXYMM.value();
+      if (!(sZ  > 0.0)) sZ  = m_defaultSigmaZMM.value();
+      const float sx = std::max<float>(1e-6f, float(sXY));
+      const float sz = std::max<float>(1e-6f, float(sZ));
+      h.setCovMatrix(diag_cov_3d(sx, sx, sz));
+      return true;
+    };
+
+    auto add_hit_to_track = [&](extension::MutableTrack& trk,
+                                int64_t flatIdx,
+                                const TVector3& Cxy, double R,
+                                int labelValue,
+                                int& made3D_for_track) {
+      const int64_t t  = tagType[flatIdx];
+      const int64_t ia = tagA[flatIdx];
+      const int64_t ib = tagB[flatIdx];
+
+      if (t == 0) {
+        const auto& hp = (*inputPlanarHitCollections[ia])[int(ib)];
+        if (m_produce3DHits.value()
+            && (m_max3DHitsPerEvent.value()==0 || total3D < m_max3DHitsPerEvent.value())
+            && (m_max3DPerTrack.value()==0     || made3D_for_track < m_max3DPerTrack.value())) {
+          if (add_planar_3d(hp, labelValue, output3D)) { ++total3D; ++made3D_for_track; }
+        }
+        trk.addToTrackerHits(hp);
+        return;
+      }
+
+      // Wire: project onto drift circle in XY
+      const auto& hw = (*inputWireHitCollections[ia])[int(ib)];
+      const auto wp  = hw.getPosition();
+      double d = std::abs((double)hw.getDistanceToWire()); // mm
+      if (d > m_wireGateMM.value()) d = m_wireGateMM.value(); // clamp absurd
+
+      TVector3 wxy(wp.x, wp.y, 0.0);
+      TVector3 u = (wxy - Cxy);
+      const double r0 = u.Perp();
+      if (u.Perp2() > 0) u *= (1.0 / u.Perp()); else u = TVector3(1,0,0);
+
+      const double s = (R > r0 ? +1.0 : -1.0);
+      TVector3 M(wxy.X() + s*d*u.X(),
+                 wxy.Y() + s*d*u.Y(),
+                 wp.z); // keep Z from wire center
+
+      // residual gate: ||wxy-C|-R| ≈ d
+      const double e = std::fabs(std::fabs(r0 - R) - d);
+      const bool passGate = (e <= m_wireGateMM.value());
+
+      if (passGate && m_produce3DHits.value()
+          && (m_max3DHitsPerEvent.value()==0 || total3D < m_max3DHitsPerEvent.value())
+          && (m_max3DPerTrack.value()==0     || made3D_for_track < m_max3DPerTrack.value())) {
+        if (add_wire_3d(hw, M, labelValue, output3D)) { ++total3D; ++made3D_for_track; }
+      }
+      trk.addToTrackerHits(hw); // always keep original relation
+    };
+
+    // -------- assemble tracks from groups --------
+    {
+      StepTimer t_build;
+      const int64_t nLabels = (int64_t)groups.size();
+      int nTracks = 0;
+
+      for (int64_t li = 0; li < nLabels; ++li) {
+        if (li == zeroLabelPos) continue;        // skip noise label "0"
+        if (groups[li].empty()) continue;
+
+        auto trk = outputTracks.create();
+        const int labelValue = uniques_cpu[li].item<int>();
+        trk.setType(labelValue);
+
+        // Seed circle: prefer wires if >=3; else any 3 points
+        TVector3 Cxy(0,0,0); double R = 1e9;
+        const auto& vec = groups[li];
+        std::vector<int64_t> wireIdx; wireIdx.reserve(vec.size());
+        for (auto k : vec) if (tagType[k] == 1) wireIdx.push_back(k);
+
+        auto pick3 = [&](const std::vector<int64_t>& v)
+            -> std::tuple<TVector3,TVector3,TVector3,bool> {
+          if (v.size() < 3) return {{},{},{},false};
+          const TVector3 A = posCache[v.front()];
+          const TVector3 B = posCache[v[v.size()/2]];
+          const TVector3 C = posCache[v.back()];
+          return {A,B,C,true};
+        };
+
+        bool ok=false;
+        if (wireIdx.size() >= 3) {
+          auto [A,B,C,have] = pick3(wireIdx);
+          if (have) ok = circle_from_3pts_xy(A,B,C,Cxy,R);
+        }
+        if (!ok && vec.size() >= 3) {
+          const TVector3 A = posCache[vec.front()];
+          const TVector3 B = posCache[vec[vec.size()/2]];
+          const TVector3 C = posCache[vec.back()];
+          ok = circle_from_3pts_xy(A,B,C,Cxy,R);
+        }
+        if (!ok) { Cxy = TVector3(0,0,0); R = 1e9; }
+
+        int made3D_for_track = 0;
+        for (int64_t k : vec) add_hit_to_track(trk, k, Cxy, R, labelValue, made3D_for_track);
+        ++nTracks;
+      }
+
+      info() << "[evt " << m_evt << "] build: tracks=" << nTracks
+             << " created3D=" << total3D
+             << " in " << t_build.ms() << " ms" << endmsg;
+    }
+    logMem("after-build");
+
+    info() << "[evt " << m_evt << "] TOTAL " << t_all.ms() << " ms" << endmsg;
 
     return std::make_tuple(std::move(outputTracks), std::move(output3D));
   }
 
+  // ---------- finalize ----------
   StatusCode finalize() override {
-    info() << "Run report:" << endmsg;
-    info() << "Number of analysed events: " << m_indexCounter << endmsg;
-    info() << "----------------" << endmsg;
+    auto [rss,hwm] = readRSSkB();
+    info() << "GGTF_tracking finalize | events=" << m_evt
+           << " | RSS=" << rss/1024.0 << "MB, Peak=" << hwm/1024.0 << "MB"
+           << endmsg;
     return StatusCode::SUCCESS;
   }
 
-public:
-  mutable int m_indexCounter = 0;
-
 private:
-  // ---- ONNX ----
-  std::unique_ptr<Ort::Env>     m_fEnv;
-  std::unique_ptr<Ort::Session> m_fSession;
-  Ort::SessionOptions           m_fSessionOptions;
-  const OrtMemoryInfo*          m_fInfo{nullptr};
-  std::vector<const char*>      m_fInames;
-  std::vector<const char*>      m_fOnames;
-
-  // ---- Config knobs ----
-  Gaudi::Property<std::string> m_modelPath{this, "ModelPath", "", "ModelPath"};
-  Gaudi::Property<double>      m_tbeta    {this, "Tbeta", 0.6, "tbeta"};
-  Gaudi::Property<double>      m_td       {this, "Td",    0.3, "td"};
-
-  // 3D output controls (wired to your Python args)
-  Gaudi::Property<bool>  m_produce3DHits     {this, "Produce3DHits", false, "If true, emit GGTF_3DHits"};
-  Gaudi::Property<int>   m_max3DHitsPerEvent {this, "Max3DHitsPerEvent", 0, "Cap per event (0=off)"};
-  Gaudi::Property<int>   m_max3DPerTrack     {this, "Max3DPerTrack",     0, "Cap per track (0=off)"};
-
-  // ---- Geometry / services ----
-  Gaudi::Property<std::string> m_geoSvcName{this, "GeoSvcName", "GeoSvc", "The name of the GeoSvc instance"};
-  Gaudi::Property<std::string> m_uidSvcName{this, "UidSvcName", "uidSvc", "The name of the UniqueIDGenSvc instance"};
-  Gaudi::Property<std::string> m_dchName   {this, "DchName", "DCH_v2", "Name of the Drift Chamber detector"};
-
-  SmartIF<IGeoSvc>                        m_geoSvc;
-  dd4hep::rec::DCH_info*                  m_dchInfo{nullptr};
-  dd4hep::DDSegmentation::BitFieldCoder*  m_dchDecoder{nullptr};
+  // (no extra private fields)
 };
 
 DECLARE_COMPONENT(GGTF_tracking)

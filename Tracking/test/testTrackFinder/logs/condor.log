@@ -8203,3 +8203,39 @@
 
 	Job terminated of its own accord at 2025-12-01T22:21:50Z with exit-code 50.
 ...
+006 (16271873.003.000) 12/01 23:22:23 Image size of job updated: 2361256
+	2306  -  MemoryUsage of job (MB)
+	2361256  -  ResidentSetSize of job (KB)
+...
+006 (16271873.003.000) 12/01 23:27:24 Image size of job updated: 2442500
+	2386  -  MemoryUsage of job (MB)
+	2442500  -  ResidentSetSize of job (KB)
+...
+006 (16271873.003.000) 12/01 23:32:24 Image size of job updated: 2452296
+	2395  -  MemoryUsage of job (MB)
+	2452296  -  ResidentSetSize of job (KB)
+...
+040 (16271873.003.000) 12/01 23:35:14 Started transferring output files
+...
+040 (16271873.003.000) 12/01 23:35:14 Finished transferring output files
+...
+005 (16271873.003.000) 12/01 23:35:14 Job terminated.
+	(1) Normal termination (return value 50)
+		Usr 0 00:17:21, Sys 0 00:00:13  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:17:21, Sys 0 00:00:13  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	888501  -  Run Bytes Sent By Job
+	7580  -  Run Bytes Received By Job
+	888501  -  Total Bytes Sent By Job
+	7580  -  Total Bytes Received By Job
+	Partitionable Resources :     Usage  Request Allocated 
+	   Cpus                 :      0.99        1         1 
+	   Disk (KB)            : 143802     2097152   2099894 
+	   GPUs                 :                            0 
+	   Memory (MB)          :   2395        3072      3100 
+	   TimeExecute (s)      :   1084                       
+	   TimeSlotBusy (s)     :   1086                       
+
+	Job terminated of its own accord at 2025-12-01T22:35:14Z with exit-code 50.
+...

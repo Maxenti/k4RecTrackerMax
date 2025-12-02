@@ -2,3 +2,6 @@
 *.tar.gz
 *.onnx
 *.onnx.md5
+build/
+install/
+*.log
