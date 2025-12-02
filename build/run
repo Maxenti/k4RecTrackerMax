@@ -1,4 +1,0 @@
-#!/bin/sh
-# Auto-generated script to set the environment before the execution of a command
-. /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/build/k4rectrackerenv.sh
-exec "$@"
