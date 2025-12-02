@@ -1,9 +1,10 @@
-[pipeline] TopAlg order: ['DCHdigi_v01/DCHdigi_v01', 'GGTF_tracking/GGTF_tracking', 'GenFit2DCHFitter/GenFit2DCHFitter']
-[k4run - INFO] k4run.main: --> DCHdigi_v01 --> GGTF_tracking --> GenFit2DCHFitter
+[pipeline] TopAlg order: ['DCHdigi_v02/DCHdigi_v02', 'GGTF_tracking/GGTF_tracking', 'GenFit2DCHFitter/GenFit2DCHFitter']
+[k4run - INFO] k4run.main: --> DCHdigi_v02 --> GGTF_tracking --> GenFit2DCHFitter
+[k4run - INFO] k4run.main: Option name: MemoryAuditor.OutputLevel 0
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.OutputLevel 2
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.Asynchronous False
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.InputPlanarHitCollections []
-[k4run - INFO] k4run.main: Option name: GGTF_tracking.InputWireHitCollections ['DCH_DigiCollection']
+[k4run - INFO] k4run.main: Option name: GGTF_tracking.InputWireHitCollections ['DCHDigi2Collection']
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.OutputTracksGGTF ['CDCHTracks']
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.Output3DHits ['GGTF_3DHits']
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.ModelPath /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx
@@ -14,869 +15,95 @@
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.Produce3DHits True
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.Max3DHitsPerEvent 200000
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.Max3DPerTrack 20000
-[k4run - INFO] k4run.main: Option name: GGTF_tracking.WireGateMM 100.0
+[k4run - INFO] k4run.main: Option name: GGTF_tracking.WireGateMM 12.0
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.PropagateScalars True
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.DefaultSigmaXYMM 0.1
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.DefaultSigmaZMM 1.0
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.GeoSvcName GeoSvc
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.UidSvcName uidSvc
 [k4run - INFO] k4run.main: Option name: GGTF_tracking.DchName DCH_v2
-[k4run - INFO] k4run.main: Option name: MemoryAuditor.OutputLevel 0
 ApplicationMgr       INFO Application Manager Configured successfully
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Initialize virtual size = 1068.29 MB resident set size = 514.984 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Initialize virtual size = 1068.29 MB resident set size = 514.984 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Initialize virtual size = 1068.3 MB resident set size = 514.652 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Algs Initialize virtual size = 1068.3 MB resident set size = 514.652 MB
 k4FWCore__Algs      DEBUG GGTF_tracking doesn't exist - created and appended to member list
-k4FWCore__Algs       INFO Member list: Reader/k4FWCore__Reader, DCHdigi_v01, GGTF_tracking, GenFit2DCHFitter
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Initialize virtual size = 1419.57 MB resident set size = 639.484 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Initialize virtual size = 1454.03 MB resident set size = 645.109 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Initialize virtual size = 1454.03 MB resident set size = 645.109 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Initialize virtual size = 1555.02 MB resident set size = 707.734 MB
+k4FWCore__Algs       INFO Member list: Reader/k4FWCore__Reader, DCHdigi_v02, GGTF_tracking, GenFit2DCHFitter
+MemoryAuditor        INFO Memory usage before k4FWCore__Reader Initialize virtual size = 1419.79 MB resident set size = 639.277 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Initialize virtual size = 1454.29 MB resident set size = 645.152 MB
+MemoryAuditor        INFO Memory usage before DCHdigi_v02 Initialize virtual size = 1454.29 MB resident set size = 645.152 MB
+MemoryAuditor        INFO Memory usage has changed after DCHdigi_v02 Initialize virtual size = 1454.29 MB resident set size = 645.152 MB
 GGTF_tracking       DEBUG Property update for OutputLevel : new value = 2
-MemoryAuditor        INFO Memory usage before GGTF_tracking Initialize virtual size = 1555.02 MB resident set size = 707.734 MB
-GGTF_tracking        INFO GGTF_tracking init | model=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx | Tbeta=0.6 | Td=0.3 | Produce3DHits=true | OnnxChunk=4096 | MaxHitsPerEvent=0 | RSS=890.195MB, Peak=890.195MB
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Initialize virtual size = 1726.58 MB resident set size = 889.203 MB
+MemoryAuditor        INFO Memory usage before GGTF_tracking Initialize virtual size = 1454.29 MB resident set size = 645.152 MB
+GGTF_tracking        INFO GGTF_tracking init | model=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx | Tbeta=0.6 | Td=0.3 | Produce3DHits=true | OnnxChunk=4096 | MaxHitsPerEvent=0 | RSS=827.352MB, Peak=827.352MB
+MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Initialize virtual size = 1625.31 MB resident set size = 826.094 MB
 AlgExecStateSvc     DEBUG preInit: will add Alg GGTF_tracking later
 GGTF_tracking       DEBUG input handles: 1
 GGTF_tracking       DEBUG output handles: 2
 GGTF_tracking       DEBUG data dependencies:
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Initialize virtual size = 1726.58 MB resident set size = 889.203 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Initialize virtual size = 1726.58 MB resident set size = 889.328 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Initialize virtual size = 1726.58 MB resident set size = 889.328 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Initialize virtual size = 1726.58 MB resident set size = 889.328 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Initialize virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Initialize virtual size = 1726.58 MB resident set size = 889.453 MB
+MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Initialize virtual size = 1625.31 MB resident set size = 826.094 MB
+MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Initialize virtual size = 1625.31 MB resident set size = 826.219 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Initialize virtual size = 1625.31 MB resident set size = 826.219 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Writer Initialize virtual size = 1625.31 MB resident set size = 826.219 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Initialize virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Initialize virtual size = 1625.31 MB resident set size = 826.344 MB
 ApplicationMgr       INFO Application Manager Initialized successfully
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Start virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Start virtual size = 1726.58 MB resident set size = 889.453 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Algs Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Reader Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before DCHdigi_v02 Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after DCHdigi_v02 Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before GGTF_tracking Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Writer Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Start virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Start virtual size = 1625.31 MB resident set size = 826.344 MB
 ApplicationMgr       INFO Application Manager Started successfully
 AlgExecStateSvc     DEBUG adding alg GGTF_tracking to 1 slots
   +       GGTF_tracking  e: n
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 1726.58 MB resident set size = 889.453 MB
-GGTF_tracking        INFO [evt 1] flatten: planar=0 wire=4383 -> used=4383 in 1 ms
-GGTF_tracking        INFO [evt 1] after-flatten | RSS=890.512MB, Peak=890.512MB
-GGTF_tracking        INFO [evt 1] onnx: nHits=4383 in 11849 ms
-GGTF_tracking        INFO [evt 1] after-onnx | RSS=2073.23MB, Peak=2073.23MB
-GGTF_tracking        INFO [evt 1] clustering in 21 ms
-GGTF_tracking        INFO [evt 1] after-clustering | RSS=2081.82MB, Peak=2081.82MB
-GGTF_tracking        INFO [evt 1] unique: nLabels=58 in 0 ms
-GGTF_tracking        INFO [evt 1] bucket in 0 ms
-GGTF_tracking        INFO [evt 1] after-bucket | RSS=2082.13MB, Peak=2082.13MB
-GGTF_tracking        INFO [evt 1] build: tracks=57 created3D=623 in 0 ms
-GGTF_tracking        INFO [evt 1] after-build | RSS=2082.19MB, Peak=2082.19MB
-GGTF_tracking        INFO [evt 1] TOTAL 11874 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2907.55 MB resident set size = 2081.33 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2907.55 MB resident set size = 2081.33 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2907.55 MB resident set size = 2082.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2907.55 MB resident set size = 2082.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2907.55 MB resident set size = 2082.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2917.94 MB resident set size = 2087.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2917.94 MB resident set size = 2087.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2917.94 MB resident set size = 2087.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2917.94 MB resident set size = 2087.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2917.94 MB resident set size = 2087.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2917.94 MB resident set size = 2088.08 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2917.94 MB resident set size = 2088.08 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2917.94 MB resident set size = 2088.08 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2917.94 MB resident set size = 2088.08 MB
-GGTF_tracking        INFO [evt 2] flatten: planar=0 wire=1172 -> used=1172 in 0 ms
-GGTF_tracking        INFO [evt 2] after-flatten | RSS=2089.08MB, Peak=2089.08MB
-GGTF_tracking        INFO [evt 2] onnx: nHits=1172 in 1673 ms
-GGTF_tracking        INFO [evt 2] after-onnx | RSS=2089.65MB, Peak=2089.65MB
-GGTF_tracking        INFO [evt 2] clustering in 1 ms
-GGTF_tracking        INFO [evt 2] after-clustering | RSS=2089.65MB, Peak=2089.65MB
-GGTF_tracking        INFO [evt 2] unique: nLabels=9 in 0 ms
-GGTF_tracking        INFO [evt 2] bucket in 0 ms
-GGTF_tracking        INFO [evt 2] after-bucket | RSS=2089.65MB, Peak=2089.65MB
-GGTF_tracking        INFO [evt 2] build: tracks=8 created3D=60 in 0 ms
-GGTF_tracking        INFO [evt 2] after-build | RSS=2089.65MB, Peak=2089.65MB
-GGTF_tracking        INFO [evt 2] TOTAL 1676 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2918.54 MB resident set size = 2088.7 MB
-GGTF_tracking        INFO [evt 3] flatten: planar=0 wire=2434 -> used=2434 in 0 ms
-GGTF_tracking        INFO [evt 3] after-flatten | RSS=2089.66MB, Peak=2089.66MB
-GGTF_tracking        INFO [evt 3] onnx: nHits=2434 in 4533 ms
-GGTF_tracking        INFO [evt 3] after-onnx | RSS=2090.3MB, Peak=2090.3MB
-GGTF_tracking        INFO [evt 3] clustering in 3 ms
-GGTF_tracking        INFO [evt 3] after-clustering | RSS=2090.3MB, Peak=2090.3MB
-GGTF_tracking        INFO [evt 3] unique: nLabels=20 in 0 ms
-GGTF_tracking        INFO [evt 3] bucket in 0 ms
-GGTF_tracking        INFO [evt 3] after-bucket | RSS=2090.3MB, Peak=2090.3MB
-GGTF_tracking        INFO [evt 3] build: tracks=19 created3D=249 in 0 ms
-GGTF_tracking        INFO [evt 3] after-build | RSS=2090.3MB, Peak=2090.3MB
-GGTF_tracking        INFO [evt 3] TOTAL 4538 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2919.13 MB resident set size = 2089.33 MB
-GGTF_tracking        INFO [evt 4] flatten: planar=0 wire=5123 -> used=5123 in 1 ms
-GGTF_tracking        INFO [evt 4] after-flatten | RSS=2090.33MB, Peak=2090.33MB
-GGTF_tracking        INFO [evt 4] onnx: nHits=5123 in 12130 ms
-GGTF_tracking        INFO [evt 4] after-onnx | RSS=2092.26MB, Peak=2092.26MB
-GGTF_tracking        INFO [evt 4] clustering in 6 ms
-GGTF_tracking        INFO [evt 4] after-clustering | RSS=2092.26MB, Peak=2092.26MB
-GGTF_tracking        INFO [evt 4] unique: nLabels=35 in 0 ms
-GGTF_tracking        INFO [evt 4] bucket in 0 ms
-GGTF_tracking        INFO [evt 4] after-bucket | RSS=2092.26MB, Peak=2092.26MB
-GGTF_tracking        INFO [evt 4] build: tracks=34 created3D=610 in 0 ms
-GGTF_tracking        INFO [evt 4] after-build | RSS=2092.26MB, Peak=2092.26MB
-GGTF_tracking        INFO [evt 4] TOTAL 12140 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2921.06 MB resident set size = 2091.2 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2921.06 MB resident set size = 2091.2 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2921.06 MB resident set size = 2091.2 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2921.06 MB resident set size = 2091.2 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2921.06 MB resident set size = 2091.2 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-GGTF_tracking        INFO [evt 5] flatten: planar=0 wire=2435 -> used=2435 in 0 ms
-GGTF_tracking        INFO [evt 5] after-flatten | RSS=2092.52MB, Peak=2092.52MB
-GGTF_tracking        INFO [evt 5] onnx: nHits=2435 in 4434 ms
-GGTF_tracking        INFO [evt 5] after-onnx | RSS=2092.55MB, Peak=2092.55MB
-GGTF_tracking        INFO [evt 5] clustering in 5 ms
-GGTF_tracking        INFO [evt 5] after-clustering | RSS=2092.55MB, Peak=2092.55MB
-GGTF_tracking        INFO [evt 5] unique: nLabels=25 in 0 ms
-GGTF_tracking        INFO [evt 5] bucket in 0 ms
-GGTF_tracking        INFO [evt 5] after-bucket | RSS=2092.55MB, Peak=2092.55MB
-GGTF_tracking        INFO [evt 5] build: tracks=24 created3D=451 in 0 ms
-GGTF_tracking        INFO [evt 5] after-build | RSS=2092.55MB, Peak=2092.55MB
-GGTF_tracking        INFO [evt 5] TOTAL 4441 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2921.06 MB resident set size = 2091.45 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2921.06 MB resident set size = 2091.58 MB
-GGTF_tracking        INFO [evt 6] flatten: planar=0 wire=4436 -> used=4436 in 1 ms
-GGTF_tracking        INFO [evt 6] after-flatten | RSS=2092.57MB, Peak=2092.57MB
-GGTF_tracking        INFO [evt 6] onnx: nHits=4436 in 11371 ms
-GGTF_tracking        INFO [evt 6] after-onnx | RSS=2092.98MB, Peak=2092.98MB
-GGTF_tracking        INFO [evt 6] clustering in 7 ms
-GGTF_tracking        INFO [evt 6] after-clustering | RSS=2092.98MB, Peak=2092.98MB
-GGTF_tracking        INFO [evt 6] unique: nLabels=33 in 0 ms
-GGTF_tracking        INFO [evt 6] bucket in 0 ms
-GGTF_tracking        INFO [evt 6] after-bucket | RSS=2092.98MB, Peak=2092.98MB
-GGTF_tracking        INFO [evt 6] build: tracks=32 created3D=455 in 0 ms
-GGTF_tracking        INFO [evt 6] after-build | RSS=2092.98MB, Peak=2092.98MB
-GGTF_tracking        INFO [evt 6] TOTAL 11381 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2921.47 MB resident set size = 2091.95 MB
-GGTF_tracking        INFO [evt 7] flatten: planar=0 wire=1844 -> used=1844 in 0 ms
-GGTF_tracking        INFO [evt 7] after-flatten | RSS=2093.02MB, Peak=2093.02MB
-GGTF_tracking        INFO [evt 7] onnx: nHits=1844 in 2778 ms
-GGTF_tracking        INFO [evt 7] after-onnx | RSS=2093.66MB, Peak=2093.66MB
-GGTF_tracking        INFO [evt 7] clustering in 4 ms
-GGTF_tracking        INFO [evt 7] after-clustering | RSS=2093.66MB, Peak=2093.66MB
-GGTF_tracking        INFO [evt 7] unique: nLabels=25 in 0 ms
-GGTF_tracking        INFO [evt 7] bucket in 0 ms
-GGTF_tracking        INFO [evt 7] after-bucket | RSS=2093.66MB, Peak=2093.66MB
-GGTF_tracking        INFO [evt 7] build: tracks=24 created3D=287 in 0 ms
-GGTF_tracking        INFO [evt 7] after-build | RSS=2093.66MB, Peak=2093.66MB
-GGTF_tracking        INFO [evt 7] TOTAL 2784 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.09 MB resident set size = 2092.58 MB
-GGTF_tracking        INFO [evt 8] flatten: planar=0 wire=2475 -> used=2475 in 0 ms
-GGTF_tracking        INFO [evt 8] after-flatten | RSS=2093.67MB, Peak=2093.67MB
-GGTF_tracking        INFO [evt 8] onnx: nHits=2475 in 4276 ms
-GGTF_tracking        INFO [evt 8] after-onnx | RSS=2093.84MB, Peak=2093.84MB
-GGTF_tracking        INFO [evt 8] clustering in 3 ms
-GGTF_tracking        INFO [evt 8] after-clustering | RSS=2093.84MB, Peak=2093.84MB
-GGTF_tracking        INFO [evt 8] unique: nLabels=27 in 0 ms
-GGTF_tracking        INFO [evt 8] bucket in 0 ms
-GGTF_tracking        INFO [evt 8] after-bucket | RSS=2093.84MB, Peak=2093.84MB
-GGTF_tracking        INFO [evt 8] build: tracks=26 created3D=246 in 0 ms
-GGTF_tracking        INFO [evt 8] after-build | RSS=2093.84MB, Peak=2093.84MB
-GGTF_tracking        INFO [evt 8] TOTAL 4281 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-GGTF_tracking        INFO [evt 9] flatten: planar=0 wire=1994 -> used=1994 in 0 ms
-GGTF_tracking        INFO [evt 9] after-flatten | RSS=2093.86MB, Peak=2093.86MB
-GGTF_tracking        INFO [evt 9] onnx: nHits=1994 in 3162 ms
-GGTF_tracking        INFO [evt 9] after-onnx | RSS=2093.86MB, Peak=2093.86MB
-GGTF_tracking        INFO [evt 9] clustering in 3 ms
-GGTF_tracking        INFO [evt 9] after-clustering | RSS=2093.86MB, Peak=2093.86MB
-GGTF_tracking        INFO [evt 9] unique: nLabels=20 in 0 ms
-GGTF_tracking        INFO [evt 9] bucket in 0 ms
-GGTF_tracking        INFO [evt 9] after-bucket | RSS=2093.86MB, Peak=2093.86MB
-GGTF_tracking        INFO [evt 9] build: tracks=19 created3D=234 in 0 ms
-GGTF_tracking        INFO [evt 9] after-build | RSS=2093.86MB, Peak=2093.86MB
-GGTF_tracking        INFO [evt 9] TOTAL 3166 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-GGTF_tracking        INFO [evt 10] flatten: planar=0 wire=403 -> used=403 in 0 ms
-GGTF_tracking        INFO [evt 10] after-flatten | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 10] onnx: nHits=403 in 495 ms
-GGTF_tracking        INFO [evt 10] after-onnx | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 10] clustering in 0 ms
-GGTF_tracking        INFO [evt 10] after-clustering | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 10] unique: nLabels=5 in 0 ms
-GGTF_tracking        INFO [evt 10] bucket in 0 ms
-GGTF_tracking        INFO [evt 10] after-bucket | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 10] build: tracks=4 created3D=7 in 0 ms
-GGTF_tracking        INFO [evt 10] after-build | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 10] TOTAL 497 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.7 MB
-GGTF_tracking        INFO [evt 11] flatten: planar=0 wire=1269 -> used=1269 in 0 ms
-GGTF_tracking        INFO [evt 11] after-flatten | RSS=2093.88MB, Peak=2093.88MB
-GGTF_tracking        INFO [evt 11] onnx: nHits=1269 in 1686 ms
-GGTF_tracking        INFO [evt 11] after-onnx | RSS=2093.89MB, Peak=2093.89MB
-GGTF_tracking        INFO [evt 11] clustering in 0 ms
-GGTF_tracking        INFO [evt 11] after-clustering | RSS=2093.89MB, Peak=2093.89MB
-GGTF_tracking        INFO [evt 11] unique: nLabels=8 in 0 ms
-GGTF_tracking        INFO [evt 11] bucket in 0 ms
-GGTF_tracking        INFO [evt 11] after-bucket | RSS=2093.89MB, Peak=2093.89MB
-GGTF_tracking        INFO [evt 11] build: tracks=7 created3D=136 in 0 ms
-GGTF_tracking        INFO [evt 11] after-build | RSS=2093.89MB, Peak=2093.89MB
-GGTF_tracking        INFO [evt 11] TOTAL 1688 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-GGTF_tracking        INFO [evt 12] flatten: planar=0 wire=1865 -> used=1865 in 0 ms
-GGTF_tracking        INFO [evt 12] after-flatten | RSS=2093.9MB, Peak=2093.9MB
-GGTF_tracking        INFO [evt 12] onnx: nHits=1865 in 2917 ms
-GGTF_tracking        INFO [evt 12] after-onnx | RSS=2093.9MB, Peak=2093.9MB
-GGTF_tracking        INFO [evt 12] clustering in 1 ms
-GGTF_tracking        INFO [evt 12] after-clustering | RSS=2093.9MB, Peak=2093.9MB
-GGTF_tracking        INFO [evt 12] unique: nLabels=12 in 0 ms
-GGTF_tracking        INFO [evt 12] bucket in 0 ms
-GGTF_tracking        INFO [evt 12] after-bucket | RSS=2093.9MB, Peak=2093.9MB
-GGTF_tracking        INFO [evt 12] build: tracks=11 created3D=219 in 0 ms
-GGTF_tracking        INFO [evt 12] after-build | RSS=2093.9MB, Peak=2093.9MB
-GGTF_tracking        INFO [evt 12] TOTAL 2920 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-GGTF_tracking        INFO [evt 13] flatten: planar=0 wire=1010 -> used=1010 in 0 ms
-GGTF_tracking        INFO [evt 13] after-flatten | RSS=2093.91MB, Peak=2093.91MB
-GGTF_tracking        INFO [evt 13] onnx: nHits=1010 in 1320 ms
-GGTF_tracking        INFO [evt 13] after-onnx | RSS=2093.91MB, Peak=2093.91MB
-GGTF_tracking        INFO [evt 13] clustering in 1 ms
-GGTF_tracking        INFO [evt 13] after-clustering | RSS=2093.91MB, Peak=2093.91MB
-GGTF_tracking        INFO [evt 13] unique: nLabels=12 in 0 ms
-GGTF_tracking        INFO [evt 13] bucket in 0 ms
-GGTF_tracking        INFO [evt 13] after-bucket | RSS=2093.91MB, Peak=2093.91MB
-GGTF_tracking        INFO [evt 13] build: tracks=11 created3D=158 in 0 ms
-GGTF_tracking        INFO [evt 13] after-build | RSS=2093.91MB, Peak=2093.91MB
-GGTF_tracking        INFO [evt 13] TOTAL 1322 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-GGTF_tracking        INFO [evt 14] flatten: planar=0 wire=1176 -> used=1176 in 0 ms
-GGTF_tracking        INFO [evt 14] after-flatten | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 14] onnx: nHits=1176 in 1508 ms
-GGTF_tracking        INFO [evt 14] after-onnx | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 14] clustering in 1 ms
-GGTF_tracking        INFO [evt 14] after-clustering | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 14] unique: nLabels=13 in 0 ms
-GGTF_tracking        INFO [evt 14] bucket in 0 ms
-GGTF_tracking        INFO [evt 14] after-bucket | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 14] build: tracks=12 created3D=114 in 0 ms
-GGTF_tracking        INFO [evt 14] after-build | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 14] TOTAL 1510 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-GGTF_tracking        INFO [evt 15] flatten: planar=0 wire=1801 -> used=1801 in 0 ms
-GGTF_tracking        INFO [evt 15] after-flatten | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 15] onnx: nHits=1801 in 2677 ms
-GGTF_tracking        INFO [evt 15] after-onnx | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 15] clustering in 2 ms
-GGTF_tracking        INFO [evt 15] after-clustering | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 15] unique: nLabels=13 in 0 ms
-GGTF_tracking        INFO [evt 15] bucket in 0 ms
-GGTF_tracking        INFO [evt 15] after-bucket | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 15] build: tracks=12 created3D=264 in 0 ms
-GGTF_tracking        INFO [evt 15] after-build | RSS=2093.92MB, Peak=2093.92MB
-GGTF_tracking        INFO [evt 15] TOTAL 2681 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-GGTF_tracking        INFO [evt 16] flatten: planar=0 wire=1880 -> used=1880 in 0 ms
-GGTF_tracking        INFO [evt 16] after-flatten | RSS=2094.01MB, Peak=2094.01MB
-GGTF_tracking        INFO [evt 16] onnx: nHits=1880 in 2791 ms
-GGTF_tracking        INFO [evt 16] after-onnx | RSS=2094.04MB, Peak=2094.04MB
-GGTF_tracking        INFO [evt 16] clustering in 2 ms
-GGTF_tracking        INFO [evt 16] after-clustering | RSS=2094.04MB, Peak=2094.04MB
-GGTF_tracking        INFO [evt 16] unique: nLabels=19 in 0 ms
-GGTF_tracking        INFO [evt 16] bucket in 0 ms
-GGTF_tracking        INFO [evt 16] after-bucket | RSS=2094.04MB, Peak=2094.04MB
-GGTF_tracking        INFO [evt 16] build: tracks=18 created3D=196 in 0 ms
-GGTF_tracking        INFO [evt 16] after-build | RSS=2094.04MB, Peak=2094.04MB
-GGTF_tracking        INFO [evt 16] TOTAL 2795 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-GGTF_tracking        INFO [evt 17] flatten: planar=0 wire=1223 -> used=1223 in 0 ms
-GGTF_tracking        INFO [evt 17] after-flatten | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 17] onnx: nHits=1223 in 1610 ms
-GGTF_tracking        INFO [evt 17] after-onnx | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 17] clustering in 1 ms
-GGTF_tracking        INFO [evt 17] after-clustering | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 17] unique: nLabels=10 in 0 ms
-GGTF_tracking        INFO [evt 17] bucket in 0 ms
-GGTF_tracking        INFO [evt 17] after-bucket | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 17] build: tracks=9 created3D=54 in 0 ms
-GGTF_tracking        INFO [evt 17] after-build | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 17] TOTAL 1613 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2922.25 MB resident set size = 2092.95 MB
-GGTF_tracking        INFO [evt 18] flatten: planar=0 wire=4604 -> used=4604 in 1 ms
-GGTF_tracking        INFO [evt 18] after-flatten | RSS=2094.05MB, Peak=2094.05MB
-GGTF_tracking        INFO [evt 18] onnx: nHits=4604 in 11586 ms
-GGTF_tracking        INFO [evt 18] after-onnx | RSS=2094.93MB, Peak=2094.93MB
-GGTF_tracking        INFO [evt 18] clustering in 7 ms
-GGTF_tracking        INFO [evt 18] after-clustering | RSS=2094.93MB, Peak=2094.93MB
-GGTF_tracking        INFO [evt 18] unique: nLabels=26 in 0 ms
-GGTF_tracking        INFO [evt 18] bucket in 0 ms
-GGTF_tracking        INFO [evt 18] after-bucket | RSS=2094.93MB, Peak=2094.93MB
-GGTF_tracking        INFO [evt 18] build: tracks=25 created3D=529 in 0 ms
-GGTF_tracking        INFO [evt 18] after-build | RSS=2094.93MB, Peak=2094.93MB
-GGTF_tracking        INFO [evt 18] TOTAL 11595 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 19] flatten: planar=0 wire=881 -> used=881 in 0 ms
-GGTF_tracking        INFO [evt 19] after-flatten | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 19] onnx: nHits=881 in 1308 ms
-GGTF_tracking        INFO [evt 19] after-onnx | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 19] clustering in 0 ms
-GGTF_tracking        INFO [evt 19] after-clustering | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 19] unique: nLabels=7 in 0 ms
-GGTF_tracking        INFO [evt 19] bucket in 0 ms
-GGTF_tracking        INFO [evt 19] after-bucket | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 19] build: tracks=6 created3D=17 in 0 ms
-GGTF_tracking        INFO [evt 19] after-build | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 19] TOTAL 1310 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 20] flatten: planar=0 wire=4140 -> used=4140 in 1 ms
-GGTF_tracking        INFO [evt 20] after-flatten | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 20] onnx: nHits=4140 in 11205 ms
-GGTF_tracking        INFO [evt 20] after-onnx | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 20] clustering in 11 ms
-GGTF_tracking        INFO [evt 20] after-clustering | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 20] unique: nLabels=41 in 0 ms
-GGTF_tracking        INFO [evt 20] bucket in 0 ms
-GGTF_tracking        INFO [evt 20] after-bucket | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 20] build: tracks=40 created3D=435 in 0 ms
-GGTF_tracking        INFO [evt 20] after-build | RSS=2094.95MB, Peak=2094.95MB
-GGTF_tracking        INFO [evt 20] TOTAL 11219 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 21] flatten: planar=0 wire=2017 -> used=2017 in 0 ms
-GGTF_tracking        INFO [evt 21] after-flatten | RSS=2094.97MB, Peak=2094.97MB
-GGTF_tracking        INFO [evt 21] onnx: nHits=2017 in 3293 ms
-GGTF_tracking        INFO [evt 21] after-onnx | RSS=2094.97MB, Peak=2094.97MB
-GGTF_tracking        INFO [evt 21] clustering in 2 ms
-GGTF_tracking        INFO [evt 21] after-clustering | RSS=2094.97MB, Peak=2094.97MB
-GGTF_tracking        INFO [evt 21] unique: nLabels=15 in 0 ms
-GGTF_tracking        INFO [evt 21] bucket in 0 ms
-GGTF_tracking        INFO [evt 21] after-bucket | RSS=2094.97MB, Peak=2094.97MB
-GGTF_tracking        INFO [evt 21] build: tracks=14 created3D=288 in 0 ms
-GGTF_tracking        INFO [evt 21] after-build | RSS=2094.97MB, Peak=2094.97MB
-GGTF_tracking        INFO [evt 21] TOTAL 3296 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 22] flatten: planar=0 wire=110 -> used=110 in 0 ms
-GGTF_tracking        INFO [evt 22] after-flatten | RSS=2094.98MB, Peak=2094.98MB
-GGTF_tracking        INFO [evt 22] onnx: nHits=110 in 154 ms
-GGTF_tracking        INFO [evt 22] after-onnx | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 22] clustering in 0 ms
-GGTF_tracking        INFO [evt 22] after-clustering | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 22] unique: nLabels=2 in 0 ms
-GGTF_tracking        INFO [evt 22] bucket in 0 ms
-GGTF_tracking        INFO [evt 22] after-bucket | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 22] build: tracks=1 created3D=0 in 0 ms
-GGTF_tracking        INFO [evt 22] after-build | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 22] TOTAL 155 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 23] flatten: planar=0 wire=6797 -> used=6797 in 1 ms
-GGTF_tracking        INFO [evt 23] after-flatten | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 23] onnx: nHits=6797 in 16174 ms
-GGTF_tracking        INFO [evt 23] after-onnx | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 23] clustering in 18 ms
-GGTF_tracking        INFO [evt 23] after-clustering | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 23] unique: nLabels=60 in 0 ms
-GGTF_tracking        INFO [evt 23] bucket in 0 ms
-GGTF_tracking        INFO [evt 23] after-bucket | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 23] build: tracks=59 created3D=598 in 0 ms
-GGTF_tracking        INFO [evt 23] after-build | RSS=2094.99MB, Peak=2094.99MB
-GGTF_tracking        INFO [evt 23] TOTAL 16196 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-GGTF_tracking        INFO [evt 24] flatten: planar=0 wire=3567 -> used=3567 in 0 ms
-GGTF_tracking        INFO [evt 24] after-flatten | RSS=2095.02MB, Peak=2095.02MB
-GGTF_tracking        INFO [evt 24] onnx: nHits=3567 in 8156 ms
-GGTF_tracking        INFO [evt 24] after-onnx | RSS=2095.02MB, Peak=2095.02MB
-GGTF_tracking        INFO [evt 24] clustering in 3 ms
-GGTF_tracking        INFO [evt 24] after-clustering | RSS=2095.02MB, Peak=2095.02MB
-GGTF_tracking        INFO [evt 24] unique: nLabels=23 in 0 ms
-GGTF_tracking        INFO [evt 24] bucket in 0 ms
-GGTF_tracking        INFO [evt 24] after-bucket | RSS=2095.02MB, Peak=2095.02MB
-GGTF_tracking        INFO [evt 24] build: tracks=22 created3D=434 in 0 ms
-GGTF_tracking        INFO [evt 24] after-build | RSS=2095.02MB, Peak=2095.02MB
-GGTF_tracking        INFO [evt 24] TOTAL 8161 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.13 MB resident set size = 2093.83 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.3 MB resident set size = 2093.95 MB
-GGTF_tracking        INFO [evt 25] flatten: planar=0 wire=1712 -> used=1712 in 0 ms
-GGTF_tracking        INFO [evt 25] after-flatten | RSS=2095.16MB, Peak=2095.16MB
-GGTF_tracking        INFO [evt 25] onnx: nHits=1712 in 2739 ms
-GGTF_tracking        INFO [evt 25] after-onnx | RSS=2095.78MB, Peak=2095.78MB
-GGTF_tracking        INFO [evt 25] clustering in 2 ms
-GGTF_tracking        INFO [evt 25] after-clustering | RSS=2095.78MB, Peak=2095.78MB
-GGTF_tracking        INFO [evt 25] unique: nLabels=16 in 0 ms
-GGTF_tracking        INFO [evt 25] bucket in 0 ms
-GGTF_tracking        INFO [evt 25] after-bucket | RSS=2095.78MB, Peak=2095.78MB
-GGTF_tracking        INFO [evt 25] build: tracks=15 created3D=156 in 0 ms
-GGTF_tracking        INFO [evt 25] after-build | RSS=2095.78MB, Peak=2095.78MB
-GGTF_tracking        INFO [evt 25] TOTAL 2743 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-GGTF_tracking        INFO [evt 26] flatten: planar=0 wire=1484 -> used=1484 in 0 ms
-GGTF_tracking        INFO [evt 26] after-flatten | RSS=2095.79MB, Peak=2095.79MB
-GGTF_tracking        INFO [evt 26] onnx: nHits=1484 in 2215 ms
-GGTF_tracking        INFO [evt 26] after-onnx | RSS=2095.79MB, Peak=2095.79MB
-GGTF_tracking        INFO [evt 26] clustering in 1 ms
-GGTF_tracking        INFO [evt 26] after-clustering | RSS=2095.79MB, Peak=2095.79MB
-GGTF_tracking        INFO [evt 26] unique: nLabels=14 in 0 ms
-GGTF_tracking        INFO [evt 26] bucket in 0 ms
-GGTF_tracking        INFO [evt 26] after-bucket | RSS=2095.79MB, Peak=2095.79MB
-GGTF_tracking        INFO [evt 26] build: tracks=13 created3D=218 in 0 ms
-GGTF_tracking        INFO [evt 26] after-build | RSS=2095.79MB, Peak=2095.79MB
-GGTF_tracking        INFO [evt 26] TOTAL 2218 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.58 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-GGTF_tracking        INFO [evt 27] flatten: planar=0 wire=1289 -> used=1289 in 0 ms
-GGTF_tracking        INFO [evt 27] after-flatten | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 27] onnx: nHits=1289 in 1861 ms
-GGTF_tracking        INFO [evt 27] after-onnx | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 27] clustering in 1 ms
-GGTF_tracking        INFO [evt 27] after-clustering | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 27] unique: nLabels=12 in 0 ms
-GGTF_tracking        INFO [evt 27] bucket in 0 ms
-GGTF_tracking        INFO [evt 27] after-bucket | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 27] build: tracks=11 created3D=117 in 0 ms
-GGTF_tracking        INFO [evt 27] after-build | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 27] TOTAL 1864 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-GGTF_tracking        INFO [evt 28] flatten: planar=0 wire=911 -> used=911 in 0 ms
-GGTF_tracking        INFO [evt 28] after-flatten | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 28] onnx: nHits=911 in 1203 ms
-GGTF_tracking        INFO [evt 28] after-onnx | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 28] clustering in 1 ms
-GGTF_tracking        INFO [evt 28] after-clustering | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 28] unique: nLabels=7 in 0 ms
-GGTF_tracking        INFO [evt 28] bucket in 0 ms
-GGTF_tracking        INFO [evt 28] after-bucket | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 28] build: tracks=6 created3D=83 in 0 ms
-GGTF_tracking        INFO [evt 28] after-build | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 28] TOTAL 1206 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-GGTF_tracking        INFO [evt 29] flatten: planar=0 wire=2030 -> used=2030 in 0 ms
-GGTF_tracking        INFO [evt 29] after-flatten | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 29] onnx: nHits=2030 in 3340 ms
-GGTF_tracking        INFO [evt 29] after-onnx | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 29] clustering in 2 ms
-GGTF_tracking        INFO [evt 29] after-clustering | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 29] unique: nLabels=17 in 0 ms
-GGTF_tracking        INFO [evt 29] bucket in 0 ms
-GGTF_tracking        INFO [evt 29] after-bucket | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 29] build: tracks=16 created3D=184 in 0 ms
-GGTF_tracking        INFO [evt 29] after-build | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 29] TOTAL 3344 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-GGTF_tracking        INFO [evt 30] flatten: planar=0 wire=1802 -> used=1802 in 0 ms
-GGTF_tracking        INFO [evt 30] after-flatten | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 30] onnx: nHits=1802 in 2851 ms
-GGTF_tracking        INFO [evt 30] after-onnx | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 30] clustering in 1 ms
-GGTF_tracking        INFO [evt 30] after-clustering | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 30] unique: nLabels=13 in 0 ms
-GGTF_tracking        INFO [evt 30] bucket in 0 ms
-GGTF_tracking        INFO [evt 30] after-bucket | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 30] build: tracks=12 created3D=232 in 0 ms
-GGTF_tracking        INFO [evt 30] after-build | RSS=2095.81MB, Peak=2095.81MB
-GGTF_tracking        INFO [evt 30] TOTAL 2854 ms
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Stop virtual size = 2923.88 MB resident set size = 2094.7 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Execute virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Algs Execute virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Reader Execute virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Execute virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage before DCHdigi_v02 Execute virtual size = 1625.31 MB resident set size = 826.344 MB
+MemoryAuditor        INFO Memory usage has changed after DCHdigi_v02 Execute virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Execute virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Execute virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Algs Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Reader Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before DCHdigi_v02 Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after DCHdigi_v02 Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before GGTF_tracking Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Writer Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Stop virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Stop virtual size = 1625.76 MB resident set size = 826.969 MB
 ApplicationMgr       INFO Application Manager Stopped successfully
-MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Finalize virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Algs Finalize virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Reader Finalize virtual size = 2923.88 MB resident set size = 2094.7 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage before DCHdigi_v01 Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage has changed after DCHdigi_v01 Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage before GGTF_tracking Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-GGTF_tracking        INFO GGTF_tracking finalize | events=30 | RSS=2092.42MB, Peak=2094.7MB
-MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage before k4FWCore__Writer Finalize virtual size = 2838.04 MB resident set size = 2091.33 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Finalize virtual size = 2838.04 MB resident set size = 2093.45 MB
-MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Finalize virtual size = 2838.04 MB resident set size = 2093.45 MB
-GGTF_tracking:Stop   INFO Time User   : Tot=    0 [us]  #=  1
+MemoryAuditor        INFO Memory usage before k4FWCore__Sequencer Finalize virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Algs Finalize virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Reader Finalize virtual size = 1625.76 MB resident set size = 826.969 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Reader Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage before DCHdigi_v02 Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage has changed after DCHdigi_v02 Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage before GGTF_tracking Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+GGTF_tracking        INFO GGTF_tracking finalize | events=0 | RSS=824.797MB, Peak=826.969MB
+MemoryAuditor        INFO Memory usage has changed after GGTF_tracking Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage before GenFit2DCHFitter Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage has changed after GenFit2DCHFitter Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Algs Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage before k4FWCore__Writer Finalize virtual size = 1539.92 MB resident set size = 823.699 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Writer Finalize virtual size = 1539.92 MB resident set size = 825.074 MB
+MemoryAuditor        INFO Memory usage has changed after k4FWCore__Sequencer Finalize virtual size = 1539.92 MB resident set size = 825.074 MB
 GGTF_tracking:S...   INFO Time User   : Tot=    0 [us]  #=  1
+GGTF_tracking:Stop   INFO Time User   : Tot=    0 [us]  #=  1
 GGTF_tracking:F...   INFO Time User   : Tot=    0 [us]  #=  1
-GGTF_tracking:I...   INFO Time User   : Tot= 10.9  [s]  #=  1
-GGTF_tracking:E...   INFO Time User   : Tot=  134  [s] Ave/Min/Max=    4.47(+-    4.09)/    0.15/    15.9  [s] #= 30
+GGTF_tracking:I...   INFO Time User   : Tot= 9.58  [s]  #=  1
 ApplicationMgr       INFO Application Manager Finalized successfully
-ApplicationMgr       INFO Application Manager Terminated successfully with a user requested ScheduledStop
+ApplicationMgr      ERROR Application Manager Terminated with error code 3

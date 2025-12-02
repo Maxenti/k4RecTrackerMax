@@ -1,4 +1,4 @@
-# runDCHTestTrackFinder.py (tri-fitter edition, crash-safe: no manual .so loads)
+# runDCHTestTrackFinder.py (tri-fitter edition, crash-safe; v02 digi aware)
 
 import os
 import math
@@ -7,19 +7,12 @@ import shutil
 import traceback
 
 # --- HARD STOP ON PRELOADING -------------------------------------------------
-# If GAUDI_PLUGINS is set, Gaudi will *preload* libs by name and then auto-discover
-# them again via GAUDI_PLUGIN_PATH, causing duplicate dictionary loads in Cling.
-# Unset it here to avoid segfaults from double-loads.
 os.environ.pop("GAUDI_PLUGINS", None)
 
 from Gaudi.Configuration import INFO, DEBUG
 from Gaudi.Configuration import ApplicationMgr as GaudiApp
 from Configurables import EventDataSvc, UniqueIDGenSvc, RndmGenSvc, GeoSvc
 from Configurables import AuditorSvc, ChronoAuditor, MemoryAuditor, MessageSvc
-
-# DO NOT import ROOT and DO NOT call gSystem.Load for any library.
-# Gaudi will load plugins from GAUDI_PLUGIN_PATH automatically when
-# you instantiate Configurables.
 
 from k4FWCore import IOSvc
 from k4FWCore.parseArgs import parser
@@ -37,6 +30,40 @@ parser.add_argument("--dchSimHits", default="DCHCollection",
                     help="Name of DCH SimTrackerHit collection in the input file")
 parser.add_argument("--dchName",    default="DCH_v2",
                     help="DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)")
+
+# ----------------- Digitizer selection (v01/v02) -----------------
+parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v02",
+                    help="Choose DCH digitizer implementation")
+
+# v01 common knobs (still honored when present)
+parser.add_argument("--zResolution_mm",  type=float, default=30.0, help="z-resolution (mm)")
+parser.add_argument("--xyResolution_mm", type=float, default=0.10, help="xy-resolution (mm)")
+
+# v02 extra knobs (silently ignored by v01)
+# --- compatibility aliases for your shell/local_chain flags ---
+parser.add_argument("--dch-xy-mm",  type=float, dest="xyResolution_mm",
+                    help="Alias for --xyResolution_mm")
+parser.add_argument("--dch-z-mm",   type=float, dest="zResolution_mm",
+                    help="Alias for --zResolution_mm")
+parser.add_argument("--dch-readout-start-ns", type=float, dest="rw_start_ns",
+                    help="Alias for --rw-start-ns")
+parser.add_argument("--dch-readout-dur-ns",   type=float, dest="rw_dur_ns",
+                    help="Alias for --rw-duration-ns")
+
+
+parser.add_argument("--dch-deadtime-ns",     dest="dch_deadtime_ns", type=float, default=400.0,
+                    help="[v02] cell deadtime (ns)")
+parser.add_argument("--dch-drift-vel-um-ns", dest="dch_drift_um_ns", type=float, default=-1.0,
+                    help="[v02] drift velocity (um/ns). If <0, auto by GasType")
+parser.add_argument("--dch-signal-vel-mm-ns",dest="dch_sig_mm_ns",   type=float,
+                    default=2.0/3.0*299792458.0*1e-6,
+                    help="[v02] signal velocity along wire (mm/ns). Default 2/3 c")
+parser.add_argument("--dch-gas-type",        dest="dch_gas_type",    type=int,   default=0,
+                    help="[v02] gas: 0 He(90)-iC4H10(10), 1 He, 2 Ar(50)-C2H6(50), 3 Ar")
+parser.add_argument("--rw-start-ns",         dest="rw_start_ns",     type=float, default=1.0,
+                    help="[v02] readout window start (ns)")
+parser.add_argument("--rw-duration-ns",      dest="rw_dur_ns",       type=float, default=450.0,
+                    help="[v02] readout window duration (ns)")
 
 # ----------------- GGTF clustering -----------------
 parser.add_argument("--tbeta", type=float, default=0.6, help="GGTF beta threshold")
@@ -76,43 +103,30 @@ parser.add_argument("--no-fallbackIfNoGenFit2", dest="fallbackIfNoGenFit2",
                     action="store_false")
 
 # ----------------- GenFit2-specific knobs (prefix gf-) -----------------
-# On/off pairs
 parser.add_argument("--gf-useMat", dest="gf_useMat", action="store_true",  default=True,
                     help="Enable material effects in GenFit2")
 parser.add_argument("--no-gf-useMat", dest="gf_useMat", action="store_false")
-
 parser.add_argument("--gf-sortHits", dest="gf_sortHits", action="store_true", default=True)
 parser.add_argument("--no-gf-sortHits", dest="gf_sortHits", action="store_false")
-
 parser.add_argument("--gf-dedup", dest="gf_dedup", action="store_true", default=True)
 parser.add_argument("--no-gf-dedup", dest="gf_dedup", action="store_false")
-
-# Units / scales
 parser.add_argument("--gf-posScale", type=float, default=0.1,  help="mm→cm scale for positions")
 parser.add_argument("--gf-len2m",    type=float, default=0.01, help="cm→m for seeding geometry")
-
-# Tolerances / sigmas
 parser.add_argument("--gf-dedupTol",   type=float, default=0.10, help="Dedup tol [mm]")
 parser.add_argument("--gf-hitSigmaXY", type=float, default=0.60, help="XY sigma [mm]")
 parser.add_argument("--gf-hitSigmaZ",  type=float, default=3.00, help="Z  sigma [mm]")
-
-# Seed covariances / clamps
 parser.add_argument("--gf-seedPosSigma", type=float, default=30.0, help="Seed pos sigma [mm]")
 parser.add_argument("--gf-seedMomSigma", type=float, default=2.0,  help="Seed mom sigma [GeV]")
 parser.add_argument("--gf-seedPTMin",    type=float, default=0.30, help="Min pT seed [GeV]")
 parser.add_argument("--gf-seedPTMax",    type=float, default=50.0, help="Max pT seed [GeV]")
 parser.add_argument("--gf-seedPMin",     type=float, default=1.2,  help="Min |p| seed [GeV]")
-
-# Phys / grouping / fallback / retry
 parser.add_argument("--gf-bz",  type=float, default=2.0, help="Bz [T]")
 parser.add_argument("--gf-pdg", type=int,   default=13,  help="PDG hypothesis")
-
 parser.add_argument("--gf-minGroup",        type=int,   default=6)
 parser.add_argument("--gf-useFallback",     dest="gf_useFallback", action="store_true",  default=True)
 parser.add_argument("--no-gf-useFallback",  dest="gf_useFallback", action="store_false")
 parser.add_argument("--gf-fallbackEpsCM",   type=float, default=2.0)
 parser.add_argument("--gf-fallbackMinPts",  type=int,   default=6)
-
 parser.add_argument("--gf-retry",          dest="gf_retry", action="store_true",  default=True)
 parser.add_argument("--no-gf-retry",       dest="gf_retry", action="store_false")
 parser.add_argument("--gf-retryMeasInfl",  type=float, default=4.0)
@@ -153,28 +167,24 @@ parser.add_argument("--no-tp-dedup",    dest="tp_dedup", action="store_false")
 parser.add_argument("--tp-dedupTol",    type=float, default=0.50, help="Dedup tol [mm]")
 parser.add_argument("--tp-maxMeasPerGroup", type=int, default=24, help="Downsample cap (0=off)")
 parser.add_argument("--tp-outHisto",    default="", help="If set, write QA histos here (root)")
-
-# >>> New, finer-grained ThreePointFitter controls <<<
 parser.add_argument("--tp-minDeltaPhi", type=float, default=0.02,
-                    help="Minimum |Δphi| between any chosen pair among the 3 points [rad]")
+                    help="Minimum |Δphi| among chosen 3 points [rad]")
 parser.add_argument("--tp-minChordMM",  type=float, default=5.0,
-                    help="Minimum chord length among the 3 chosen points [mm]")
+                    help="Minimum chord length among 3 points [mm]")
 parser.add_argument("--tp-minRadiusMM", type=float, default=100.0,
                     help="Reject tiny circles with R < this [mm]")
 parser.add_argument("--tp-fitTanLambda", dest="tp_fitTanLambda", action="store_true", default=True,
-                    help="If set, estimate tanLambda via z(phi) regression")
+                    help="Estimate tanLambda via z(phi) regression")
 parser.add_argument("--no-tp-fitTanLambda", dest="tp_fitTanLambda", action="store_false")
 parser.add_argument("--tp-printDiag", dest="tp_printDiag", action="store_true", default=False,
-                    help="If set, fitter prints diagnostic info for first N events/groups")
+                    help="Print diagnostics for first N events/groups")
 parser.add_argument("--no-tp-printDiag", dest="tp_printDiag", action="store_false")
 parser.add_argument("--tp-diagEveryN", type=int, default=100,
-                    help="Diagnostic print frequency (events) when tp-printDiag is enabled")
+                    help="Diagnostic print frequency (events)")
 
 args = parser.parse_args()
-
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
 
-# after args = parser.parse_args()
 if args.fitter == "genfit2" and args.gf_useMat and not args.compactXML:
     raise RuntimeError(
         "UseMaterialEffects=True but --compactXML not provided. "
@@ -282,23 +292,41 @@ def _set_if_has_digitizer(obj, name, value):
         print(f"[digitizer] could not set {name}: {e}")
     return False
 
+# Common v01/v02 inputs
 _set_if_has_digitizer(dch_digitizer, "DCH_simhits", [args.dchSimHits])
 _set_if_has_digitizer(dch_digitizer, "DCH_name", args.dchName)
+
+# v01 legacy knobs (harmless for v02; set only if exist)
 _set_if_has_digitizer(dch_digitizer, "fileDataAlg", "DataAlgFORGEANT.root")
 _set_if_has_digitizer(dch_digitizer, "calculate_dndx", False)
 _set_if_has_digitizer(dch_digitizer, "create_debug_histograms", False)
-_set_if_has_digitizer(dch_digitizer, "zResolution_mm", 30.0)
-_set_if_has_digitizer(dch_digitizer, "xyResolution_mm", 0.1)
 
-# Ensure cluster-size file for digitizer (best-effort)
+# Resolutions (shared semantics)
+_set_if_has_digitizer(dch_digitizer, "zResolution_mm",  args.zResolution_mm)
+_set_if_has_digitizer(dch_digitizer, "xyResolution_mm", args.xyResolution_mm)
+
+# v02-specific (silently ignored by v01)
+_set_if_has_digitizer(dch_digitizer, "Deadtime_ns",              args.dch_deadtime_ns)
+_set_if_has_digitizer(dch_digitizer, "DriftVelocity_um_per_ns",  args.dch_drift_um_ns)
+_set_if_has_digitizer(dch_digitizer, "SignalVelocity_mm_per_ns", args.dch_sig_mm_ns)
+_set_if_has_digitizer(dch_digitizer, "GasType",                  args.dch_gas_type)
+_set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns",args.rw_start_ns)
+_set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns", args.rw_dur_ns)
+
+# Ensure cluster-size file for v01 (harmless no-op for v02)
 cluster_file = "DataAlgFORGEANT.root"
 if not os.path.exists(cluster_file):
     url = "https://fccsw.web.cern.ch/fccsw/filesForSimDigiReco/IDEA/DataAlgFORGEANT.root"
     print(f"[setup] Fetching {cluster_file} from {url}")
     subprocess.run(["wget","--no-verbose","--timeout=180","--tries=2","--no-clobber",url], check=True)
 
+# ----------------- Choose wire collection name by digi version -----------------
+if args.dchDigiVersion == "v02":
+    wire_coll = "DCHDigi2Collection"
+else:
+    wire_coll = "DCH_DigiCollection"
+
 # ----------------- Track Finder (GGTF) -----------------
-# Prefer the pre-generated Configurable module if present; fallback to Configurables registry
 try:
     from TrackingConf import GGTF_tracking
 except Exception:
@@ -306,7 +334,7 @@ except Exception:
 
 GGTF = GGTF_tracking(
     "GGTF_tracking",
-    InputWireHitCollections=["DCH_DigiCollection"],
+    InputWireHitCollections=[wire_coll],
     InputPlanarHitCollections=[],
     OutputTracksGGTF=["CDCHTracks"],
     Output3DHits=["GGTF_3DHits"],
@@ -343,7 +371,7 @@ print(f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} 
       f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
       f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
       f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
-      f"log={args.ggtfLog}")
+      f"log={args.ggtfLog}  wireColl={wire_coll}")
 
 # ----------------- Helper: quiet property setter -----------------
 def _set_if_has(obj, name, value):
@@ -399,7 +427,6 @@ fitter_alg = None
 requested_fitter = args.fitter
 
 def _configure_genfit2():
-    # Import GenFit2DCHFitter from either namespace (no manual library loads)
     try:
         try:
             from TrackingConf import GenFit2DCHFitter
@@ -413,19 +440,16 @@ def _configure_genfit2():
     alg = GenFit2DCHFitter("GenFit2DCHFitter")
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
-    # IO
     for prop, val in (("Input3DHits", "GGTF_3DHits"),
                       ("input3DHits","GGTF_3DHits"),
                       ("inputHits",  ["GGTF_3DHits"])):
         if _set_if_has(alg, prop, val): break
-
     for prop, val in (("OutTracks", args.fitOut),
                       ("outputTracks", [args.fitOut]),
                       ("outputTracks", args.fitOut),
                       ("TracksOut", args.fitOut)):
         if _set_if_has(alg, prop, val): break
 
-    # Optional services
     for prop, val in [
         ("FieldSvc", field_svc_name),
         ("BFieldSvc", field_svc_name),
@@ -437,14 +461,12 @@ def _configure_genfit2():
         if val is not None or prop == "UseTGeoPath":
             _set_if_has(alg, prop, val if prop != "UseTGeoPath" else True)
 
-    # Physics/units
     _set_if_has(alg, "Bz", args.gf_bz)
     _set_if_has(alg, "PDG", args.gf_pdg)
     _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
     _set_if_has(alg, "PositionUnitScale", args.gf_posScale)
     _set_if_has(alg, "InternalLengthToMeters", args.gf_len2m)
 
-    # meas/seed
     _set_if_has(alg, "HitSigmaXYMM", args.gf_hitSigmaXY)
     _set_if_has(alg, "HitSigmaZMM",  args.gf_hitSigmaZ)
     _set_if_has(alg, "SeedPosSigmaMM",  args.gf_seedPosSigma)
@@ -453,7 +475,6 @@ def _configure_genfit2():
     _set_if_has(alg, "SeedPTMaxGeV",    args.gf_seedPTMax)
     _set_if_has(alg, "SeedPMinGeV",     args.gf_seedPMin)
 
-    # grouping/fallback/retry/caps
     _set_if_has(alg, "MinGroupSize",          args.gf_minGroup)
     _set_if_has(alg, "UseFallbackClustering", args.gf_useFallback)
     _set_if_has(alg, "FallbackEpsCM",         args.gf_fallbackEpsCM)
@@ -464,7 +485,6 @@ def _configure_genfit2():
     _set_if_has(alg, "RetrySeedMomInfl",      args.gf_retrySeedMom)
     _set_if_has(alg, "MaxMeasPerGroup",       args.gf_maxMeasPerGroup)
 
-    # Friendly catch-alls
     _set_if_has(alg, "pdgHypothesis", args.gf_pdg)
     _set_if_has(alg, "minHitsOnTrack", 4)
     _set_if_has(alg, "maxChi2", 1e6)
@@ -473,7 +493,6 @@ def _configure_genfit2():
     return alg
 
 def _configure_simple():
-    # Import SimpleFitDCHFitter if available; otherwise fallback to threepoint
     Simple = None
     tried = []
     for mod, name in (("TrackingConf","SimpleFitDCHFitter"),
@@ -534,17 +553,14 @@ def _configure_threepoint():
     for prop, val in (("outputTracks", [args.fitOut]), ("outputTracks", args.fitOut)):
         if _set_if_has(alg, prop, val): break
 
-    # Core physics/units
     _set_if_has(alg, "Bz", args.tp_bz)
-    _set_if_has(alg, "PDG", args.gf_pdg)  # reuse PDG choice for sign convention
+    _set_if_has(alg, "PDG", args.gf_pdg)
     _set_if_has(alg, "PositionUnitScale", args.tp_posScale)
     _set_if_has(alg, "InternalLengthToMeters", args.tp_len2m)
 
-    # Common toggles (harmless if not present)
     _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
     _set_if_has(alg, "UseTGeoPath", True)
 
-    # Grouping / fallback / housekeeping
     _set_if_has(alg, "MinGroupSize",            args.tp_minGroup)
     _set_if_has(alg, "UseFallbackClustering",   args.tp_useFallback)
     _set_if_has(alg, "FallbackEpsCM",           args.tp_fallbackEpsCM)
@@ -557,7 +573,6 @@ def _configure_threepoint():
     if args.tp_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.tp_outHisto)
 
-    # >>> New: pass through fine-grained selection / diagnostics <<<
     _set_if_has(alg, "MinDeltaPhi",  args.tp_minDeltaPhi)
     _set_if_has(alg, "MinChordMM",   args.tp_minChordMM)
     _set_if_has(alg, "MinRadiusMM",  args.tp_minRadiusMM)

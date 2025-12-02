@@ -41,7 +41,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=100.0}"       # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=12.0}"       # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
 
@@ -59,7 +59,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${GF_SEED_P_MIN:=1.2}"        # GeV
 
 # Fitter grouping / fallback / retry (GenFit2)
-: "${GF_MIN_GROUP:=5}"
+: "${GF_MIN_GROUP:=6}"
 : "${GF_USE_FALLBACK:=1}"
 : "${GF_FALLBACK_EPS_CM:=4}"
 : "${GF_FALLBACK_MINPTS:=4}"
@@ -72,9 +72,9 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 # ThreePointFitter args (match new tp-* names in Python)
 : "${FITTER_LOG:=DEBUG}"
 : "${TP_MIN_DELTA_PHI:=0.10}"     # rad
-: "${TP_MIN_CHORD_MM:=5}"         # mm
-: "${TP_MIN_HITS:=3}"
-: "${TP_MIN_RADIUS_MM:=100}"      # mm
+: "${TP_MIN_CHORD_MM:=10}"         # mm
+: "${TP_MIN_HITS:=6}"
+: "${TP_MIN_RADIUS_MM:=50}"      # mm
 : "${TP_FIT_TANLAMBDA:=true}"     # true|false
 : "${TP_PRINT_DIAG:=false}"       # true|false
 : "${TP_DIAG_EVERY_N:=100}"
@@ -82,6 +82,20 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 # Field / PDG (used generally)
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
+
+#New Digi_v02 settings
+: "${DCH_DIGI_VERSION:=v02}"       # v01|v02
+: "${DCH_DEADTIME_NS:=400.0}"
+: "${DCH_XY_MM:=0.10}"
+: "${DCH_Z_MM:=1.0}"
+: "${DCH_GAS_TYPE:=0}"             # 0 HeIso(90/10)
+: "${DCH_DRIFT_VEL_UM_NS:=-1.0}"   # <0 -> auto by gas
+: "${DCH_SIGNAL_VEL_MM_NS:=$(python3 - <<'PY'
+print((2.0/3.0)*299792458e-6)
+PY
+)}"
+: "${DCH_READOUT_START_NS:=1.0}"
+: "${DCH_READOUT_DUR_NS:=450.0}"
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -166,6 +180,15 @@ K4_ARGS+=(
   --gf-seedPMin     "${GF_SEED_P_MIN}"
   --gf-bz           "${GF_BZ}"
   --gf-pdg          "${GF_PDG}"
+  --dchDigiVersion "${DCH_DIGI_VERSION}"
+  --dch-deadtime-ns "${DCH_DEADTIME_NS}"
+  --dch-xy-mm       "${DCH_XY_MM}"
+  --dch-z-mm        "${DCH_Z_MM}"
+  --dch-gas-type    "${DCH_GAS_TYPE}"
+  --dch-drift-vel-um-ns "${DCH_DRIFT_VEL_UM_NS}"
+  --dch-signal-vel-mm-ns "${DCH_SIGNAL_VEL_MM_NS}"
+  --dch-readout-start-ns "${DCH_READOUT_START_NS}"
+  --dch-readout-dur-ns   "${DCH_READOUT_DUR_NS}"
 )
 
 if [[ "${GF_USE_MAT}" == "1" ]]; then
