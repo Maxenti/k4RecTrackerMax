@@ -1,10 +1,5 @@
 //======================================================================
-// GGTF_tracking.cpp  (tracks + optional 3D hits output)  [merged]
-//  * Upstream I/O names + your controls (caps, chunking, gates, covariances)
-//  * Tracks + optional edm4hep::TrackerHit3D ("GGTF_3DHits")
-//  * Chunked ONNX -> clustering -> grouping
-//  * Wire 3D positions via XY drift circle projection (seeded by 3 points)
-//  * Outlier gate; scalar propagation; default covariances
+// GGTF_tracking.cpp  (tracks + optional 3D hits output)  [with label-0 guards]
 //======================================================================
 
 #include <algorithm>
@@ -161,6 +156,18 @@ struct GGTF_tracking final
   Gaudi::Property<std::string> m_uidSvcName{this, "UidSvcName", "uidSvc", "UniqueIDGenSvc name"};
   Gaudi::Property<std::string> m_dchName   {this, "DchName", "DCH_v2", "Drift chamber detector name"};
 
+  // --- label-0 handling (NEW) ---
+  Gaudi::Property<int>    m_zeroMinSizeKeep{this, "ZeroMinSizeKeep", 8,
+    "Min hits for a label=0 group to be considered (else dropped)"};
+  Gaudi::Property<double> m_minWireFracKeep{this, "MinWireFracKeep", 0.60,
+    "Min fraction of wire hits to keep a zero-label group"};
+  Gaudi::Property<bool>   m_promoteZeroIfGood{this, "PromoteZeroIfGood", true,
+    "If a zero-label group passes checks, treat it as a normal cluster"};
+  Gaudi::Property<bool>   m_skipZeroIfSmall{this, "SkipZeroIfSmall", true,
+    "If label=0 group smaller than ZeroMinSizeKeep, drop it"};
+  Gaudi::Property<bool>   m_skipZeroAlways{this, "SkipZeroAlways", false,
+    "If true, never build tracks from label=0 (debug mode)"};
+
   // ---------- state ----------
   std::unique_ptr<Ort::Env>          m_fEnv;
   std::unique_ptr<Ort::Session>      m_fSession;
@@ -217,6 +224,11 @@ struct GGTF_tracking final
            << " | Produce3DHits=" << (m_produce3DHits.value()?"true":"false")
            << " | OnnxChunk=" << m_onnxChunk.value()
            << " | MaxHitsPerEvent=" << m_maxHitsPerEvent.value()
+           << " | ZeroMinSizeKeep=" << m_zeroMinSizeKeep.value()
+           << " | MinWireFracKeep=" << m_minWireFracKeep.value()
+           << " | PromoteZeroIfGood=" << (m_promoteZeroIfGood.value()?"true":"false")
+           << " | SkipZeroIfSmall=" << (m_skipZeroIfSmall.value()?"true":"false")
+           << " | SkipZeroAlways=" << (m_skipZeroAlways.value()?"true":"false")
            << " | RSS=" << rss/1024.0 << "MB, Peak=" << hwm/1024.0 << "MB"
            << endmsg;
 
@@ -498,20 +510,64 @@ struct GGTF_tracking final
       int nTracks = 0;
 
       for (int64_t li = 0; li < nLabels; ++li) {
-        if (li == zeroLabelPos) continue;        // skip noise label "0"
         if (groups[li].empty()) continue;
 
+        int labelValue = uniques_cpu[li].item<int>();
+        const auto& vec = groups[li];
+
+        // --- label-0 guards (NEW) ---
+        if (labelValue == 0) {
+          if (m_skipZeroAlways.value()) continue;
+
+          const int size = (int)vec.size();
+          if (m_skipZeroIfSmall.value() && size < m_zeroMinSizeKeep.value()) {
+            // too small to be meaningful
+            continue;
+          }
+
+          int nWire = 0;
+          for (auto k : vec) if (tagType[k] == 1) ++nWire;
+          const double wireFrac = (size > 0) ? double(nWire)/double(size) : 0.0;
+
+          bool good = (wireFrac >= m_minWireFracKeep.value());
+
+          // quick circle sanity if we have ≥3 wire points
+          if (good && nWire >= 3) {
+            std::vector<int64_t> wires; wires.reserve(nWire);
+            for (auto k: vec) if (tagType[k]==1) wires.push_back(k);
+            auto pick3 = [&](const std::vector<int64_t>& v)
+                -> std::tuple<TVector3,TVector3,TVector3,bool> {
+              if (v.size() < 3) return {{},{},{},false};
+              const TVector3 A = posCache[v.front()];
+              const TVector3 B = posCache[v[v.size()/2]];
+              const TVector3 C = posCache[v.back()];
+              return {A,B,C,true};
+            };
+            TVector3 Cxy0; double R0=0;
+            auto [A,B,C,have] = pick3(wires);
+            bool ok = have && circle_from_3pts_xy(A,B,C,Cxy0,R0);
+            if (!ok) good = false;
+          }
+
+          if (!good) {
+            // reject low-quality zero-label group
+            continue;
+          }
+          // If promote is disabled and label==0, we still build the track here (keeps relations),
+          // but you can flip this if you want strict promotion behavior.
+          // If you wanted to relabel zero groups, you could compute a fresh positive label here.
+          (void)m_promoteZeroIfGood; // currently used as a conceptual switch; kept for CLI completeness
+        }
+
         auto trk = outputTracks.create();
-        const int labelValue = uniques_cpu[li].item<int>();
         trk.setType(labelValue);
 
         // Seed circle: prefer wires if >=3; else any 3 points
         TVector3 Cxy(0,0,0); double R = 1e9;
-        const auto& vec = groups[li];
         std::vector<int64_t> wireIdx; wireIdx.reserve(vec.size());
         for (auto k : vec) if (tagType[k] == 1) wireIdx.push_back(k);
 
-        auto pick3 = [&](const std::vector<int64_t>& v)
+        auto pick3_any = [&](const std::vector<int64_t>& v)
             -> std::tuple<TVector3,TVector3,TVector3,bool> {
           if (v.size() < 3) return {{},{},{},false};
           const TVector3 A = posCache[v.front()];
@@ -522,14 +578,12 @@ struct GGTF_tracking final
 
         bool ok=false;
         if (wireIdx.size() >= 3) {
-          auto [A,B,C,have] = pick3(wireIdx);
+          auto [A,B,C,have] = pick3_any(wireIdx);
           if (have) ok = circle_from_3pts_xy(A,B,C,Cxy,R);
         }
         if (!ok && vec.size() >= 3) {
-          const TVector3 A = posCache[vec.front()];
-          const TVector3 B = posCache[vec[vec.size()/2]];
-          const TVector3 C = posCache[vec.back()];
-          ok = circle_from_3pts_xy(A,B,C,Cxy,R);
+          auto [A,B,C,have] = pick3_any(vec);
+          if (have) ok = circle_from_3pts_xy(A,B,C,Cxy,R);
         }
         if (!ok) { Cxy = TVector3(0,0,0); R = 1e9; }
 

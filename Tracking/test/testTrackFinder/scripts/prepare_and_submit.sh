@@ -13,7 +13,7 @@ mkdir -p logs scripts params "$OUT_DIR"
 echo "[prep] Generating grid -> $GRID_JSON"
 python3 scripts/mk_ddsim_grid.py \
   --out "$GRID_JSON" \
-  --pt-min 0.01 --pt-max 200 --pt-n 10 \
+  --pt-min 0.1 --pt-max 200 --pt-n 30 \
   --etas "0, 0.1, 0.5, 1.0, 1.5, 2.0" \
   --nev 1000 --particle mu- --theta-smear 0.0
 echo "Wrote $(wc -l < "$GRID_JSON") lines to $GRID_JSON"

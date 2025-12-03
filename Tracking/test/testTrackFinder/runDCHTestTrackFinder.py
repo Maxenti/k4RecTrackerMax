@@ -32,7 +32,7 @@ parser.add_argument("--dchName",    default="DCH_v2",
                     help="DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)")
 
 # ----------------- Digitizer selection (v01/v02) -----------------
-parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v02",
+parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v01",
                     help="Choose DCH digitizer implementation")
 
 # v01 common knobs (still honored when present)
@@ -75,7 +75,7 @@ parser.add_argument("--onnxChunk",  type=int,   default=4096,   help="ONNX hits 
 parser.add_argument("--max3DHitsPerEvent", type=int, default=1000000, help="3D hits cap per event")
 parser.add_argument("--max3DPerTrack",     type=int, default=100000,  help="3D hits cap per track")
 parser.add_argument("--maxHitsPerEvent",   type=int, default=8000,    help="Cap input hits (0=off)")
-parser.add_argument("--produce3DHits", action="store_true", default=False,
+parser.add_argument("--produce3DHits", action="store_true", default=True,
                     help="If set, also write GGTF_3DHits")
 parser.add_argument("--ggtfLog", choices=["INFO","DEBUG"], default="INFO",
                     help="GGTF_tracking OutputLevel")
@@ -181,6 +181,18 @@ parser.add_argument("--tp-printDiag", dest="tp_printDiag", action="store_true", 
 parser.add_argument("--no-tp-printDiag", dest="tp_printDiag", action="store_false")
 parser.add_argument("--tp-diagEveryN", type=int, default=100,
                     help="Diagnostic print frequency (events)")
+
+
+
+parser.add_argument("--ggtf-zeroMinSizeKeep", type=int, default=8)
+parser.add_argument("--ggtf-minWireFracKeep", type=float, default=0.60)
+parser.add_argument("--ggtf-promoteZeroIfGood", action="store_true", default=True)
+parser.add_argument("--no-ggtf-promoteZeroIfGood", dest="ggtf_promoteZeroIfGood", action="store_false")
+parser.add_argument("--ggtf-skipZeroIfSmall", action="store_true", default=True)
+parser.add_argument("--no-ggtf-skipZeroIfSmall", dest="ggtf_skipZeroIfSmall", action="store_false")
+parser.add_argument("--ggtf-skipZeroAlways", action="store_true", default=False)
+parser.add_argument("--no-ggtf-skipZeroAlways", dest="ggtf_skipZeroAlways", action="store_false")
+
 
 args = parser.parse_args()
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
@@ -295,6 +307,9 @@ def _set_if_has_digitizer(obj, name, value):
 # Common v01/v02 inputs
 _set_if_has_digitizer(dch_digitizer, "DCH_simhits", [args.dchSimHits])
 _set_if_has_digitizer(dch_digitizer, "DCH_name", args.dchName)
+# --- v02 input bindings (safe no-ops for v01) ---
+_set_if_has_digitizer(dch_digitizer, "InputSimHitCollection", [args.dchSimHits])
+_set_if_has_digitizer(dch_digitizer, "HeaderName", ["EventHeader"])
 
 # v01 legacy knobs (harmless for v02; set only if exist)
 _set_if_has_digitizer(dch_digitizer, "fileDataAlg", "DataAlgFORGEANT.root")
@@ -346,6 +361,16 @@ GGTF.Tbeta = args.tbeta
 GGTF.Td    = args.td
 
 for name, val in [
+    ("ZeroMinSizeKeep", args.ggtf_zeroMinSizeKeep),
+    ("MinWireFracKeep", args.ggtf_minWireFracKeep),
+    ("PromoteZeroIfGood", args.ggtf_promoteZeroIfGood),
+    ("SkipZeroIfSmall", args.ggtf_skipZeroIfSmall),
+    ("SkipZeroAlways", args.ggtf_skipZeroAlways),
+]:
+    try: setattr(GGTF, name, val)
+    except Exception as e: print(f"[warn] could not set GGTF.{name}: {e}")
+
+for name, val in [
     ("WireGateMM", args.wireGateMM),
     ("OnnxChunk", args.onnxChunk),
     ("Max3DHitsPerEvent", args.max3DHitsPerEvent),
@@ -354,7 +379,7 @@ for name, val in [
     try: setattr(GGTF, name, val)
     except Exception as e: print(f"[warn] could not set GGTF.{name}: {e}")
 
-try: GGTF.produce3DHits = bool(args.produce3DHits)
+try: GGTF.Produce3DHits = bool(args.produce3DHits)
 except Exception: pass
 
 try:

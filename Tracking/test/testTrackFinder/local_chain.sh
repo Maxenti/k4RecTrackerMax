@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples2/gun_eta+0.1+E300MeV.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/gun_samples2/reco_eta+0.1_E300MeV.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+1.00/gun_eta+1.00_E2.3224.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/reco_eta+1.00_E2.3224.root"
 # Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
@@ -41,7 +41,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=12.0}"       # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=4.0}"       # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
 
@@ -53,16 +53,16 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${GF_SEED_POS_SIGMA:=100}"    # mm
 : "${GF_SEED_MOM_SIGMA:=10.0}"   # GeV
 : "${GF_DEDUP_TOL:=0.50}"        # mm
-: "${GF_USE_MAT:=1}"             # 0/1
+: "${GF_USE_MAT:=0}"             # 0/1
 : "${GF_SEED_PT_MIN:=0.2}"
 : "${GF_SEED_PT_MAX:=200.0}"
 : "${GF_SEED_P_MIN:=1.2}"        # GeV
 
 # Fitter grouping / fallback / retry (GenFit2)
-: "${GF_MIN_GROUP:=6}"
+: "${GF_MIN_GROUP:=7}"
 : "${GF_USE_FALLBACK:=1}"
 : "${GF_FALLBACK_EPS_CM:=4}"
-: "${GF_FALLBACK_MINPTS:=4}"
+: "${GF_FALLBACK_MINPTS:=6}"
 : "${GF_RETRY:=1}"
 : "${GF_RETRY_MEAS_INFL:=5.0}"
 : "${GF_RETRY_SEED_POS:=5.0}"
@@ -96,6 +96,15 @@ PY
 )}"
 : "${DCH_READOUT_START_NS:=1.0}"
 : "${DCH_READOUT_DUR_NS:=450.0}"
+
+
+# label-0 handling
+: "${GGTF_ZERO_MIN:=8}"
+: "${GGTF_WIRE_FRAC:=0.80}"
+: "${GGTF_PROMOTE_ZERO:=1}"   # 1/0
+: "${GGTF_SKIP_ZERO_SMALL:=1}"
+: "${GGTF_SKIP_ZERO_ALWAYS:=0}"
+
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -190,6 +199,11 @@ K4_ARGS+=(
   --dch-readout-start-ns "${DCH_READOUT_START_NS}"
   --dch-readout-dur-ns   "${DCH_READOUT_DUR_NS}"
 )
+K4_ARGS+=( --ggtf-zeroMinSizeKeep "${GGTF_ZERO_MIN}" )
+K4_ARGS+=( --ggtf-minWireFracKeep "${GGTF_WIRE_FRAC}" )
+[[ "${GGTF_PROMOTE_ZERO}" -eq 1 ]] && K4_ARGS+=( --ggtf-promoteZeroIfGood ) || K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
+[[ "${GGTF_SKIP_ZERO_SMALL}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
+[[ "${GGTF_SKIP_ZERO_ALWAYS}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
 
 if [[ "${GF_USE_MAT}" == "1" ]]; then
   K4_ARGS+=( --gf-useMat )

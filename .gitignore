@@ -10,3 +10,7 @@ install/
 *.err
 *.out
 *.cc
+*.json.err
+*.json.out
+Tracking/test/testTrackFinder/params
+Tracking/test/testTrackFinder/logs
