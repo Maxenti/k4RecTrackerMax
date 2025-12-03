@@ -5,3 +5,8 @@
 build/
 install/
 *.log
+*.txt
+*.json
+*.err
+*.out
+*.cc
