@@ -9,9 +9,13 @@
 // DD4hep
 #include "DD4hep/Detector.h"
 
+// k4FWCore
+#include "k4FWCore/MetaDataHandle.h"   // NEW
+
 // STL
 #include <algorithm>
 #include <unordered_map>
+#include <sstream>                      // NEW
 
 namespace {
 
@@ -37,7 +41,10 @@ DCHdigi_v02::DCHdigi_v02(const std::string& name, ISvcLocator* svcLoc)
         KeyValues("HeaderName", {"EventHeader"}) },
       // outputs
       { KeyValues("OutputDigihitCollection", {"DCHDigi2Collection"}),
-        KeyValues("OutputLinkCollection",   {"DCHDigi2SimLinkCollection"}) }) {}
+        KeyValues("OutputLinkCollection",   {"DCHDigi2SimLinkCollection"}) }),
+    m_digiMeta("DCHdigi_v02Config", Gaudi::DataHandle::Writer)  // NEW
+{
+}
 
 StatusCode DCHdigi_v02::initialize() {
 
@@ -90,6 +97,38 @@ StatusCode DCHdigi_v02::initialize() {
   }
 
   m_event_counter.reset();
+
+  // ---------------------------
+  // Write configuration metadata
+  // ---------------------------
+  try {
+    std::ostringstream os;
+    os << "{";
+    os << "\"component\":\"DCHdigi_v02\"";
+    os << ",\"DCH_name\":\"" << m_dch_name.value() << "\"";
+    os << ",\"GasType\":" << m_GasType.value();
+    os << ",\"xyResolution_mm\":" << m_xy_resolution_mm.value();
+    os << ",\"zResolution_mm\":" << m_z_resolution_mm.value();
+    os << ",\"Deadtime_ns\":" << m_deadtime_ns.value();
+    os << ",\"DriftVelocity_um_per_ns\":" << m_drift_velocity_um_per_ns.value();
+    os << ",\"SignalVelocity_mm_per_ns\":" << m_signal_velocity_mm_per_ns.value();
+    os << ",\"ReadoutWindowStart_ns\":" << m_ReadoutWindowStartTime_ns.value();
+    os << ",\"ReadoutWindowDuration_ns\":" << m_ReadoutWindowDuration_ns.value();
+
+    // Optional external tag (e.g. input file name) – can be set from Python
+    if (!m_jobTag.value().empty()) {
+      os << ",\"JobTag\":\"" << m_jobTag.value() << "\"";
+    }
+
+    os << "}";
+
+    const std::string payload = os.str();
+    m_digiMeta.put(payload);
+    info() << "DCHdigi_v02 metadata written: " << payload << endmsg;
+  } catch (const std::exception& e) {
+    warning() << "Failed to write DCHdigi_v02 metadata: " << e.what() << endmsg;
+  }
+
   return StatusCode::SUCCESS;
 }
 

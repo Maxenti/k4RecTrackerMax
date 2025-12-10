@@ -5,9 +5,10 @@ view_tracks_event.py
 Visualize GGTF_3DHits, DCH digis, and GenFit2 tracks from an EDM4hep ROOT file.
 
 For a chosen event:
-  - Reads GGTF_3DHits positions (x,y,z) and labels (type).
-  - Reads DCHDigi2Collection positions (x,y,z) from DCHdigi_v02.
-  - Reads GenFitTracks TrackStates(AtIP) and draws straight-line tracks.
+  - GGTF_3DHits positions (x,y,z) and labels (type)
+  - DCHDigi2Collection positions (SenseWireHit positions in mm)
+  - GenFitTracks TrackStates(AtIP):
+      * straight-line or helix visualization
 
 Builds:
   * 2D XY histogram (GGTF hits)
@@ -15,13 +16,18 @@ Builds:
   * 3D display:
       - GGTF hits as colored scatter dots (TPolyMarker3D per label)
       - DCHDigi2Collection points as orange scatter dots
-      - GenFitTracks as TPolyLine3D tracks (straight-line approx)
+      - GenFitTracks as TPolyLine3D tracks (straight or helix)
 
-Writes histograms and canvases into a ROOT file (no interactive windows).
+Writes histograms, canvases, and metadata into a ROOT file (no interactive windows).
 """
 
 import math
 import argparse
+import os
+import sys
+import socket
+import getpass
+import time
 from collections import defaultdict
 
 import ROOT
@@ -194,7 +200,7 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
 
     We primarily use:
       - referencePoint (x,y,z) as origin
-      - phi, tanLambda to build direction
+      - phi, tanLambda, omega for direction and curvature
       - time (pT) only for logging
     """
 
@@ -269,7 +275,7 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
 
         print(f"[debug] TrackState[{i}] "
               f"x0={x0:.2f} y0={y0:.2f} z0={z0p:.2f} mm, "
-              f"phi={phi:.3f}, tanLambda={tl:.3f}, pT={pT:.3f} GeV")
+              f"phi={phi:.3f}, tanLambda={tl:.3f}, pT={pT:.3f} GeV, omega={omg:.4e}")
 
     return states
 
@@ -281,12 +287,18 @@ def make_plots(tracks_by_label,
                digi_points,
                out_root,
                title_prefix="GGTF_3DHits",
-               track_states=None):
+               track_states=None,
+               track_style="helix",
+               Bz=2.0,
+               meta_info=None):
     """
     tracks_by_label: dict[label] -> list[(x,y,z)] for GGTF_3DHits
     digi_points: list[(x,y,z)] for DCHDigi2Collection (SenseWireHits)
     out_root: path to ROOT file for output
     track_states: list of track-state dicts (can be None or empty)
+    track_style: "straight" or "helix"
+    Bz: magnetic field along z [T] for helix (matches fitter default)
+    meta_info: dict of metadata strings to store as a TNamed
     """
 
     # Flatten to find coordinate ranges
@@ -320,6 +332,14 @@ def make_plots(tracks_by_label,
     f_out = ROOT.TFile(out_root, "RECREATE")
     if not f_out or f_out.IsZombie():
         raise RuntimeError(f"Could not create output ROOT file: {out_root}")
+
+    # --------------------------------------------------------
+    # Metadata block
+    # --------------------------------------------------------
+    if meta_info is not None:
+        meta_str = "\n".join(f"{k}: {v}" for k, v in meta_info.items())
+        meta = ROOT.TNamed("view_tracks_metadata", meta_str)
+        meta.Write()
 
     # --------------------------------------------------------
     # 2D XY and RZ histograms (using GGTF hits only)
@@ -419,7 +439,7 @@ def make_plots(tracks_by_label,
         n_digi = len(digi_points)
         pm_digi = ROOT.TPolyMarker3D(n_digi)
         pm_digi.SetMarkerColor(ROOT.kOrange + 1)
-        pm_digi.SetMarkerStyle(24)  # open circle/square-ish
+        pm_digi.SetMarkerStyle(20)  # open marker
         pm_digi.SetMarkerSize(0.9)
 
         for i, (x, y, z) in enumerate(digi_points):
@@ -430,16 +450,18 @@ def make_plots(tracks_by_label,
         print(f"[info] Drew {n_digi} DCHDigi2Collection points in orange.")
 
     # --------------------------------------------------------
-    # Draw GenFit track lines (approximate as straight lines)
+    # Draw GenFit track lines
     # --------------------------------------------------------
     if track_states:
-        print(f"[info] Drawing {len(track_states)} GenFit track line(s) in 3D view.")
+        print(f"[info] Drawing {len(track_states)} GenFit track line(s) in 3D view "
+              f"with style='{track_style}'.")
+
         # Rough scale: use largest radial extent seen in all points
         rmax_hits = max(math.hypot(x, y) for x, y in zip(xs, ys))
-        # Path length in mm along the line (some multiple of radial extent)
+        # Path length in mm along the track (s range)
         s_max = 1.2 * rmax_hits
         s_min = -s_max
-        n_points_line = 100
+        n_points_line = 200
 
         for it, st in enumerate(track_states):
             x0 = st["x0"]
@@ -447,30 +469,72 @@ def make_plots(tracks_by_label,
             z0 = st["z0"]
             phi = st["phi"]
             tl  = st["tanLambda"]
-
-            # Direction unit vector from (phi, tanLambda)
-            # p ∝ (cos phi, sin phi, tanLambda); only direction matters for drawing
-            ux = math.cos(phi)
-            uy = math.sin(phi)
-            uz = tl
-            norm = math.sqrt(ux*ux + uy*uy + uz*uz)
-            if norm > 0:
-                ux /= norm
-                uy /= norm
-                uz /= norm
+            omg = st["omega"]
 
             pl = ROOT.TPolyLine3D(n_points_line)
-            # First track in white, others in yellow for visibility
             line_color = ROOT.kBlue if it == 0 else ROOT.kYellow
             pl.SetLineColor(line_color)
             pl.SetLineWidth(3)
 
-            for i in range(n_points_line):
-                s = s_min + (s_max - s_min) * i / (n_points_line - 1)
-                x = x0 + ux * s
-                y = y0 + uy * s
-                z = z0 + uz * s
-                pl.SetPoint(i, x, y, z)
+            if track_style == "straight" or not math.isfinite(omg) or Bz == 0.0:
+                # ---------- Straight-line approximation ----------
+                ux = math.cos(phi)
+                uy = math.sin(phi)
+                uz = tl
+                norm = math.sqrt(ux*ux + uy*uy + uz*uz)
+                if norm > 0:
+                    ux /= norm
+                    uy /= norm
+                    uz /= norm
+
+                for i in range(n_points_line):
+                    s = s_min + (s_max - s_min) * i / (n_points_line - 1)
+                    x = x0 + ux * s
+                    y = y0 + uy * s
+                    z = z0 + uz * s
+                    pl.SetPoint(i, x, y, z)
+
+            else:
+                # ---------- Helix in uniform Bz ----------
+                # Units: pT [GeV], omega = q/pT [GeV^-1], Bz [T]
+                # Radius in m: R = pT / (0.3 |q| B) = 1 / (|omega| * 0.3 |Bz|)
+                R_m = 1.0 / (abs(omg) * 0.3 * abs(Bz)) if abs(omg) > 0 and abs(Bz) > 0 else 1e6
+                R_mm = R_m * 1000.0
+
+                # Sign of curvature: ~ sign(q * Bz) = sign(omega * Bz)
+                #Switched to -1.0 as base to match helixes to the 3dhits
+                sgn = -1.0
+                if omg * Bz < 0:
+                    sgn = 1.0
+
+                # Circle center in XY (from perigee point)
+                # Derived such that tangent at perigee matches phi
+                xc = x0 - sgn * R_mm * math.sin(phi)
+                yc = y0 + sgn * R_mm * math.cos(phi)
+
+                # Angle of radial vector (center -> perigee)
+                alpha0 = math.atan2(y0 - yc, x0 - xc)
+
+                # Pitch angle: tanλ = pz / pT
+                # cosθ = pT / |p| = 1 / sqrt(1 + tan^2λ)
+                cos_theta = 1.0 / math.sqrt(1.0 + tl*tl)
+                sin_theta = tl * cos_theta
+
+                for i in range(n_points_line):
+                    s = s_min + (s_max - s_min) * i / (n_points_line - 1)
+
+                    # Projected path length in XY plane
+                    s_xy = s * cos_theta
+
+                    # Change in azimuth along circle
+                    delta_alpha = sgn * s_xy / R_mm
+                    alpha = alpha0 + delta_alpha
+
+                    x = xc + R_mm * math.cos(alpha)
+                    y = yc + R_mm * math.sin(alpha)
+                    z = z0 + s * sin_theta
+
+                    pl.SetPoint(i, x, y, z)
 
             pl.Draw("SAME")
             track_lines.append(pl)
@@ -533,7 +597,9 @@ def find_first_event_with_hits(tree, coll_name="GGTF_3DHits", max_print=20):
 # main
 # ------------------------------------------------------------
 def main():
-    ap = argparse.ArgumentParser(description="View GGTF_3DHits + DCH digis + GenFit tracks for one event.")
+    ap = argparse.ArgumentParser(
+        description="View GGTF_3DHits + DCH digis + GenFit tracks for one event."
+    )
     ap.add_argument("--input", required=True, help="Input reco ROOT file (EDM4hep)")
     ap.add_argument("--event", type=int, default=-1,
                     help="Event index (0-based). If <0, auto-find first event with GGTF_3DHits.")
@@ -545,6 +611,11 @@ def main():
     ap.add_argument("--trackCollection", default="GenFitTracks",
                     help="Track collection base name for GenFit TrackStates (default: GenFitTracks). "
                          "If empty, tracks will not be drawn.")
+    ap.add_argument("--trackStyle", choices=["straight", "helix"], default="helix",
+                    help="Visualization style for tracks: straight or helix (default: helix).")
+    ap.add_argument("--Bz", type=float, default=2.0,
+                    help="B-field along z [T] for helix drawing (default: 2.0, "
+                         "should match GenFit2DCHFitter.Bz).")
     ap.add_argument("--outRoot", default="tracks_display.root",
                     help="Output ROOT file for histos + canvases")
     args = ap.parse_args()
@@ -588,11 +659,31 @@ def main():
     if args.trackCollection:
         track_states = load_track_states(tree, ev_idx, args.trackCollection)
 
+    # Build metadata
+    meta_info = {
+        "script": os.path.basename(__file__),
+        "command_line": " ".join(sys.argv),
+        "input_file": args.input,
+        "output_file": args.outRoot,
+        "event_index": ev_idx,
+        "hits_collection": args.collection,
+        "digi_collection": args.digiCollection or "<none>",
+        "track_collection": args.trackCollection or "<none>",
+        "track_style": args.trackStyle,
+        "Bz_T": args.Bz,
+        "user": getpass.getuser(),
+        "host": socket.gethostname(),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
     make_plots(tracks_by_label,
                digi_points,
                args.outRoot,
                title_prefix=f"{args.collection} (event {ev_idx})",
-               track_states=track_states)
+               track_states=track_states,
+               track_style=args.trackStyle,
+               Bz=args.Bz,
+               meta_info=meta_info)
 
     f.Close()
 

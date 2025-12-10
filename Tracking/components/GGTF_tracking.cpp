@@ -12,6 +12,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <sstream>  // <--- added
 
 #include <ATen/ATen.h>
 #include <torch/torch.h>
@@ -25,6 +26,7 @@
 #include "GaudiKernel/ISvcLocator.h"
 #include "GaudiKernel/SmartIF.h"
 #include "k4FWCore/Transformer.h"
+#include "k4FWCore/MetaDataHandle.h"  // <--- added
 #include "k4Interface/IGeoSvc.h"
 #include "k4Interface/IUniqueIDGenSvc.h"
 
@@ -113,7 +115,8 @@ struct GGTF_tracking final
                       std::tuple<>, std::tuple<>, Traits>::KeyValues;
 
   GGTF_tracking(const std::string& name, ISvcLocator* svcLoc)
-      : MultiTransformer(name, svcLoc,
+      : MultiTransformer(
+          name, svcLoc,
           // Inputs (match upstream names)
           {
             KeyValues("InputPlanarHitCollections", std::vector<std::string>{"InputPlanarHitCollections"}),
@@ -123,7 +126,9 @@ struct GGTF_tracking final
           {
             KeyValues("OutputTracksGGTF", std::vector<std::string>{"OutputTracksGGTF"}),
             KeyValues("Output3DHits",     std::vector<std::string>{"GGTF_3DHits"})
-          }) {
+          }),
+        m_meta("GGTF_trackingConfig", Gaudi::DataHandle::Writer)  // <--- added
+  {
     m_geoSvc = serviceLocator()->service(m_geoSvcName);
   }
 
@@ -156,6 +161,11 @@ struct GGTF_tracking final
   Gaudi::Property<std::string> m_uidSvcName{this, "UidSvcName", "uidSvc", "UniqueIDGenSvc name"};
   Gaudi::Property<std::string> m_dchName   {this, "DchName", "DCH_v2", "Drift chamber detector name"};
 
+  // Optional external job tag (e.g. input file, steering script name)
+  Gaudi::Property<std::string> m_jobTag{
+      this, "JobTag", "",
+      "Optional free-form tag (e.g. steering script name, input file, run label) to store in metadata"};
+
   // --- label-0 handling (NEW) ---
   Gaudi::Property<int>    m_zeroMinSizeKeep{this, "ZeroMinSizeKeep", 8,
     "Min hits for a label=0 group to be considered (else dropped)"};
@@ -180,6 +190,9 @@ struct GGTF_tracking final
   dd4hep::DDSegmentation::BitFieldCoder* m_dchDecoder{nullptr};
 
   mutable int m_evt{0};
+
+  // Metadata handle for this stage
+  k4FWCore::MetaDataHandle<std::string> m_meta;  // <--- added
 
   // ---------- init ----------
   StatusCode initialize() override {
@@ -231,6 +244,39 @@ struct GGTF_tracking final
            << " | SkipZeroAlways=" << (m_skipZeroAlways.value()?"true":"false")
            << " | RSS=" << rss/1024.0 << "MB, Peak=" << hwm/1024.0 << "MB"
            << endmsg;
+
+    // ---- write metadata for this component ----
+    try {
+      std::ostringstream cfg;
+      cfg << "{"
+          << "\"component\":\"GGTF_tracking\","
+          << "\"modelPath\":\"" << m_modelPath.value() << "\","
+          << "\"Tbeta\":" << m_tbeta.value() << ","
+          << "\"Td\":" << m_td.value() << ","
+          << "\"Produce3DHits\":" << (m_produce3DHits.value() ? "true" : "false") << ","
+          << "\"OnnxChunk\":" << m_onnxChunk.value() << ","
+          << "\"MaxHitsPerEvent\":" << m_maxHitsPerEvent.value() << ","
+          << "\"Max3DHitsPerEvent\":" << m_max3DHitsPerEvent.value() << ","
+          << "\"Max3DPerTrack\":" << m_max3DPerTrack.value() << ","
+          << "\"WireGateMM\":" << m_wireGateMM.value() << ","
+          << "\"DefaultSigmaXYMM\":" << m_defaultSigmaXYMM.value() << ","
+          << "\"DefaultSigmaZMM\":" << m_defaultSigmaZMM.value() << ","
+          << "\"DchName\":\"" << m_dchName.value() << "\","
+          << "\"JobTag\":\"" << m_jobTag.value() << "\","
+          << "\"ZeroMinSizeKeep\":" << m_zeroMinSizeKeep.value() << ","
+          << "\"MinWireFracKeep\":" << m_minWireFracKeep.value() << ","
+          << "\"PromoteZeroIfGood\":" << (m_promoteZeroIfGood.value() ? "true" : "false") << ","
+          << "\"SkipZeroIfSmall\":" << (m_skipZeroIfSmall.value() ? "true" : "false") << ","
+          << "\"SkipZeroAlways\":" << (m_skipZeroAlways.value() ? "true" : "false")
+          << "}";
+
+      m_meta.put(cfg.str());
+      info() << "GGTF_tracking metadata written under key 'GGTF_trackingConfig'" << endmsg;
+    } catch (const std::exception& e) {
+      warning() << "Failed to write GGTF_tracking metadata: " << e.what() << endmsg;
+    } catch (...) {
+      warning() << "Failed to write GGTF_tracking metadata (unknown exception)" << endmsg;
+    }
 
     return StatusCode::SUCCESS;
   }
@@ -379,7 +425,7 @@ struct GGTF_tracking final
 
     // Build groups via inverse index
     std::vector<std::vector<int64_t>> groups;
-    int64_t zeroLabelPos = -1;
+
     torch::Tensor uniques_cpu;
     {
       StepTimer t_bucket;
@@ -388,8 +434,7 @@ struct GGTF_tracking final
       const int64_t nLabels = uniques_cpu.size(0);
       groups.resize(nLabels);
 
-      for (int64_t i=0; i<nLabels; ++i)
-        if (uniques_cpu[i].item<int64_t>() == 0) { zeroLabelPos = i; break; }
+
 
       auto acc = inv_cpu.accessor<int64_t,1>();
       for (int64_t i=0; i<nHits; ++i) {
@@ -525,9 +570,9 @@ struct GGTF_tracking final
             continue;
           }
 
-          int nWire = 0;
-          for (auto k : vec) if (tagType[k] == 1) ++nWire;
-          const double wireFrac = (size > 0) ? double(nWire)/double(size) : 0.0;
+          int nWireInGroup = 0;
+          for (auto k : vec) if (tagType[k] == 1) ++nWireInGroup;
+          const double wireFrac = (size > 0) ? double(nWireInGroup)/double(size) : 0.0;
 
           bool good = (wireFrac >= m_minWireFracKeep.value());
 
@@ -553,10 +598,7 @@ struct GGTF_tracking final
             // reject low-quality zero-label group
             continue;
           }
-          // If promote is disabled and label==0, we still build the track here (keeps relations),
-          // but you can flip this if you want strict promotion behavior.
-          // If you wanted to relabel zero groups, you could compute a fresh positive label here.
-          (void)m_promoteZeroIfGood; // currently used as a conceptual switch; kept for CLI completeness
+          (void)m_promoteZeroIfGood;
         }
 
         auto trk = outputTracks.create();
@@ -613,7 +655,7 @@ struct GGTF_tracking final
   }
 
 private:
-  // (no extra private fields)
+  // (no extra private fields beyond m_meta)
 };
 
 DECLARE_COMPONENT(GGTF_tracking)

@@ -1,5 +1,8 @@
 #pragma once
 
+// STL
+#include <string>  // NEW
+
 // Gaudi
 #include "Gaudi/Accumulators.h"
 #include <GaudiKernel/ISvcLocator.h>
@@ -7,6 +10,7 @@
 
 // k4FWCore
 #include "k4FWCore/Transformer.h"
+#include "k4FWCore/MetaDataHandle.h"   // NEW
 
 // k4Interface
 #include <k4Interface/IGeoSvc.h>
@@ -62,33 +66,43 @@ public:
 
 private:
   SmartIF<IUniqueIDGenSvc> m_uniqueIDSvc{nullptr};
-  Gaudi::Property<std::string> m_uidSvcName{this, "uidSvcName", "UniqueIDGenSvc",
-                                            "The name of the UniqueIDGenSvc instance"};
+  Gaudi::Property<std::string> m_uidSvcName{
+      this, "uidSvcName", "UniqueIDGenSvc",
+      "The name of the UniqueIDGenSvc instance"};
 
   SmartIF<IGeoSvc> m_geoSvc{nullptr};
-  Gaudi::Property<std::string> m_geoSvcName{this, "GeoSvcName", "GeoSvc", "The name of the GeoSvc instance"};
+  Gaudi::Property<std::string> m_geoSvcName{
+      this, "GeoSvcName", "GeoSvc",
+      "The name of the GeoSvc instance"};
 
-  mutable Gaudi::Accumulators::Counter<Gaudi::Accumulators::atomicity::full, unsigned int> m_event_counter;
+  mutable Gaudi::Accumulators::Counter<
+      Gaudi::Accumulators::atomicity::full, unsigned int> m_event_counter;
 
   TrkUtil m_delphesTrkUtil;
 
   dd4hep::DDSegmentation::BitFieldCoder* m_decoder{nullptr};
 
   // Detector name
-  Gaudi::Property<std::string> m_dch_name{this, "DCH_name", "DCH_v2", "Name of the Drift Chamber detector"};
+  Gaudi::Property<std::string> m_dch_name{
+      this, "DCH_name", "DCH_v2",
+      "Name of the Drift Chamber detector"};
 
   // Drift chamber info extension for geometry calculations
   dd4hep::rec::DCH_info* m_dch_info{nullptr};
 
   // z resolution in mm
-  Gaudi::Property<double> m_z_resolution_mm{this, "zResolution_mm", 1.0,
-                                            "Spatial resolution in the direction along the wire, in mm."};
+  Gaudi::Property<double> m_z_resolution_mm{
+      this, "zResolution_mm", 1.0,
+      "Spatial resolution in the direction along the wire, in mm."};
+
   // xy resolution in mm
-  Gaudi::Property<double> m_xy_resolution_mm{this, "xyResolution_mm", 0.1,
-                                             "Spatial resolution in the direction perpendicular to the wire, in mm."};
+  Gaudi::Property<double> m_xy_resolution_mm{
+      this, "xyResolution_mm", 0.1,
+      "Spatial resolution in the direction perpendicular to the wire, in mm."};
 
   // Deadtime of a cell in ns
-  Gaudi::Property<double> m_deadtime_ns{this, "Deadtime_ns", 400.0, "Deadtime of a cell in ns."};
+  Gaudi::Property<double> m_deadtime_ns{
+      this, "Deadtime_ns", 400.0, "Deadtime of a cell in ns."};
 
   // Gas drift velocity in um/ns
   Gaudi::Property<double> m_drift_velocity_um_per_ns{
@@ -103,13 +117,27 @@ private:
 
   // Gas mixture
   Gaudi::Property<int> m_GasType{
-      this, "GasType", {0}, "0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar."};
+      this, "GasType", {0},
+      "0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar."};
 
   // Readout window
   Gaudi::Property<double> m_ReadoutWindowStartTime_ns{
-      this, "ReadoutWindowStartTime_ns", 1.0, "Start time of readout window (ns)."};
+      this, "ReadoutWindowStartTime_ns", 1.0,
+      "Start time of readout window (ns)."};
+
   Gaudi::Property<double> m_ReadoutWindowDuration_ns{
-      this, "ReadoutWindowDuration_ns", 450.0, "Duration of readout window (ns)."};
+      this, "ReadoutWindowDuration_ns", 450.0,
+      "Duration of readout window (ns)."};
+
+  // --------- NEW: metadata + external tag ---------
+
+  // Optional freeform tag (e.g. input file name, job label)
+  Gaudi::Property<std::string> m_jobTag{
+      this, "JobTag", "",
+      "Optional external tag (e.g. input file name or run label)"};
+
+  // Metadata handle: writes a JSON-ish config blob once per file
+  k4FWCore::MetaDataHandle<std::string> m_digiMeta;
 
   /// Convert EDM4hep Vector3d to TVector3
   TVector3 toTVector3(const edm4hep::Vector3d& v) const { return {v[0], v[1], v[2]}; };

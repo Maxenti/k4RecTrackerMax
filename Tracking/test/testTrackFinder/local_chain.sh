@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E200.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/eta_+0.00/reco_eta+0.00_E200.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.50/gun_eta+0.50_E0.62633.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/eta_+0.50/reco_eta+0.50_E0.62633.root"
 # Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
@@ -36,8 +36,8 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${TIMEOUT_K4RUN:=0}"          # seconds (0=off)
 
 # GGTF clustering thresholds
-: "${TBETA:=0.8}"
-: "${TD:=0.05}"
+: "${TBETA:=0.6}"
+: "${TD:=0.3}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice

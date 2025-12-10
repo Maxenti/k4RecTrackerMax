@@ -24,6 +24,8 @@
 #include <numeric>
 #include <queue>
 #include <limits>
+#include <sstream>
+#include <ctime>
 
 // Gaudi
 #include "Gaudi/Algorithm.h"
@@ -32,6 +34,7 @@
 
 // k4FWCore
 #include "k4FWCore/Transformer.h"
+#include "k4FWCore/MetaDataHandle.h"
 
 // EDM4hep
 #include "edm4hep/TrackerHit3DCollection.h"
@@ -188,7 +191,6 @@ static void addAtIPState(edm4hep::MutableTrack& trk,
 
   edm4hep::TrackState ts;
   ts.location       = edm4hep::TrackState::AtIP;
-    // *** CHANGE IS HERE: store the actual perigee position in mm ***
   ts.referencePoint = { float(x), float(y), float(z) };
   ts.phi            = float(phi);
   ts.omega          = float(omegaSigned);  // q/pT [GeV^-1]
@@ -261,7 +263,8 @@ struct GenFit2DCHFitter final
   GenFit2DCHFitter(const std::string& name, ISvcLocator* svcLoc)
   : Transformer(name, svcLoc,
       std::tuple<KeyValues>{ KeyValues{"inputHits",  std::vector<std::string>{"GGTF_3DHits"}} },
-      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"GenFitTracks"}} }) {
+      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"GenFitTracks"}} }),
+    m_cfgMeta("GenFit2DCHFitterConfig", Gaudi::DataHandle::Writer) {
     // No declareProperty calls here — Gaudi::Property<> handles registration.
   }
 
@@ -353,6 +356,55 @@ struct GenFit2DCHFitter final
            << " | RetrySeedMomInfl=" << m_retrySeedMomInfl.value()
            << " | MaxMeasPerGroup=" << m_maxMeasPerGroup.value()
            << endmsg;
+
+    // --- Write configuration metadata once at initialize() ---
+    try {
+      std::ostringstream os;
+
+      // Timestamp (UTC)
+      std::time_t now = std::time(nullptr);
+      char tbuf[64] = {0};
+      std::strftime(tbuf, sizeof(tbuf), "%Y-%m-%dT%H:%M:%SZ", std::gmtime(&now));
+
+      os << "{";
+      os << "\"component\":\"" << name() << "\"";
+      os << ",\"timestamp_utc\":\"" << tbuf << "\"";
+      os << ",\"Bz_T\":" << m_Bz.value();
+      os << ",\"PDG\":" << m_pdg.value();
+      os << ",\"UseMaterialEffects\":" << (m_useMatEff.value() ? "true" : "false");
+      os << ",\"PositionUnitScale\":" << m_posScale.value();
+      os << ",\"InternalLengthToMeters\":" << m_internalLenToM.value();
+      os << ",\"HitSigmaXYMM\":" << m_hitSigmaXYMM.value();
+      os << ",\"HitSigmaZMM\":" << m_hitSigmaZMM.value();
+      os << ",\"SeedPosSigmaMM\":" << m_seedPosSigmaMM.value();
+      os << ",\"SeedMomSigmaGeV\":" << m_seedMomSigmaGeV.value();
+      os << ",\"SeedPTMinGeV\":" << m_seedPTMinGeV.value();
+      os << ",\"SeedPTMaxGeV\":" << m_seedPTMaxGeV.value();
+      os << ",\"SeedPMinGeV\":" << m_seedPMinGeV.value();
+      os << ",\"SortHits\":" << (m_sortHits.value() ? "true" : "false");
+      os << ",\"DeduplicateHits\":" << (m_dedup.value() ? "true" : "false");
+      os << ",\"DedupTolMM\":" << m_dedupTolMM.value();
+      os << ",\"MinGroupSize\":" << m_minGroupSize.value();
+      os << ",\"UseFallbackClustering\":" << (m_useFallbackClust.value() ? "true" : "false");
+      os << ",\"FallbackEpsCM\":" << m_fallbackEpsCM.value();
+      os << ",\"FallbackMinPts\":" << m_fallbackMinPts.value();
+      os << ",\"RetryIfNoFitterInfo\":" << (m_retryIfNoFI.value() ? "true" : "false");
+      os << ",\"RetryMeasInfl\":" << m_retryMeasInfl.value();
+      os << ",\"RetrySeedPosInfl\":" << m_retrySeedPosInfl.value();
+      os << ",\"RetrySeedMomInfl\":" << m_retrySeedMomInfl.value();
+      os << ",\"MaxMeasPerGroup\":" << m_maxMeasPerGroup.value();
+      os << ",\"buildDate\":\"" << __DATE__ << "\"";
+      os << ",\"buildTime\":\"" << __TIME__ << "\"";
+      os << "}";
+
+      m_cfgMeta.put(os.str());
+      info() << "Wrote GenFit2DCHFitter configuration metadata (key='GenFit2DCHFitterConfig')" << endmsg;
+    } catch (const std::exception& e) {
+      warning() << "Failed to write GenFit2DCHFitter metadata: " << e.what() << endmsg;
+    } catch (...) {
+      warning() << "Failed to write GenFit2DCHFitter metadata (unknown exception)" << endmsg;
+    }
+
     return StatusCode::SUCCESS;
   }
 
@@ -612,6 +664,9 @@ struct GenFit2DCHFitter final
 
 private:
   std::unique_ptr<genfit::KalmanFitterRefTrack> m_fitter;
+
+  // Metadata handle for this fitter's configuration
+  k4FWCore::MetaDataHandle<std::string> m_cfgMeta;
 };
 
 DECLARE_COMPONENT(GenFit2DCHFitter)

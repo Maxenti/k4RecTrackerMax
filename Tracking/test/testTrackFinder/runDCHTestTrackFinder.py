@@ -31,6 +31,14 @@ parser.add_argument("--dchSimHits", default="DCHCollection",
 parser.add_argument("--dchName",    default="DCH_v2",
                     help="DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)")
 
+### NEW: global job tag CLI
+parser.add_argument(
+    "--jobTag",
+    default="",
+    help="Optional free-form tag stored in metadata (overrides auto tag). "
+         "If empty, an automatic tag based on script/input/stage/fitter is used.",
+)
+
 # ----------------- Digitizer selection (v01/v02) -----------------
 parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v01",
                     help="Choose DCH digitizer implementation")
@@ -182,8 +190,6 @@ parser.add_argument("--no-tp-printDiag", dest="tp_printDiag", action="store_fals
 parser.add_argument("--tp-diagEveryN", type=int, default=100,
                     help="Diagnostic print frequency (events)")
 
-
-
 parser.add_argument("--ggtf-zeroMinSizeKeep", type=int, default=8)
 parser.add_argument("--ggtf-minWireFracKeep", type=float, default=0.60)
 parser.add_argument("--ggtf-promoteZeroIfGood", action="store_true", default=True)
@@ -193,9 +199,22 @@ parser.add_argument("--no-ggtf-skipZeroIfSmall", dest="ggtf_skipZeroIfSmall", ac
 parser.add_argument("--ggtf-skipZeroAlways", action="store_true", default=False)
 parser.add_argument("--no-ggtf-skipZeroAlways", dest="ggtf_skipZeroAlways", action="store_false")
 
-
 args = parser.parse_args()
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
+
+### NEW: construct a global job_tag string
+if args.jobTag:
+    job_tag = args.jobTag
+else:
+    script_name = os.path.basename(globals().get("__file__", "runDCHTestTrackFinder.py"))
+    job_tag = (
+        f"{script_name}"
+        f"|input={os.path.basename(args.inputFile)}"
+        f"|stage={args.stage}"
+        f"|fitter={args.fitter}"
+        f"|digi={args.dchDigiVersion}"
+    )
+print(f"[meta] JobTag = '{job_tag}'")
 
 if args.fitter == "genfit2" and args.gf_useMat and not args.compactXML:
     raise RuntimeError(
@@ -328,6 +347,9 @@ _set_if_has_digitizer(dch_digitizer, "GasType",                  args.dch_gas_ty
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns",args.rw_start_ns)
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns", args.rw_dur_ns)
 
+### NEW: pass JobTag into digitizer (DCHdigi_v02 will record it in metadata)
+_set_if_has_digitizer(dch_digitizer, "JobTag", job_tag)
+
 # Ensure cluster-size file for v01 (harmless no-op for v02)
 cluster_file = "DataAlgFORGEANT.root"
 if not os.path.exists(cluster_file):
@@ -387,6 +409,13 @@ try:
         GGTF.maxHitsPerEvent = int(args.maxHitsPerEvent)
 except Exception:
     print("[warn] GGTF.maxHitsPerEvent property not present; ignoring.")
+
+### NEW: pass JobTag into GGTF_tracking so it writes it into GGTF_trackingConfig metadata
+try:
+    GGTF.JobTag = job_tag
+    print(f"[GGTF] JobTag set to '{job_tag}'")
+except Exception as e:
+    print(f"[GGTF][warn] could not set JobTag: {e}")
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
 print(f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
@@ -514,6 +543,9 @@ def _configure_genfit2():
     _set_if_has(alg, "minHitsOnTrack", 4)
     _set_if_has(alg, "maxChi2", 1e6)
 
+    ### NEW: pass JobTag into GenFit2DCHFitter (if the property exists)
+    _set_if_has(alg, "JobTag", job_tag)
+
     print(f"[fitter] GenFit2DCHFitter configured; output -> '{args.fitOut}'")
     return alg
 
@@ -565,6 +597,9 @@ def _configure_simple():
     if args.sf_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.sf_outHisto)
 
+    ### NEW: pass JobTag into SimpleFitDCHFitter
+    _set_if_has(alg, "JobTag", job_tag)
+
     print(f"[fitter] SimpleFitDCHFitter configured; output -> '{args.fitOut}'")
     return alg
 
@@ -604,6 +639,9 @@ def _configure_threepoint():
     _set_if_has(alg, "FitTanLambda", args.tp_fitTanLambda)
     _set_if_has(alg, "PrintDiagnostics", args.tp_printDiag)
     _set_if_has(alg, "DiagEveryN", args.tp_diagEveryN)
+
+    ### NEW: pass JobTag into ThreePointFitter
+    _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] ThreePointFitter configured; output -> '{args.fitOut}'")
     return alg
