@@ -188,7 +188,8 @@ static void addAtIPState(edm4hep::MutableTrack& trk,
 
   edm4hep::TrackState ts;
   ts.location       = edm4hep::TrackState::AtIP;
-  ts.referencePoint = {0.f, 0.f, 0.f};
+    // *** CHANGE IS HERE: store the actual perigee position in mm ***
+  ts.referencePoint = { float(x), float(y), float(z) };
   ts.phi            = float(phi);
   ts.omega          = float(omegaSigned);  // q/pT [GeV^-1]
   ts.tanLambda      = float(tanL);

@@ -14,3 +14,8 @@ install/
 *.json.out
 Tracking/test/testTrackFinder/params
 Tracking/test/testTrackFinder/logs
+*.csv
+*.png
+*.pdf
+*.tgz
+*.jpeg
