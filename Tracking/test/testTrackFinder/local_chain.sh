@@ -41,22 +41,22 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=1.0}"       # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=1.0}"         # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
 
 # GenFit2 “stability profile” (used when FITTER=genfit2)
 : "${GF_POS_SCALE:=0.1}"           # mm→cm internally
-: "${GF_LEN2M:=0.01}"           # cm→m
-: "${GF_HIT_SIGMA_XY:=0.8}"      # mm
-: "${GF_HIT_SIGMA_Z:=6.0}"       # mm
-: "${GF_SEED_POS_SIGMA:=100}"    # mm
-: "${GF_SEED_MOM_SIGMA:=10.0}"   # GeV
-: "${GF_DEDUP_TOL:=0.50}"        # mm
-: "${GF_USE_MAT:=0}"             # 0/1
+: "${GF_LEN2M:=0.01}"              # cm→m
+: "${GF_HIT_SIGMA_XY:=0.8}"        # mm
+: "${GF_HIT_SIGMA_Z:=6.0}"         # mm
+: "${GF_SEED_POS_SIGMA:=100}"      # mm
+: "${GF_SEED_MOM_SIGMA:=10.0}"     # GeV
+: "${GF_DEDUP_TOL:=0.50}"          # mm
+: "${GF_USE_MAT:=0}"               # 0/1
 : "${GF_SEED_PT_MIN:=0.2}"
 : "${GF_SEED_PT_MAX:=200.0}"
-: "${GF_SEED_P_MIN:=1.2}"        # GeV
+: "${GF_SEED_P_MIN:=1.2}"          # GeV
 
 # Fitter grouping / fallback / retry (GenFit2)
 : "${GF_MIN_GROUP:=7}"
@@ -69,12 +69,17 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${GF_RETRY_SEED_MOM:=5.0}"
 : "${GF_MAX_MEAS_PER_GROUP:=0}"
 
-# ThreePointFitter args (match new tp-* names in Python)
+# NEW: GenFit2 residual filter knobs
+: "${GF_RES_FILTER:=1}"        # 1=on, 0=off
+: "${GF_RES_MAX_PULL:=5.0}"    # |pull| threshold
+: "${GF_RES_MAX_CHI2:=25.0}"   # per-measurement chi2 threshold
+
+# ThreePointFitter args (match tp-* names in Python)
 : "${FITTER_LOG:=DEBUG}"
 : "${TP_MIN_DELTA_PHI:=0.10}"     # rad
-: "${TP_MIN_CHORD_MM:=10}"         # mm
+: "${TP_MIN_CHORD_MM:=10}"        # mm
 : "${TP_MIN_HITS:=6}"
-: "${TP_MIN_RADIUS_MM:=50}"      # mm
+: "${TP_MIN_RADIUS_MM:=50}"       # mm
 : "${TP_FIT_TANLAMBDA:=true}"     # true|false
 : "${TP_PRINT_DIAG:=false}"       # true|false
 : "${TP_DIAG_EVERY_N:=100}"
@@ -83,7 +88,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
-#New Digi_v02 settings
+# New Digi_v02 settings
 : "${DCH_DIGI_VERSION:=v02}"       # v01|v02
 : "${DCH_DEADTIME_NS:=400.0}"
 : "${DCH_XY_MM:=0.10}"
@@ -97,14 +102,12 @@ PY
 : "${DCH_READOUT_START_NS:=1.0}"
 : "${DCH_READOUT_DUR_NS:=450.0}"
 
-
 # label-0 handling
 : "${GGTF_ZERO_MIN:=8}"
 : "${GGTF_WIRE_FRAC:=0.80}"
 : "${GGTF_PROMOTE_ZERO:=1}"   # 1/0
 : "${GGTF_SKIP_ZERO_SMALL:=1}"
 : "${GGTF_SKIP_ZERO_ALWAYS:=0}"
-
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -128,6 +131,7 @@ echo "[cfg] GF_SEED_POS_SIGMA=$GF_SEED_POS_SIGMA GF_SEED_MOM_SIGMA=$GF_SEED_MOM_
 echo "[cfg] GF_SEED_PT_MIN=$GF_SEED_PT_MIN GF_SEED_PT_MAX=$GF_SEED_PT_MAX GF_SEED_P_MIN=$GF_SEED_P_MIN"
 echo "[cfg] GF_MIN_GROUP=$GF_MIN_GROUP GF_USE_FALLBACK=$GF_USE_FALLBACK GF_FALLBACK_EPS_CM=$GF_FALLBACK_EPS_CM GF_FALLBACK_MINPTS=$GF_FALLBACK_MINPTS"
 echo "[cfg] GF_RETRY=$GF_RETRY GF_RETRY_MEAS_INFL=$GF_RETRY_MEAS_INFL GF_RETRY_SEED_POS=$GF_RETRY_SEED_POS GF_RETRY_SEED_MOM=$GF_RETRY_SEED_MOM GF_MAX_MEAS_PER_GROUP=$GF_MAX_MEAS_PER_GROUP"
+echo "[cfg] GF_RES_FILTER=$GF_RES_FILTER GF_RES_MAX_PULL=$GF_RES_MAX_PULL GF_RES_MAX_CHI2=$GF_RES_MAX_CHI2"
 echo "[cfg] GF_BZ=$GF_BZ GF_PDG=$GF_PDG"
 echo "[cfg] TP_MIN_DELTA_PHI=$TP_MIN_DELTA_PHI TP_MIN_CHORD_MM=$TP_MIN_CHORD_MM TP_MIN_HITS=$TP_MIN_HITS TP_MIN_RADIUS_MM=$TP_MIN_RADIUS_MM"
 echo "[cfg] TP_FIT_TANLAMBDA=$TP_FIT_TANLAMBDA TP_PRINT_DIAG=$TP_PRINT_DIAG TP_DIAG_EVERY_N=$TP_DIAG_EVERY_N"
@@ -199,6 +203,16 @@ K4_ARGS+=(
   --dch-readout-start-ns "${DCH_READOUT_START_NS}"
   --dch-readout-dur-ns   "${DCH_READOUT_DUR_NS}"
 )
+
+# NEW: residual filter CLI wiring
+if [[ "${GF_RES_FILTER}" == "1" ]]; then
+  K4_ARGS+=( --gf-residualFilterEnable )
+else
+  K4_ARGS+=( --no-gf-residualFilterEnable )
+fi
+K4_ARGS+=( --gf-residualMaxPull "${GF_RES_MAX_PULL}" )
+K4_ARGS+=( --gf-residualMaxChi2 "${GF_RES_MAX_CHI2}" )
+
 K4_ARGS+=( --ggtf-zeroMinSizeKeep "${GGTF_ZERO_MIN}" )
 K4_ARGS+=( --ggtf-minWireFracKeep "${GGTF_WIRE_FRAC}" )
 [[ "${GGTF_PROMOTE_ZERO}" -eq 1 ]] && K4_ARGS+=( --ggtf-promoteZeroIfGood ) || K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
@@ -225,7 +239,7 @@ else
   K4_ARGS+=( --no-gf-retry )
 fi
 
-# --- ThreePointFitter-specific args (NEW) ---
+# --- ThreePointFitter-specific args ---
 K4_ARGS+=( --tp-minDeltaPhi "${TP_MIN_DELTA_PHI}" )
 K4_ARGS+=( --tp-minChordMM  "${TP_MIN_CHORD_MM}" )
 K4_ARGS+=( --tp-minGroup    "${TP_MIN_HITS}" )
@@ -267,7 +281,8 @@ nev = 0
 if ok:
     t = f.Get("events")
     nev = int(t.GetEntries()) if t else 0
-f.Close() if f else None
+if f:
+    f.Close()
 print(f"[verify] %s OK=%s NEV=%d" % (sys.argv[1], ok, nev))
 sys.exit(0 if ok and nev>0 else 1)
 PY

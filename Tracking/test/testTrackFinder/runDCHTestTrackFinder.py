@@ -31,7 +31,7 @@ parser.add_argument("--dchSimHits", default="DCHCollection",
 parser.add_argument("--dchName",    default="DCH_v2",
                     help="DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)")
 
-### NEW: global job tag CLI
+# --- NEW: global job tag CLI --------------------------------------------------
 parser.add_argument(
     "--jobTag",
     default="",
@@ -57,7 +57,6 @@ parser.add_argument("--dch-readout-start-ns", type=float, dest="rw_start_ns",
                     help="Alias for --rw-start-ns")
 parser.add_argument("--dch-readout-dur-ns",   type=float, dest="rw_dur_ns",
                     help="Alias for --rw-duration-ns")
-
 
 parser.add_argument("--dch-deadtime-ns",     dest="dch_deadtime_ns", type=float, default=400.0,
                     help="[v02] cell deadtime (ns)")
@@ -190,6 +189,7 @@ parser.add_argument("--no-tp-printDiag", dest="tp_printDiag", action="store_fals
 parser.add_argument("--tp-diagEveryN", type=int, default=100,
                     help="Diagnostic print frequency (events)")
 
+# ----------------- GGTF label-0 handling -----------------
 parser.add_argument("--ggtf-zeroMinSizeKeep", type=int, default=8)
 parser.add_argument("--ggtf-minWireFracKeep", type=float, default=0.60)
 parser.add_argument("--ggtf-promoteZeroIfGood", action="store_true", default=True)
@@ -199,10 +199,65 @@ parser.add_argument("--no-ggtf-skipZeroIfSmall", dest="ggtf_skipZeroIfSmall", ac
 parser.add_argument("--ggtf-skipZeroAlways", action="store_true", default=False)
 parser.add_argument("--no-ggtf-skipZeroAlways", dest="ggtf_skipZeroAlways", action="store_false")
 
+# ----------------- GenFit2 Fitter outlier / residual options -----------------
+
+# z(phi) outlier filter toggles
+parser.add_argument("--gf-filterZOutliers",
+                    dest="gf_filterZOutliers",
+                    action="store_true",
+                    default=False,
+                    help="Enable z(phi)-based outlier rejection in GenFit2DCHFitter")
+parser.add_argument("--no-gf-filterZOutliers",
+                    dest="gf_filterZOutliers",
+                    action="store_false")
+
+parser.add_argument("--gf-zOutlierAbsMM",
+                    type=float,
+                    default=80.0,
+                    help="Absolute |z residual| cut [mm] for GF z-outlier filter")
+parser.add_argument("--gf-zOutlierNSigma",
+                    type=float,
+                    default=3.5,
+                    help="N-sigma cut for GF z-outlier filter (0 disables sigma part)")
+parser.add_argument("--gf-zOutlierMinFracKeep",
+                    type=float,
+                    default=0.5,
+                    help="Minimum fraction of hits to keep after filtering "
+                         "(else filter is skipped for that group)")
+
+# generic residual filter toggles (match local_chain.sh)
+parser.add_argument(
+    "--gf-residualFilterEnable",
+    dest="gf_residualFilterEnable",
+    action="store_true",
+    default=False,
+    help="Enable generic residual filter in GenFit2DCHFitter",
+)
+parser.add_argument(
+    "--no-gf-residualFilterEnable",
+    dest="gf_residualFilterEnable",
+    action="store_false",
+)
+parser.add_argument(
+    "--gf-residualMaxPull",
+    type=float,
+    default=5.0,
+    help="Max |residual pull| to keep a measurement in the residual filter",
+)
+parser.add_argument(
+    "--gf-residualMaxChi2",
+    type=float,
+    default=25.0,
+    help="Max per-hit chi2 to keep a measurement in the residual filter",
+)
+
+# -----------------------------------------------------------------------------
+
+
 args = parser.parse_args()
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
 
-### NEW: construct a global job_tag string
+# --- construct a global job_tag string ---------------------------------------
 if args.jobTag:
     job_tag = args.jobTag
 else:
@@ -230,8 +285,10 @@ except Exception:
     pass
 
 GaudiApp().AuditAlgorithms = True
-try: GaudiApp().AuditTools = True
-except Exception: pass
+try:
+    GaudiApp().AuditTools = True
+except Exception:
+    pass
 AuditorSvc().Auditors = [ ChronoAuditor(), MemoryAuditor() ]
 
 # ----------------- IO -----------------
@@ -254,27 +311,29 @@ def stage_model(spec: str) -> str:
         return os.path.abspath(spec)
     out = os.path.abspath("model.onnx")
     if spec.endswith(".onnx.md5"):
-        with open(spec) as f: md5 = f.read().split()[0]
+        with open(spec) as f:
+            md5 = f.read().split()[0]
         url = f"https://key4hep.web.cern.ch/testFiles/k4RecTracker/{md5}"
         print(f"[model] from md5: {md5} -> {url}")
-        subprocess.run(["wget","--no-verbose","--timeout=180","--tries=2","-O",out,url], check=True)
-        if not os.path.exists(out) or os.path.getsize(out)==0:
+        subprocess.run(["wget", "--no-verbose", "--timeout=180", "--tries=2", "-O", out, url], check=True)
+        if not os.path.exists(out) or os.path.getsize(out) == 0:
             raise RuntimeError(f"Downloaded model is missing/empty: {out}")
         return out
-    if spec.startswith(("http://","https://")):
+    if spec.startswith(("http://", "https://")):
         print(f"[model] download {spec} -> {out}")
-        subprocess.run(["wget","--no-verbose","--timeout=180","--tries=2","-O",out,spec], check=True)
-        if not os.path.exists(out) or os.path.getsize(out)==0:
+        subprocess.run(["wget", "--no-verbose", "--timeout=180", "--tries=2", "-O", out, spec], check=True)
+        if not os.path.exists(out) or os.path.getsize(out) == 0:
             raise RuntimeError(f"Downloaded model is missing/empty: {out}")
         return out
     if spec.startswith("root://"):
         print(f"[model] xrdcp {spec} -> {out}")
-        subprocess.run(["xrdcp","-f",spec,out], check=True)
-        if not os.path.exists(out) or os.path.getsize(out)==0:
+        subprocess.run(["xrdcp", "-f", spec, out], check=True)
+        if not os.path.exists(out) or os.path.getsize(out) == 0:
             raise RuntimeError(f"xrdcp model is missing/empty: {out}")
         return out
     if spec.endswith(".onnx"):
-        shutil.copy2(spec, out); return out
+        shutil.copy2(spec, out)
+        return out
     raise RuntimeError(f"Unrecognized model spec: {spec}")
 
 # ----------------- DCH Digitizer (robust resolver) -----------------
@@ -299,7 +358,7 @@ def _resolve_dch_digitizer():
             return C(cls)
         except Exception as e:
             tried.append(f"{mod}.{cls} -> {e}")
-    paths = os.environ.get("GAUDI_PLUGIN_PATH","(unset)")
+    paths = os.environ.get("GAUDI_PLUGIN_PATH", "(unset)")
     raise ImportError(
         "No DCH digitizer component found. Tried:\n  " +
         "\n  ".join(tried) +
@@ -344,10 +403,10 @@ _set_if_has_digitizer(dch_digitizer, "Deadtime_ns",              args.dch_deadti
 _set_if_has_digitizer(dch_digitizer, "DriftVelocity_um_per_ns",  args.dch_drift_um_ns)
 _set_if_has_digitizer(dch_digitizer, "SignalVelocity_mm_per_ns", args.dch_sig_mm_ns)
 _set_if_has_digitizer(dch_digitizer, "GasType",                  args.dch_gas_type)
-_set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns",args.rw_start_ns)
-_set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns", args.rw_dur_ns)
+_set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns", args.rw_start_ns)
+_set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns",  args.rw_dur_ns)
 
-### NEW: pass JobTag into digitizer (DCHdigi_v02 will record it in metadata)
+# NEW: pass JobTag into digitizer (DCHdigi_v02 will record it in metadata)
 _set_if_has_digitizer(dch_digitizer, "JobTag", job_tag)
 
 # Ensure cluster-size file for v01 (harmless no-op for v02)
@@ -355,7 +414,7 @@ cluster_file = "DataAlgFORGEANT.root"
 if not os.path.exists(cluster_file):
     url = "https://fccsw.web.cern.ch/fccsw/filesForSimDigiReco/IDEA/DataAlgFORGEANT.root"
     print(f"[setup] Fetching {cluster_file} from {url}")
-    subprocess.run(["wget","--no-verbose","--timeout=180","--tries=2","--no-clobber",url], check=True)
+    subprocess.run(["wget", "--no-verbose", "--timeout=180", "--tries=2", "--no-clobber", url], check=True)
 
 # ----------------- Choose wire collection name by digi version -----------------
 if args.dchDigiVersion == "v02":
@@ -389,8 +448,10 @@ for name, val in [
     ("SkipZeroIfSmall", args.ggtf_skipZeroIfSmall),
     ("SkipZeroAlways", args.ggtf_skipZeroAlways),
 ]:
-    try: setattr(GGTF, name, val)
-    except Exception as e: print(f"[warn] could not set GGTF.{name}: {e}")
+    try:
+        setattr(GGTF, name, val)
+    except Exception as e:
+        print(f"[warn] could not set GGTF.{name}: {e}")
 
 for name, val in [
     ("WireGateMM", args.wireGateMM),
@@ -398,11 +459,15 @@ for name, val in [
     ("Max3DHitsPerEvent", args.max3DHitsPerEvent),
     ("Max3DPerTrack", args.max3DPerTrack),
 ]:
-    try: setattr(GGTF, name, val)
-    except Exception as e: print(f"[warn] could not set GGTF.{name}: {e}")
+    try:
+        setattr(GGTF, name, val)
+    except Exception as e:
+        print(f"[warn] could not set GGTF.{name}: {e}")
 
-try: GGTF.Produce3DHits = bool(args.produce3DHits)
-except Exception: pass
+try:
+    GGTF.Produce3DHits = bool(args.produce3DHits)
+except Exception:
+    pass
 
 try:
     if int(args.maxHitsPerEvent) > 0:
@@ -410,7 +475,7 @@ try:
 except Exception:
     print("[warn] GGTF.maxHitsPerEvent property not present; ignoring.")
 
-### NEW: pass JobTag into GGTF_tracking so it writes it into GGTF_trackingConfig metadata
+# NEW: pass JobTag into GGTF_tracking so it writes it into GGTF_trackingConfig metadata
 try:
     GGTF.JobTag = job_tag
     print(f"[GGTF] JobTag set to '{job_tag}'")
@@ -418,14 +483,16 @@ except Exception as e:
     print(f"[GGTF][warn] could not set JobTag: {e}")
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
-print(f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
-      f"produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
-      f"maxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',0)} "
-      f"wireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
-      f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
-      f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
-      f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
-      f"log={args.ggtfLog}  wireColl={wire_coll}")
+print(
+    f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
+    f"produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
+    f"maxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',0)} "
+    f"wireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
+    f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
+    f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
+    f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
+    f"log={args.ggtfLog}  wireColl={wire_coll}"
+)
 
 # ----------------- Helper: quiet property setter -----------------
 def _set_if_has(obj, name, value):
@@ -438,7 +505,7 @@ def _set_if_has(obj, name, value):
         print(f"[fitter] could not set {name}: {e}")
     return False
 
-# ----------------- Optional: field/material (GenFit2 only needs them) -----------------
+# ----------------- Optional: field/material (GenFit2 only needs them) --------
 field_svc_name = None
 material_svc_name = None
 field_svc_obj = None
@@ -494,15 +561,21 @@ def _configure_genfit2():
     alg = GenFit2DCHFitter("GenFit2DCHFitter")
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
-    for prop, val in (("Input3DHits", "GGTF_3DHits"),
-                      ("input3DHits","GGTF_3DHits"),
-                      ("inputHits",  ["GGTF_3DHits"])):
-        if _set_if_has(alg, prop, val): break
-    for prop, val in (("OutTracks", args.fitOut),
-                      ("outputTracks", [args.fitOut]),
-                      ("outputTracks", args.fitOut),
-                      ("TracksOut", args.fitOut)):
-        if _set_if_has(alg, prop, val): break
+    for prop, val in (
+        ("Input3DHits", "GGTF_3DHits"),
+        ("input3DHits", "GGTF_3DHits"),
+        ("inputHits",   ["GGTF_3DHits"]),
+    ):
+        if _set_if_has(alg, prop, val):
+            break
+    for prop, val in (
+        ("OutTracks",   args.fitOut),
+        ("outputTracks", [args.fitOut]),
+        ("outputTracks", args.fitOut),
+        ("TracksOut",   args.fitOut),
+    ):
+        if _set_if_has(alg, prop, val):
+            break
 
     for prop, val in [
         ("FieldSvc", field_svc_name),
@@ -543,7 +616,18 @@ def _configure_genfit2():
     _set_if_has(alg, "minHitsOnTrack", 4)
     _set_if_has(alg, "maxChi2", 1e6)
 
-    ### NEW: pass JobTag into GenFit2DCHFitter (if the property exists)
+    # NEW: z(phi) outlier filter wiring
+    _set_if_has(alg, "FilterZOutliers",     args.gf_filterZOutliers)
+    _set_if_has(alg, "ZOutlierAbsMM",       args.gf_zOutlierAbsMM)
+    _set_if_has(alg, "ZOutlierNSigma",      args.gf_zOutlierNSigma)
+    _set_if_has(alg, "ZOutlierMinFracKeep", args.gf_zOutlierMinFracKeep)
+
+    # NEW: generic residual filter wiring
+    _set_if_has(alg, "ResidualFilterEnable", args.gf_residualFilterEnable)
+    _set_if_has(alg, "ResidualMaxPull",      args.gf_residualMaxPull)
+    _set_if_has(alg, "ResidualMaxChi2",      args.gf_residualMaxChi2)
+
+    # NEW: pass JobTag into GenFit2DCHFitter (if the property exists)
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] GenFit2DCHFitter configured; output -> '{args.fitOut}'")
@@ -552,8 +636,10 @@ def _configure_genfit2():
 def _configure_simple():
     Simple = None
     tried = []
-    for mod, name in (("TrackingConf","SimpleFitDCHFitter"),
-                      ("Configurables","SimpleFitDCHFitter")):
+    for mod, name in (
+        ("TrackingConf", "SimpleFitDCHFitter"),
+        ("Configurables", "SimpleFitDCHFitter"),
+    ):
         try:
             m = __import__(mod, fromlist=[name])
             cand = getattr(m, name)
@@ -576,9 +662,11 @@ def _configure_simple():
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
     for prop, val in (("inputHits", ["GGTF_3DHits"]), ("input3DHits", "GGTF_3DHits")):
-        if _set_if_has(alg, prop, val): break
+        if _set_if_has(alg, prop, val):
+            break
     for prop, val in (("outputTracks", [args.fitOut]), ("outputTracks", args.fitOut)):
-        if _set_if_has(alg, prop, val): break
+        if _set_if_has(alg, prop, val):
+            break
 
     _set_if_has(alg, "Bz", args.sf_bz)
     _set_if_has(alg, "PositionUnitScale", args.sf_posScale)
@@ -597,7 +685,7 @@ def _configure_simple():
     if args.sf_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.sf_outHisto)
 
-    ### NEW: pass JobTag into SimpleFitDCHFitter
+    # NEW: pass JobTag into SimpleFitDCHFitter
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] SimpleFitDCHFitter configured; output -> '{args.fitOut}'")
@@ -609,9 +697,11 @@ def _configure_threepoint():
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
     for prop, val in (("inputHits", ["GGTF_3DHits"]), ("input3DHits", "GGTF_3DHits")):
-        if _set_if_has(alg, prop, val): break
+        if _set_if_has(alg, prop, val):
+            break
     for prop, val in (("outputTracks", [args.fitOut]), ("outputTracks", args.fitOut)):
-        if _set_if_has(alg, prop, val): break
+        if _set_if_has(alg, prop, val):
+            break
 
     _set_if_has(alg, "Bz", args.tp_bz)
     _set_if_has(alg, "PDG", args.gf_pdg)
@@ -633,14 +723,14 @@ def _configure_threepoint():
     if args.tp_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.tp_outHisto)
 
-    _set_if_has(alg, "MinDeltaPhi",  args.tp_minDeltaPhi)
-    _set_if_has(alg, "MinChordMM",   args.tp_minChordMM)
-    _set_if_has(alg, "MinRadiusMM",  args.tp_minRadiusMM)
-    _set_if_has(alg, "FitTanLambda", args.tp_fitTanLambda)
+    _set_if_has(alg, "MinDeltaPhi",     args.tp_minDeltaPhi)
+    _set_if_has(alg, "MinChordMM",      args.tp_minChordMM)
+    _set_if_has(alg, "MinRadiusMM",     args.tp_minRadiusMM)
+    _set_if_has(alg, "FitTanLambda",    args.tp_fitTanLambda)
     _set_if_has(alg, "PrintDiagnostics", args.tp_printDiag)
-    _set_if_has(alg, "DiagEveryN", args.tp_diagEveryN)
+    _set_if_has(alg, "DiagEveryN",      args.tp_diagEveryN)
 
-    ### NEW: pass JobTag into ThreePointFitter
+    # NEW: pass JobTag into ThreePointFitter
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] ThreePointFitter configured; output -> '{args.fitOut}'")
@@ -648,7 +738,6 @@ def _configure_threepoint():
 
 # Build fitter (with optional fallback)
 fitter_alg = None
-requested_fitter = args.fitter
 
 if args.stage == "fit" and requested_fitter != "none":
     if requested_fitter == "genfit2":
@@ -663,7 +752,7 @@ if args.stage == "fit" and requested_fitter != "none":
     elif requested_fitter == "threepoint":
         fitter_alg = _configure_threepoint()
 
-# --- Optional: collection size probe (if available)
+# --- Optional: collection size probe (if available) ---------------------------
 try:
     from Configurables import EDM4hepCollectionSizePrinter as SizePrinter
     size_printer = SizePrinter(
@@ -676,9 +765,9 @@ except Exception:
 
 # ----------------- AppMgr / pipeline -----------------
 top_algs = []
-if args.stage in ("digi","ggtf","fit"):
+if args.stage in ("digi", "ggtf", "fit"):
     top_algs.append(dch_digitizer)
-if args.stage in ("ggtf","fit"):
+if args.stage in ("ggtf", "fit"):
     top_algs.append(GGTF)
 if args.stage == "fit" and fitter_alg is not None:
     top_algs.append(fitter_alg)
@@ -688,7 +777,8 @@ if size_printer is not None:
 # Try reader/writer if available
 try:
     from k4FWCore import getReader, getWriter
-    reader = getReader(); writer = getWriter()
+    reader = getReader()
+    writer = getWriter()
     top_algs = [reader] + top_algs + [writer]
 except Exception:
     pass
@@ -696,10 +786,16 @@ except Exception:
 print(f"[pipeline] TopAlg order: {[alg.getFullName() for alg in top_algs]}")
 
 # ---- Ext services ----
-ext_svcs = [geoservice, EventDataSvc("EventDataSvc"), UniqueIDGenSvc("uidSvc"), RndmGenSvc(), svc]
-if 'field_svc_obj' in globals() and field_svc_obj is not None:
+ext_svcs = [
+    geoservice,
+    EventDataSvc("EventDataSvc"),
+    UniqueIDGenSvc("uidSvc"),
+    RndmGenSvc(),
+    svc,
+]
+if field_svc_obj is not None:
     ext_svcs.append(field_svc_obj)
-if 'material_svc_obj' in globals() and material_svc_obj is not None:
+if material_svc_obj is not None:
     ext_svcs.append(material_svc_obj)
 
 mgr = GaudiApp(
