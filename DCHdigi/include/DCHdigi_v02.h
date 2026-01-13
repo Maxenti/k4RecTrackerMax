@@ -1,7 +1,8 @@
 #pragma once
 
 // STL
-#include <string>  // NEW
+#include <string>
+#include <cmath>
 
 // Gaudi
 #include "Gaudi/Accumulators.h"
@@ -10,7 +11,7 @@
 
 // k4FWCore
 #include "k4FWCore/Transformer.h"
-#include "k4FWCore/MetaDataHandle.h"   // NEW
+#include "k4FWCore/MetaDataHandle.h"
 
 // k4Interface
 #include <k4Interface/IGeoSvc.h>
@@ -37,6 +38,9 @@
 #include "TRandom3.h"
 #include "TVector3.h"
 
+// podio
+#include "podio/GenericParameters.h"
+
 class DCHdigi_v02 final
     : public k4FWCore::MultiTransformer<
           std::tuple<
@@ -58,9 +62,9 @@ public:
 
   // Fast zero-truncated Poisson sampler
   inline int sample_zero_truncated_poisson(double lambda, TRandom3& gen) const {
-    double u = gen.Uniform(std::exp(-lambda), 1.0);
-    double t = -std::log(u);
-    int k = gen.Poisson(lambda - t);
+    const double u = gen.Uniform(std::exp(-lambda), 1.0);
+    const double t = -std::log(u);
+    const int    k = gen.Poisson(lambda - t);
     return 1 + k;
   }
 
@@ -93,12 +97,12 @@ private:
   // z resolution in mm
   Gaudi::Property<double> m_z_resolution_mm{
       this, "zResolution_mm", 1.0,
-      "Spatial resolution in the direction along the wire, in mm."};
+      "Spatial resolution along the wire, in mm."};
 
   // xy resolution in mm
   Gaudi::Property<double> m_xy_resolution_mm{
       this, "xyResolution_mm", 0.1,
-      "Spatial resolution in the direction perpendicular to the wire, in mm."};
+      "Spatial resolution perpendicular to the wire, in mm."};
 
   // Deadtime of a cell in ns
   Gaudi::Property<double> m_deadtime_ns{
@@ -107,13 +111,14 @@ private:
   // Gas drift velocity in um/ns
   Gaudi::Property<double> m_drift_velocity_um_per_ns{
       this, "DriftVelocity_um_per_ns", -1.0,
-      "Gas drift velocity in um/ns. If negative, automatically chosen based on GasType."};
+      "Gas drift velocity in um/ns. If negative, auto-chosen based on GasType."};
 
   // Signal velocity in the wire in mm/ns
+  // c = 299.792458 mm/ns; (2/3)*c = 199.86163866666667 mm/ns
   Gaudi::Property<double> m_signal_velocity_mm_per_ns{
       this, "SignalVelocity_mm_per_ns",
-      TMath::C() * 1e-6 * 2.0 / 3.0, // 2/3 c in mm/ns
-      "Signal velocity in the wire in mm/ns."};
+      199.86163866666667,
+      "Signal velocity in the wire in mm/ns (default = (2/3)*c)."};
 
   // Gas mixture
   Gaudi::Property<int> m_GasType{
@@ -129,20 +134,18 @@ private:
       this, "ReadoutWindowDuration_ns", 450.0,
       "Duration of readout window (ns)."};
 
-  // --------- NEW: metadata + external tag ---------
-
   // Optional freeform tag (e.g. input file name, job label)
   Gaudi::Property<std::string> m_jobTag{
       this, "JobTag", "",
       "Optional external tag (e.g. input file name or run label)"};
 
-  // Metadata handle: writes a JSON-ish config blob once per file
+  // ✅ Correct for your MetaDataHandle.h
   k4FWCore::MetaDataHandle<std::string> m_digiMeta;
 
   /// Convert EDM4hep Vector3d to TVector3
-  TVector3 toTVector3(const edm4hep::Vector3d& v) const { return {v[0], v[1], v[2]}; };
+  TVector3 toTVector3(const edm4hep::Vector3d& v) const { return {v[0], v[1], v[2]}; }
   /// Convert TVector3 to EDM4hep Vector3d
-  edm4hep::Vector3d toEDM4hepVector(const TVector3& v) const { return {v.X(), v.Y(), v.Z()}; };
+  edm4hep::Vector3d toEDM4hepVector(const TVector3& v) const { return {v.X(), v.Y(), v.Z()}; }
 
   double get_drift_time_ns(double distance_to_wire_mm) const;
   double get_signal_travel_time_ns(double distance_to_readout_mm) const;

@@ -119,6 +119,40 @@ PY
   echo "[job] theta smear: [${theta_min}, ${theta_max}] rad"
 fi
 
+
+stamp_metadata_local () {
+  local rootfile="$1"
+
+  # Try to locate stamper regardless of where Condor drops it
+  local stamper="scripts/stamp_ddsim_metadata.py"
+  [[ -s "$stamper" ]] || stamper="./stamp_ddsim_metadata.py"
+  [[ -s "$stamper" ]] || { echo "[meta][WARN] stamper not found, skipping."; return 0; }
+
+  local cmdline
+  cmdline=$(
+    printf "ddsim --compactFile %q --numberOfEvents %q --random.seed %q --enableGun --gun.particle %q --gun.energy %q --gun.distribution uniform --gun.thetaMin %q --gun.thetaMax %q %s --outputFile %q" \
+      "$COMPACT_XML" "$nev" "$seed" "$particle" "${p}*GeV" "${theta_min}*rad" "${theta_max}*rad" "${phi_opts[*]}" "$rootfile"
+  )
+
+  echo "[meta] stamping provenance into $rootfile"
+  python3 "$stamper" \
+    --root "$rootfile" \
+    --params-json "$PARAMS_JSON" \
+    --compact-xml "$COMPACT_XML" \
+    --cmd "$cmdline" \
+    --theta-min "$theta_min" \
+    --theta-max "$theta_max" \
+    --phi-opts "${phi_opts[*]}" \
+    --out-eos "$EOS_POSIX" \
+    --out-url "$EOS_URL" \
+    --k4-release "2025-09-21" \
+    --job-extra "jobfile=$(basename "$PARAMS_JSON")" \
+    --job-extra "attempt=$attempt" \
+    --job-extra "TRANSFER_COMPACT=${TRANSFER_COMPACT:-unknown}" \
+    --job-extra "COMPACT_XML_ARG=${COMPACT_XML:-unknown}" \
+    || echo "[meta][WARN] stamping failed (non-fatal)"
+}
+
 # ------------------------ Validation helpers ------------------------
 validate_root_local () {
   python3 - "$LOCAL_OUT" <<'PY'
@@ -189,6 +223,7 @@ while (( attempt <= max_attempts )); do
   run_ddsim_local "$LOCAL_OUT" || echo "[ddsim] non-zero exit (attempt $attempt) — will still try to validate."
 
   if [[ -s "$LOCAL_OUT" ]] && validate_root_local; then
+    stamp_metadata_local "$LOCAL_OUT"
     stage_to_eos
     if validate_root_remote; then
       size=$(xrdfs eosuser.cern.ch stat -q Size "//${EOS_POSIX#/}" 2>/dev/null | awk '{print $2}')

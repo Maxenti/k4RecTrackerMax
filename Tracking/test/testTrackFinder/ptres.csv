@@ -1,8 +1,0 @@
-pt_lo,pt_hi,Nmatch,bias_dqOverpT,sigma_dqOverpT,pt_mean,sigma_pT_over_pT,eff_matched_over_den
-0.5,1.0,0,nan,nan,nan,nan,nan
-1.0,2.0,0,nan,nan,nan,nan,nan
-2.0,5.0,0,nan,nan,nan,nan,nan
-5.0,10.0,0,nan,nan,nan,nan,nan
-10.0,20.0,0,nan,nan,nan,nan,nan
-20.0,50.0,0,nan,nan,nan,nan,nan
-50.0,100.0,0,nan,nan,nan,nan,nan

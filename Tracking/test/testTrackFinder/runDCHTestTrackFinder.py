@@ -1,4 +1,17 @@
 # runDCHTestTrackFinder.py (tri-fitter edition, crash-safe; v02 digi aware)
+#
+# UPDATED:
+#  - Adds GGTF MC-truth PDG gating controls for wire hits (mu-only by default)
+#  - Wires GGTF.InputWireSimLinkCollections (new GGTF_tracking input)
+#  - Adds CLI toggles:
+#      --ggtf-filterInputWiresByTruthPdg / --no-ggtf-filterInputWiresByTruthPdg
+#      --ggtf-keepTruthPdg
+#      --ggtf-dropWireIfUnlinked / --no-ggtf-dropWireIfUnlinked
+#      --ggtf-wireSimLinkColl (optional override)
+#
+# NOTE:
+#  - This gating is MC-truth dependent. If the link collection is absent/empty,
+#    GGTF_tracking will auto-disable the gate for that event (per C++ update).
 
 import os
 import math
@@ -86,6 +99,45 @@ parser.add_argument("--produce3DHits", action="store_true", default=True,
                     help="If set, also write GGTF_3DHits")
 parser.add_argument("--ggtfLog", choices=["INFO","DEBUG"], default="INFO",
                     help="GGTF_tracking OutputLevel")
+
+# ----------------- NEW: GGTF truth-PDG gating for wire hits -------------------
+parser.add_argument(
+    "--ggtf-filterInputWiresByTruthPdg",
+    dest="ggtf_filterInputWiresByTruthPdg",
+    action="store_true",
+    default=False,
+    help="If set, GGTF_tracking will exclude wire digis whose linked MCParticle PDG != --ggtf-keepTruthPdg "
+         "(requires InputWireSimLinkCollections).",
+)
+parser.add_argument(
+    "--no-ggtf-filterInputWiresByTruthPdg",
+    dest="ggtf_filterInputWiresByTruthPdg",
+    action="store_false",
+)
+parser.add_argument(
+    "--ggtf-keepTruthPdg",
+    type=int,
+    default=13,
+    help="PDG code to keep when --ggtf-filterInputWiresByTruthPdg is enabled (default 13).",
+)
+parser.add_argument(
+    "--ggtf-dropWireIfUnlinked",
+    dest="ggtf_dropWireIfUnlinked",
+    action="store_true",
+    default=True,
+    help="When truth-PDG filtering is enabled: drop wire digis with no truth link (default True).",
+)
+parser.add_argument(
+    "--no-ggtf-dropWireIfUnlinked",
+    dest="ggtf_dropWireIfUnlinked",
+    action="store_false",
+)
+parser.add_argument(
+    "--ggtf-wireSimLinkColl",
+    default="",
+    help="Override the wire->SimTrackerHit link collection name for GGTF truth gating. "
+         "If empty, an automatic guess based on --dchDigiVersion is used.",
+)
 
 # ----------------- Stage control -----------------
 parser.add_argument("--stage", choices=["digi","ggtf","fit"], default="fit",
@@ -422,6 +474,21 @@ if args.dchDigiVersion == "v02":
 else:
     wire_coll = "DCH_DigiCollection"
 
+# ----------------- Choose wire->sim link collection name (for truth-PDG gating) -----------------
+def _guess_wire_simlink_collections():
+    # Allow explicit override
+    if args.ggtf_wireSimLinkColl:
+        return [args.ggtf_wireSimLinkColl]
+
+    # Best-guess defaults by digi version (safe even if absent; GGTF_tracking will auto-disable gate if empty)
+    if args.dchDigiVersion == "v02":
+        # common naming you referenced in prior debugging
+        return ["DCHDigi2SimLinkCollection", "DCHDigiSimLinkCollection", "DCHDigi2SimLink", "DCHDigiSimLink"]
+    else:
+        return ["DCHDigiSimLinkCollection", "DCHDigi2SimLinkCollection", "DCHDigiSimLink", "DCHDigi2SimLink"]
+
+wire_simlink_colls = _guess_wire_simlink_collections()
+
 # ----------------- Track Finder (GGTF) -----------------
 try:
     from TrackingConf import GGTF_tracking
@@ -432,6 +499,8 @@ GGTF = GGTF_tracking(
     "GGTF_tracking",
     InputWireHitCollections=[wire_coll],
     InputPlanarHitCollections=[],
+    # NEW INPUT:
+    InputWireSimLinkCollections=wire_simlink_colls,
     OutputTracksGGTF=["CDCHTracks"],
     Output3DHits=["GGTF_3DHits"],
     OutputLevel=INFO,
@@ -471,9 +540,32 @@ except Exception:
 
 try:
     if int(args.maxHitsPerEvent) > 0:
-        GGTF.maxHitsPerEvent = int(args.maxHitsPerEvent)
+        GGTF.MaxHitsPerEvent = int(args.maxHitsPerEvent)
 except Exception:
-    print("[warn] GGTF.maxHitsPerEvent property not present; ignoring.")
+    try:
+        if int(args.maxHitsPerEvent) > 0:
+            GGTF.maxHitsPerEvent = int(args.maxHitsPerEvent)
+    except Exception:
+        print("[warn] GGTF.MaxHitsPerEvent property not present; ignoring.")
+
+# NEW: wire truth-PDG gating controls
+try:
+    GGTF.FilterInputWiresByTruthPdg = bool(args.ggtf_filterInputWiresByTruthPdg)
+    print(f"[GGTF] FilterInputWiresByTruthPdg = {GGTF.FilterInputWiresByTruthPdg}")
+except Exception as e:
+    print(f"[GGTF][warn] could not set FilterInputWiresByTruthPdg: {e}")
+
+try:
+    GGTF.KeepTruthPdg = int(args.ggtf_keepTruthPdg)
+    print(f"[GGTF] KeepTruthPdg = {GGTF.KeepTruthPdg}")
+except Exception as e:
+    print(f"[GGTF][warn] could not set KeepTruthPdg: {e}")
+
+try:
+    GGTF.DropWireIfUnlinked = bool(args.ggtf_dropWireIfUnlinked)
+    print(f"[GGTF] DropWireIfUnlinked = {GGTF.DropWireIfUnlinked}")
+except Exception as e:
+    print(f"[GGTF][warn] could not set DropWireIfUnlinked: {e}")
 
 # NEW: pass JobTag into GGTF_tracking so it writes it into GGTF_trackingConfig metadata
 try:
@@ -486,12 +578,14 @@ GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
 print(
     f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
     f"produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
-    f"maxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',0)} "
+    f"MaxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',getattr(GGTF,'maxHitsPerEvent','n/a'))} "
     f"wireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
     f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
     f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
     f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
-    f"log={args.ggtfLog}  wireColl={wire_coll}"
+    f"log={args.ggtfLog}  wireColl={wire_coll} "
+    f"wireSimLinkColls={wire_simlink_colls} "
+    f"truthGate={args.ggtf_filterInputWiresByTruthPdg} keepPDG={args.ggtf_keepTruthPdg} dropUnlinked={args.ggtf_dropWireIfUnlinked}"
 )
 
 # ----------------- Helper: quiet property setter -----------------

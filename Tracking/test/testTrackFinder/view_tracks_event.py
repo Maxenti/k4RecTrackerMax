@@ -438,7 +438,7 @@ def make_plots(tracks_by_label,
     if digi_points:
         n_digi = len(digi_points)
         pm_digi = ROOT.TPolyMarker3D(n_digi)
-        pm_digi.SetMarkerColor(ROOT.kOrange + 1)
+        pm_digi.SetMarkerColor(ROOT.kGreen + 1)
         pm_digi.SetMarkerStyle(20)  # open marker
         pm_digi.SetMarkerSize(0.9)
 

@@ -19,7 +19,8 @@ transfer_executable      = True
 
 # We always transfer the wrapper and the per-job params JSON.
 # queue_items.txt lists filenames like "job_0.json" that live under params/
-transfer_input_files     = scripts/condor_ddsim.sh, params/$(jobfile)
+transfer_input_files     = scripts/condor_ddsim.sh, scripts/stamp_ddsim_metadata.py, params/$(jobfile)
+
 
 # ----------- RUNTIME MACROS (set via -a on condor_submit) -----------
 #   -a OUT_DIR=/eos/user/c/cglenn/gun_samples

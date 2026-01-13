@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.50/gun_eta+0.50_E0.62633.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/eta_+0.50/reco_eta+0.50_E0.62633.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E0.62633.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/eta_+0.00/reco_eta+0.00_E0.62633_wiregate12mm.root"
 # Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
@@ -41,7 +41,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=1.0}"         # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=10.0}"         # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
 
@@ -108,6 +108,16 @@ PY
 : "${GGTF_PROMOTE_ZERO:=1}"   # 1/0
 : "${GGTF_SKIP_ZERO_SMALL:=1}"
 : "${GGTF_SKIP_ZERO_ALWAYS:=0}"
+
+
+# NEW: GGTF truth-PDG wire gating (optional)
+: "${GGTF_TRUTH_GATE:=1}"          # 1=enable, 0=disable
+: "${GGTF_KEEP_PDG:=13}"           # keep muons by default
+: "${GGTF_DROP_UNLINKED:=1}"       # drop wire hits with no truth link
+: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"    # optional override (leave empty to auto-guess)
+
+
+
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -179,6 +189,31 @@ K4_ARGS=(
 [[ "${PRODUCE_3DHITS}" == "1" ]] && K4_ARGS+=( --produce3DHits )
 [[ "${MAX_HITS}" -gt 0 ]]        && K4_ARGS+=( --maxHitsPerEvent "${MAX_HITS}" )
 
+
+
+# --- GGTF truth-PDG gating CLI wiring (optional) ---
+if [[ "${GGTF_TRUTH_GATE}" == "1" ]]; then
+  K4_ARGS+=( --ggtf-filterInputWiresByTruthPdg )
+else
+  K4_ARGS+=( --no-ggtf-filterInputWiresByTruthPdg )
+fi
+
+K4_ARGS+=( --ggtf-keepTruthPdg "${GGTF_KEEP_PDG}" )
+
+if [[ "${GGTF_DROP_UNLINKED}" == "1" ]]; then
+  K4_ARGS+=( --ggtf-dropWireIfUnlinked )
+else
+  K4_ARGS+=( --no-ggtf-dropWireIfUnlinked )
+fi
+
+# Optional override (only pass if non-empty)
+if [[ -n "${GGTF_WIRE_SIMLINK_COLL}" ]]; then
+  K4_ARGS+=( --ggtf-wireSimLinkColl "${GGTF_WIRE_SIMLINK_COLL}" )
+fi
+
+
+
+
 # --- GenFit2 options (harmless for other fitters; Python only sets what exists) ---
 K4_ARGS+=(
   --gf-posScale     "${GF_POS_SCALE}"
@@ -215,7 +250,15 @@ K4_ARGS+=( --gf-residualMaxChi2 "${GF_RES_MAX_CHI2}" )
 
 K4_ARGS+=( --ggtf-zeroMinSizeKeep "${GGTF_ZERO_MIN}" )
 K4_ARGS+=( --ggtf-minWireFracKeep "${GGTF_WIRE_FRAC}" )
-[[ "${GGTF_PROMOTE_ZERO}" -eq 1 ]] && K4_ARGS+=( --ggtf-promoteZeroIfGood ) || K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
+
+if [[ "${GGTF_PROMOTE_ZERO}" -eq 1 ]]; then
+  K4_ARGS+=( --ggtf-promoteZeroIfGood )
+else
+  K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
+fi
+
+
+
 [[ "${GGTF_SKIP_ZERO_SMALL}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
 [[ "${GGTF_SKIP_ZERO_ALWAYS}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
 
