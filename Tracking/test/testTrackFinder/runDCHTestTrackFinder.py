@@ -1,25 +1,21 @@
+#!/usr/bin/env python3
 # runDCHTestTrackFinder.py (tri-fitter edition, crash-safe; v02 digi aware)
 #
-# UPDATED:
-#  - Adds GGTF MC-truth PDG gating controls for wire hits (mu-only by default)
-#  - Wires GGTF.InputWireSimLinkCollections (new GGTF_tracking input)
-#  - Adds CLI toggles:
-#      --ggtf-filterInputWiresByTruthPdg / --no-ggtf-filterInputWiresByTruthPdg
-#      --ggtf-keepTruthPdg
-#      --ggtf-dropWireIfUnlinked / --no-ggtf-dropWireIfUnlinked
-#      --ggtf-wireSimLinkColl (optional override)
-#
-# NEW (this edit):
-#  - Adds optional GGTF debug/coverage/unit knobs (settable from CLI)
-#    These are applied only if the compiled GGTF_tracking has the corresponding Gaudi::Property.
-#    If the property does not exist, a warning is printed and the run continues.
+# FIXED (this revision):
+#  - Ensures CLI values actually WIN for GGTF + GenFit2 (no silent “profile” overrides).
+#  - Wires GenFit2 knobs that were parsed but never applied:
+#      * --gf-sortHits / --no-gf-sortHits
+#      * --gf-dedup / --no-gf-dedup
+#      * --gf-dedupTol
+#  - Makes the “summary print” report the *actual* configured GGTF properties (not just args).
+#  - Digitizer resolver now respects --dchDigiVersion (v01/v02) preference order.
+#  - Explicitly sets v02 output collection names when supported (keeps names consistent).
 #
 # NOTE:
 #  - Truth-gating is MC-truth dependent. If the link collection is absent/empty,
-#    GGTF_tracking will auto-disable the gate for that event (per C++ update).
+#    GGTF_tracking may effectively disable the gate for that event in C++.
 
 import os
-import math
 import subprocess
 import shutil
 import traceback
@@ -99,40 +95,57 @@ parser.add_argument("--wireGateMM", type=float, default=3.0,    help="Wire→cir
 parser.add_argument("--onnxChunk",  type=int,   default=4096,   help="ONNX hits per slice")
 parser.add_argument("--max3DHitsPerEvent", type=int, default=1000000, help="3D hits cap per event")
 parser.add_argument("--max3DPerTrack",     type=int, default=100000,  help="3D hits cap per track")
-parser.add_argument("--maxHitsPerEvent",   type=int, default=8000,    help="Cap input hits (0=off)")
-parser.add_argument("--produce3DHits", action="store_true", default=True,
-                    help="If set, also write GGTF_3DHits")
+
+# IMPORTANT: default 0 (off) to avoid silently capping "all hits" debug mode
+parser.add_argument("--maxHitsPerEvent",   type=int, default=0,        help="Cap input hits (0=off)")
+
+# Produce3DHits as a real toggle pair (matches shell style)
+parser.add_argument("--produce3DHits", dest="produce3DHits", action="store_true", default=True,
+                    help="Write GGTF_3DHits (default True).")
+parser.add_argument("--no-produce3DHits", dest="produce3DHits", action="store_false",
+                    help="Disable GGTF_3DHits output.")
+
 parser.add_argument("--ggtfLog", choices=["INFO","DEBUG"], default="INFO",
                     help="GGTF_tracking OutputLevel")
 
-# ----------------- NEW: GGTF debug / coverage / unit knobs -------------------
-# These only take effect if the compiled GGTF_tracking.cpp defines the property.
+# ----------------- GGTF debug / coverage / unit knobs -------------------
 parser.add_argument("--ggtf-3dPosScale", type=float, default=None,
                     help="If supported: scale applied when writing GGTF_3DHits positions (e.g. 10.0 if cm->mm).")
+parser.add_argument("--ggtf-threeDHitPosScale", type=float, default=None,
+                    help="Alias for --ggtf-3dPosScale.")
+
 parser.add_argument("--ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
-                    action="store_true", default=False,
-                    help="If supported: emit 3D hits for ALL clustered inputs (planar + wire), not only gated wires.")
+                    action="store_true", default=True,
+                    help="If supported: emit 3D hits for ALL FLATTENED inputs (planar + wire) right after flatten.")
 parser.add_argument("--no-ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
                     action="store_false")
 
+# Tri-state so we don't override C++ default unless user asked.
 parser.add_argument("--ggtf-all3DHitsOnly", dest="ggtf_all3DHitsOnly",
-                    action="store_true", default=False,
-                    help="If supported: when ProduceAll3DHits is on, do NOT also produce the per-track 3D hits (avoid duplicates).")
+                    action="store_const", const=True, default=None,
+                    help="If supported: when ProduceAll3DHits is on, skip per-track 3D hits (avoid duplicates).")
 parser.add_argument("--no-ggtf-all3DHitsOnly", dest="ggtf_all3DHitsOnly",
-                    action="store_false")
+                    action="store_const", const=False,
+                    help="If supported: allow both all-input 3D hits and per-track 3D hits (duplicates possible).")
 
 parser.add_argument("--ggtf-all3DHitsTypeValue", type=int, default=None,
-                    help="If supported: set Type for the 'all-3D-hits' stream to a constant (e.g. -777) for easy spotting.")
-parser.add_argument("--ggtf-applyWireGateTo3DHits", dest="ggtf_applyWireGateTo3DHits",
-                    action="store_true", default=None,
-                    help="If supported: when True, apply wire gate to 3D hit emission. When False, still output 3D dot even if failing gate.")
-parser.add_argument("--ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
-                    action="store_true", default=False,
-                    help="If supported: print quick diagnostics (e.g. sample radii/units) for the 3D hits each event.")
-parser.add_argument("--no-ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
-                    action="store_false")
+                    help="If supported: set Type for the 'all-3D-hits' stream to a constant (e.g. -777).")
 
-# ----------------- NEW: GGTF truth-PDG gating for wire hits -------------------
+parser.add_argument("--ggtf-applyWireGateTo3DHits", dest="ggtf_applyWireGateTo3DHits",
+                    action="store_const", const=True, default=None,
+                    help="If supported: require wire gate pass for 3D hit emission.")
+parser.add_argument("--no-ggtf-applyWireGateTo3DHits", dest="ggtf_applyWireGateTo3DHits",
+                    action="store_const", const=False,
+                    help="If supported: emit wire 3D hits even if failing gate (still clamps d).")
+
+parser.add_argument("--ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
+                    action="store_const", const=True, default=None,
+                    help="If supported: enable GGTF 3D-hit radius/unit debug prints.")
+parser.add_argument("--no-ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
+                    action="store_const", const=False,
+                    help="If supported: disable GGTF 3D-hit radius/unit debug prints.")
+
+# ----------------- GGTF truth-PDG gating for wire hits -------------------
 parser.add_argument(
     "--ggtf-filterInputWiresByTruthPdg",
     dest="ggtf_filterInputWiresByTruthPdg",
@@ -186,7 +199,6 @@ parser.add_argument("--fitOut", default="GenFitTracks",
 parser.add_argument("--fitterLog", choices=["INFO","DEBUG"], default="INFO",
                     help="Fitter OutputLevel")
 
-# If GenFit2 is unavailable, optionally fall back to Simple
 parser.add_argument("--fallbackIfNoGenFit2", dest="fallbackIfNoGenFit2",
                     action="store_true", default=True,
                     help="If GenFit2DCHFitter cannot be imported, fall back to SimpleFitDCHFitter")
@@ -284,8 +296,6 @@ parser.add_argument("--ggtf-skipZeroAlways", action="store_true", default=False)
 parser.add_argument("--no-ggtf-skipZeroAlways", dest="ggtf_skipZeroAlways", action="store_false")
 
 # ----------------- GenFit2 Fitter outlier / residual options -----------------
-
-# z(phi) outlier filter toggles
 parser.add_argument("--gf-filterZOutliers",
                     dest="gf_filterZOutliers",
                     action="store_true",
@@ -309,7 +319,6 @@ parser.add_argument("--gf-zOutlierMinFracKeep",
                     help="Minimum fraction of hits to keep after filtering "
                          "(else filter is skipped for that group)")
 
-# generic residual filter toggles (match local_chain.sh)
 parser.add_argument(
     "--gf-residualFilterEnable",
     dest="gf_residualFilterEnable",
@@ -336,9 +345,7 @@ parser.add_argument(
 )
 
 # -----------------------------------------------------------------------------
-
 args = parser.parse_args()
-print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
 
 # --- construct a global job_tag string ---------------------------------------
 if args.jobTag:
@@ -352,9 +359,14 @@ else:
         f"|fitter={args.fitter}"
         f"|digi={args.dchDigiVersion}"
     )
+
+# Effective material flag (we may force it off if services are missing)
+gf_useMat_effective = bool(args.gf_useMat)
+
+print(f"[GF2] UseMaterialEffects(requested)={args.gf_useMat}  UseMaterialEffects(effective)={gf_useMat_effective}")
 print(f"[meta] JobTag = '{job_tag}'")
 
-if args.fitter == "genfit2" and args.gf_useMat and not args.compactXML:
+if args.fitter == "genfit2" and gf_useMat_effective and not args.compactXML:
     raise RuntimeError(
         "UseMaterialEffects=True but --compactXML not provided. "
         "Provide the same compact used by ddsim so TGeo is available."
@@ -420,20 +432,20 @@ def stage_model(spec: str) -> str:
     raise RuntimeError(f"Unrecognized model spec: {spec}")
 
 # ----------------- DCH Digitizer (robust resolver) -----------------
-def _resolve_dch_digitizer():
+def _resolve_dch_digitizer(version: str):
     tried = []
-    candidates = [
-        ("DCHdigiConf",    "DCHdigi_v02"),
-        ("Configurables",  "DCHdigi_v02"),
-        ("DCHdigiConf",    "DCHdigi_v01"),
-        ("Configurables",  "DCHdigi_v01"),
-        ("DCHdigiConf",    "DCHdigi"),
-        ("Configurables",  "DCHdigi"),
-        ("TrackingConf",   "DCHdigi_v02"),
-        ("TrackingConf",   "DCHdigi_v01"),
-        ("TrackingConf",   "DCHdigi"),
-    ]
-    for mod, cls in candidates:
+
+    # Prefer the requested version first (this was previously not respected).
+    if version == "v02":
+        preferred = [("DCHdigiConf", "DCHdigi_v02"), ("Configurables", "DCHdigi_v02"), ("TrackingConf", "DCHdigi_v02")]
+        fallback  = [("DCHdigiConf", "DCHdigi_v01"), ("Configurables", "DCHdigi_v01"), ("TrackingConf", "DCHdigi_v01")]
+    else:
+        preferred = [("DCHdigiConf", "DCHdigi_v01"), ("Configurables", "DCHdigi_v01"), ("TrackingConf", "DCHdigi_v01")]
+        fallback  = [("DCHdigiConf", "DCHdigi_v02"), ("Configurables", "DCHdigi_v02"), ("TrackingConf", "DCHdigi_v02")]
+
+    generic = [("DCHdigiConf", "DCHdigi"), ("Configurables", "DCHdigi"), ("TrackingConf", "DCHdigi")]
+
+    for mod, cls in (preferred + fallback + generic):
         try:
             m = __import__(mod, fromlist=[cls])
             C = getattr(m, cls)
@@ -441,6 +453,7 @@ def _resolve_dch_digitizer():
             return C(cls)
         except Exception as e:
             tried.append(f"{mod}.{cls} -> {e}")
+
     paths = os.environ.get("GAUDI_PLUGIN_PATH", "(unset)")
     raise ImportError(
         "No DCH digitizer component found. Tried:\n  " +
@@ -452,9 +465,8 @@ def _resolve_dch_digitizer():
         f"  • Current GAUDI_PLUGIN_PATH: {paths}"
     )
 
-dch_digitizer = _resolve_dch_digitizer()
+dch_digitizer = _resolve_dch_digitizer(args.dchDigiVersion)
 
-# Best-effort property setting
 def _set_if_has_digitizer(obj, name, value):
     try:
         if hasattr(obj, name):
@@ -465,23 +477,26 @@ def _set_if_has_digitizer(obj, name, value):
         print(f"[digitizer] could not set {name}: {e}")
     return False
 
-# Common v01/v02 inputs
 _set_if_has_digitizer(dch_digitizer, "DCH_simhits", [args.dchSimHits])
 _set_if_has_digitizer(dch_digitizer, "DCH_name", args.dchName)
-# --- v02 input bindings (safe no-ops for v01) ---
 _set_if_has_digitizer(dch_digitizer, "InputSimHitCollection", [args.dchSimHits])
 _set_if_has_digitizer(dch_digitizer, "HeaderName", ["EventHeader"])
 
-# v01 legacy knobs (harmless for v02; set only if exist)
+# Keep output names consistent with your pipeline conventions when the properties exist.
+if args.dchDigiVersion == "v02":
+    _set_if_has_digitizer(dch_digitizer, "OutputDigihitCollection", ["DCHDigi2Collection"])
+    _set_if_has_digitizer(dch_digitizer, "OutputLinkCollection",    ["DCHDigi2SimLinkCollection"])
+else:
+    _set_if_has_digitizer(dch_digitizer, "OutputDigihitCollection", ["DCH_DigiCollection"])
+    _set_if_has_digitizer(dch_digitizer, "OutputLinkCollection",    ["DCHDigiSimLinkCollection"])
+
 _set_if_has_digitizer(dch_digitizer, "fileDataAlg", "DataAlgFORGEANT.root")
 _set_if_has_digitizer(dch_digitizer, "calculate_dndx", False)
 _set_if_has_digitizer(dch_digitizer, "create_debug_histograms", False)
 
-# Resolutions (shared semantics)
 _set_if_has_digitizer(dch_digitizer, "zResolution_mm",  args.zResolution_mm)
 _set_if_has_digitizer(dch_digitizer, "xyResolution_mm", args.xyResolution_mm)
 
-# v02-specific (silently ignored by v01)
 _set_if_has_digitizer(dch_digitizer, "Deadtime_ns",               args.dch_deadtime_ns)
 _set_if_has_digitizer(dch_digitizer, "DriftVelocity_um_per_ns",   args.dch_drift_um_ns)
 _set_if_has_digitizer(dch_digitizer, "SignalVelocity_mm_per_ns",  args.dch_sig_mm_ns)
@@ -489,29 +504,20 @@ _set_if_has_digitizer(dch_digitizer, "GasType",                   args.dch_gas_t
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns", args.rw_start_ns)
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns",  args.rw_dur_ns)
 
-# NEW: pass JobTag into digitizer (DCHdigi_v02 will record it in metadata)
 _set_if_has_digitizer(dch_digitizer, "JobTag", job_tag)
 
-# Ensure cluster-size file for v01 (harmless no-op for v02)
 cluster_file = "DataAlgFORGEANT.root"
 if not os.path.exists(cluster_file):
     url = "https://fccsw.web.cern.ch/fccsw/filesForSimDigiReco/IDEA/DataAlgFORGEANT.root"
     print(f"[setup] Fetching {cluster_file} from {url}")
     subprocess.run(["wget", "--no-verbose", "--timeout=180", "--tries=2", "--no-clobber", url], check=True)
 
-# ----------------- Choose wire collection name by digi version -----------------
-if args.dchDigiVersion == "v02":
-    wire_coll = "DCHDigi2Collection"
-else:
-    wire_coll = "DCH_DigiCollection"
+# Choose wire digi collection names based on requested digi version.
+wire_coll = "DCHDigi2Collection" if args.dchDigiVersion == "v02" else "DCH_DigiCollection"
 
-# ----------------- Choose wire->sim link collection name (for truth-PDG gating) -----------------
 def _guess_wire_simlink_collections():
-    # Allow explicit override
     if args.ggtf_wireSimLinkColl:
         return [args.ggtf_wireSimLinkColl]
-
-    # Best-guess defaults by digi version (safe even if absent; GGTF_tracking will auto-disable gate if empty)
     if args.dchDigiVersion == "v02":
         return ["DCHDigi2SimLinkCollection", "DCHDigiSimLinkCollection", "DCHDigi2SimLink", "DCHDigiSimLink"]
     else:
@@ -523,13 +529,12 @@ wire_simlink_colls = _guess_wire_simlink_collections()
 try:
     from TrackingConf import GGTF_tracking
 except Exception:
-    from Configurables import GGTF_tracking  # registry fallback
+    from Configurables import GGTF_tracking
 
 GGTF = GGTF_tracking(
     "GGTF_tracking",
     InputWireHitCollections=[wire_coll],
     InputPlanarHitCollections=[],
-    # NEW INPUT:
     InputWireSimLinkCollections=wire_simlink_colls,
     OutputTracksGGTF=["CDCHTracks"],
     Output3DHits=["GGTF_3DHits"],
@@ -537,10 +542,9 @@ GGTF = GGTF_tracking(
 )
 
 GGTF.ModelPath = stage_model(args.modelPath)
-GGTF.Tbeta = args.tbeta
-GGTF.Td    = args.td
+GGTF.Tbeta = float(args.tbeta)
+GGTF.Td    = float(args.td)
 
-# ----------------- Helper: quiet property setter (GGTF) -----------------
 def _set_if_has_g(obj, name, value):
     try:
         if hasattr(obj, name):
@@ -551,75 +555,93 @@ def _set_if_has_g(obj, name, value):
         print(f"[GGTF][warn] could not set {name}: {e}")
     return False
 
-# Label-0 handling knobs
+# Label-0 handling (always apply)
 for name, val in [
-    ("ZeroMinSizeKeep", args.ggtf_zeroMinSizeKeep),
-    ("MinWireFracKeep", args.ggtf_minWireFracKeep),
-    ("PromoteZeroIfGood", args.ggtf_promoteZeroIfGood),
-    ("SkipZeroIfSmall", args.ggtf_skipZeroIfSmall),
-    ("SkipZeroAlways", args.ggtf_skipZeroAlways),
+    ("ZeroMinSizeKeep", int(args.ggtf_zeroMinSizeKeep)),
+    ("MinWireFracKeep", float(args.ggtf_minWireFracKeep)),
+    ("PromoteZeroIfGood", bool(args.ggtf_promoteZeroIfGood)),
+    ("SkipZeroIfSmall", bool(args.ggtf_skipZeroIfSmall)),
+    ("SkipZeroAlways", bool(args.ggtf_skipZeroAlways)),
 ]:
     _set_if_has_g(GGTF, name, val)
 
-# Core runtime knobs
+# Core GGTF runtime knobs (always apply)
 for name, val in [
-    ("WireGateMM", args.wireGateMM),
-    ("OnnxChunk", args.onnxChunk),
-    ("Max3DHitsPerEvent", args.max3DHitsPerEvent),
-    ("Max3DPerTrack", args.max3DPerTrack),
+    ("WireGateMM", float(args.wireGateMM)),
+    ("OnnxChunk", int(args.onnxChunk)),
+    ("Max3DHitsPerEvent", int(args.max3DHitsPerEvent)),
+    ("Max3DPerTrack", int(args.max3DPerTrack)),
 ]:
-    _set_if_has_g(GGTF, name, val)
+    # Some builds may use slightly different capitalization; try a couple common variants.
+    if not _set_if_has_g(GGTF, name, val):
+        if name.endswith("MM") and _set_if_has_g(GGTF, name[:-2] + "Mm", val):
+            pass
 
 _set_if_has_g(GGTF, "Produce3DHits", bool(args.produce3DHits))
 
-# MaxHitsPerEvent name differs across some builds
+# MaxHitsPerEvent name differs across builds
 if int(args.maxHitsPerEvent) > 0:
     if not _set_if_has_g(GGTF, "MaxHitsPerEvent", int(args.maxHitsPerEvent)):
         if not _set_if_has_g(GGTF, "maxHitsPerEvent", int(args.maxHitsPerEvent)):
             print("[GGTF][warn] MaxHitsPerEvent property not present; ignoring.")
+else:
+    print("[GGTF] maxHitsPerEvent=0 -> no cap")
 
-# Truth-PDG gating
+# Truth gating (always apply if property exists)
 _set_if_has_g(GGTF, "FilterInputWiresByTruthPdg", bool(args.ggtf_filterInputWiresByTruthPdg))
 _set_if_has_g(GGTF, "KeepTruthPdg", int(args.ggtf_keepTruthPdg))
 _set_if_has_g(GGTF, "DropWireIfUnlinked", bool(args.ggtf_dropWireIfUnlinked))
 
-# NEW: write JobTag into GGTF metadata
 _set_if_has_g(GGTF, "JobTag", job_tag)
 
-# NEW: optional debug/coverage/unit knobs (only if present in compiled component)
-if args.ggtf_3dPosScale is not None:
-    _set_if_has_g(GGTF, "ThreeDHitPosScale", float(args.ggtf_3dPosScale))
+# Optional knobs
+pos_scale = args.ggtf_3dPosScale if args.ggtf_3dPosScale is not None else args.ggtf_threeDHitPosScale
+if pos_scale is not None:
+    _set_if_has_g(GGTF, "ThreeDHitPosScale", float(pos_scale))
 
 _set_if_has_g(GGTF, "ProduceAll3DHits", bool(args.ggtf_produceAll3DHits))
-_set_if_has_g(GGTF, "All3DHitsOnly", bool(args.ggtf_all3DHitsOnly))
+
+if args.ggtf_all3DHitsOnly is not None:
+    _set_if_has_g(GGTF, "All3DHitsOnly", bool(args.ggtf_all3DHitsOnly))
+
 if args.ggtf_all3DHitsTypeValue is not None:
     _set_if_has_g(GGTF, "All3DHitsTypeValue", int(args.ggtf_all3DHitsTypeValue))
 
-# tri-state: only set ApplyWireGateTo3DHits if user explicitly provided (default=None)
 if args.ggtf_applyWireGateTo3DHits is not None:
     _set_if_has_g(GGTF, "ApplyWireGateTo3DHits", bool(args.ggtf_applyWireGateTo3DHits))
 
-_set_if_has_g(GGTF, "DebugPrint3DHitR", bool(args.ggtf_debugPrint3DHitR))
+if args.ggtf_debugPrint3DHitR is not None:
+    _set_if_has_g(GGTF, "DebugPrint3DHitR", bool(args.ggtf_debugPrint3DHitR))
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
 
+# IMPORTANT: print the *actual configured* properties (not just args)
+def _ggtf_prop(name, fallback="n/a"):
+    return getattr(GGTF, name, fallback)
+
 print(
-    f"[GGTF] stage={args.stage} ModelPath={getattr(GGTF,'ModelPath','n/a')} "
-    f"Tbeta={getattr(GGTF,'Tbeta','n/a')} Td={getattr(GGTF,'Td','n/a')} "
-    f"Produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
-    f"MaxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',getattr(GGTF,'maxHitsPerEvent','n/a'))} "
-    f"WireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
-    f"OnnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
-    f"Max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
-    f"Max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
-    f"log={args.ggtfLog} wireColl={wire_coll} wireSimLinkColls={wire_simlink_colls} "
-    f"truthGate={args.ggtf_filterInputWiresByTruthPdg} keepPDG={args.ggtf_keepTruthPdg} dropUnlinked={args.ggtf_dropWireIfUnlinked} "
-    f"3dPosScale={getattr(GGTF,'ThreeDHitPosScale','n/a')} "
-    f"ProduceAll3DHits={getattr(GGTF,'ProduceAll3DHits','n/a')} "
-    f"All3DHitsOnly={getattr(GGTF,'All3DHitsOnly','n/a')} "
-    f"All3DHitsTypeValue={getattr(GGTF,'All3DHitsTypeValue','n/a')} "
-    f"ApplyWireGateTo3DHits={getattr(GGTF,'ApplyWireGateTo3DHits','n/a')} "
-    f"DebugPrint3DHitR={getattr(GGTF,'DebugPrint3DHitR','n/a')}"
+    "[GGTF] configured | "
+    f"stage={args.stage} "
+    f"ModelPath={_ggtf_prop('ModelPath')} "
+    f"Tbeta={_ggtf_prop('Tbeta')} Td={_ggtf_prop('Td')} "
+    f"Produce3DHits={_ggtf_prop('Produce3DHits')} "
+    f"MaxHitsPerEvent={_ggtf_prop('MaxHitsPerEvent', _ggtf_prop('maxHitsPerEvent'))} "
+    f"WireGateMM={_ggtf_prop('WireGateMM')} "
+    f"OnnxChunk={_ggtf_prop('OnnxChunk')} "
+    f"Max3DHitsPerEvent={_ggtf_prop('Max3DHitsPerEvent')} "
+    f"Max3DPerTrack={_ggtf_prop('Max3DPerTrack')} "
+    f"log={args.ggtfLog} "
+    f"wireColl={wire_coll} wireSimLinkColls={wire_simlink_colls} "
+    f"FilterInputWiresByTruthPdg={_ggtf_prop('FilterInputWiresByTruthPdg')} "
+    f"KeepTruthPdg={_ggtf_prop('KeepTruthPdg')} "
+    f"DropWireIfUnlinked={_ggtf_prop('DropWireIfUnlinked')} "
+    f"MinWireFracKeep={_ggtf_prop('MinWireFracKeep')} "
+    f"ThreeDHitPosScale={_ggtf_prop('ThreeDHitPosScale')} "
+    f"ProduceAll3DHits={_ggtf_prop('ProduceAll3DHits')} "
+    f"All3DHitsOnly={_ggtf_prop('All3DHitsOnly')} "
+    f"All3DHitsTypeValue={_ggtf_prop('All3DHitsTypeValue')} "
+    f"ApplyWireGateTo3DHits={_ggtf_prop('ApplyWireGateTo3DHits')} "
+    f"DebugPrint3DHitR={_ggtf_prop('DebugPrint3DHitR')}"
 )
 
 # ----------------- Helper: quiet property setter -----------------
@@ -649,10 +671,10 @@ if args.fitter == "genfit2":
         print(f"[genfit] DD4hepFieldSvc not available: {e}")
         try:
             from Configurables import ConstBFieldSvc
-            field_svc_obj = ConstBFieldSvc("GenFitFieldSvc", Bz=args.gf_bz)
+            field_svc_obj = ConstBFieldSvc("GenFitFieldSvc", Bz=float(args.gf_bz))
             field_svc_name = field_svc_obj.getName()
             print(f"[genfit] Using ConstBFieldSvc Bz={args.gf_bz}T -> {field_svc_name}")
-        except Exception as e2:
+        except Exception:
             print(f"[genfit][WARN] No field service available; relying on fitter.Bz={args.gf_bz}")
 
     try:
@@ -667,9 +689,9 @@ if args.fitter == "genfit2":
             material_svc_obj = GenFitMaterialSvc("GenFitMaterialSvc", GeoSvcName="GeoSvc")
             material_svc_name = material_svc_obj.getName()
             print(f"[genfit] Using GenFitMaterialSvc -> {material_svc_name}")
-        except Exception as e2:
+        except Exception:
             print("[genfit][WARN] Material services unavailable; forcing UseMaterialEffects=False for this run.")
-            args.gf_useMat = False  # hard-disable to avoid misconfiguration
+            gf_useMat_effective = False
 
 # ----------------- Choose and configure fitter -----------------
 fitter_alg = None
@@ -689,6 +711,7 @@ def _configure_genfit2():
     alg = GenFit2DCHFitter("GenFit2DCHFitter")
     alg.OutputLevel = DEBUG if args.fitterLog == "DEBUG" else INFO
 
+    # Inputs
     for prop, val in (
         ("Input3DHits", "GGTF_3DHits"),
         ("input3DHits", "GGTF_3DHits"),
@@ -696,6 +719,8 @@ def _configure_genfit2():
     ):
         if _set_if_has(alg, prop, val):
             break
+
+    # Outputs
     for prop, val in (
         ("OutTracks",   args.fitOut),
         ("outputTracks", [args.fitOut]),
@@ -705,6 +730,7 @@ def _configure_genfit2():
         if _set_if_has(alg, prop, val):
             break
 
+    # Services
     for prop, val in [
         ("FieldSvc", field_svc_name),
         ("BFieldSvc", field_svc_name),
@@ -716,46 +742,53 @@ def _configure_genfit2():
         if val is not None or prop == "UseTGeoPath":
             _set_if_has(alg, prop, val if prop != "UseTGeoPath" else True)
 
-    _set_if_has(alg, "Bz", args.gf_bz)
-    _set_if_has(alg, "PDG", args.gf_pdg)
-    _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
-    _set_if_has(alg, "PositionUnitScale", args.gf_posScale)
-    _set_if_has(alg, "InternalLengthToMeters", args.gf_len2m)
+    # Core physics knobs
+    _set_if_has(alg, "Bz", float(args.gf_bz))
+    _set_if_has(alg, "PDG", int(args.gf_pdg))
 
-    _set_if_has(alg, "HitSigmaXYMM", args.gf_hitSigmaXY)
-    _set_if_has(alg, "HitSigmaZMM",  args.gf_hitSigmaZ)
-    _set_if_has(alg, "SeedPosSigmaMM",  args.gf_seedPosSigma)
-    _set_if_has(alg, "SeedMomSigmaGeV", args.gf_seedMomSigma)
-    _set_if_has(alg, "SeedPTMinGeV",    args.gf_seedPTMin)
-    _set_if_has(alg, "SeedPTMaxGeV",    args.gf_seedPTMax)
-    _set_if_has(alg, "SeedPMinGeV",     args.gf_seedPMin)
+    # IMPORTANT: use the *effective* UseMaterialEffects (may be forced off above)
+    _set_if_has(alg, "UseMaterialEffects", bool(gf_useMat_effective))
 
-    _set_if_has(alg, "MinGroupSize",          args.gf_minGroup)
-    _set_if_has(alg, "UseFallbackClustering", args.gf_useFallback)
-    _set_if_has(alg, "FallbackEpsCM",         args.gf_fallbackEpsCM)
-    _set_if_has(alg, "FallbackMinPts",        args.gf_fallbackMinPts)
-    _set_if_has(alg, "RetryIfNoFitterInfo",   args.gf_retry)
-    _set_if_has(alg, "RetryMeasInfl",         args.gf_retryMeasInfl)
-    _set_if_has(alg, "RetrySeedPosInfl",      args.gf_retrySeedPos)
-    _set_if_has(alg, "RetrySeedMomInfl",      args.gf_retrySeedMom)
-    _set_if_has(alg, "MaxMeasPerGroup",       args.gf_maxMeasPerGroup)
+    _set_if_has(alg, "PositionUnitScale", float(args.gf_posScale))
+    _set_if_has(alg, "InternalLengthToMeters", float(args.gf_len2m))
 
-    _set_if_has(alg, "pdgHypothesis", args.gf_pdg)
-    _set_if_has(alg, "minHitsOnTrack", 4)
-    _set_if_has(alg, "maxChi2", 1e6)
+    _set_if_has(alg, "HitSigmaXYMM", float(args.gf_hitSigmaXY))
+    _set_if_has(alg, "HitSigmaZMM",  float(args.gf_hitSigmaZ))
+    _set_if_has(alg, "SeedPosSigmaMM",  float(args.gf_seedPosSigma))
+    _set_if_has(alg, "SeedMomSigmaGeV", float(args.gf_seedMomSigma))
+    _set_if_has(alg, "SeedPTMinGeV",    float(args.gf_seedPTMin))
+    _set_if_has(alg, "SeedPTMaxGeV",    float(args.gf_seedPTMax))
+    _set_if_has(alg, "SeedPMinGeV",     float(args.gf_seedPMin))
 
-    # z(phi) outlier filter wiring
-    _set_if_has(alg, "FilterZOutliers",     args.gf_filterZOutliers)
-    _set_if_has(alg, "ZOutlierAbsMM",       args.gf_zOutlierAbsMM)
-    _set_if_has(alg, "ZOutlierNSigma",      args.gf_zOutlierNSigma)
-    _set_if_has(alg, "ZOutlierMinFracKeep", args.gf_zOutlierMinFracKeep)
+    # FIX: previously parsed but not applied
+    _set_if_has(alg, "SortHits", bool(args.gf_sortHits))
+    _set_if_has(alg, "DeduplicateHits", bool(args.gf_dedup))
+    _set_if_has(alg, "DedupTolMM", float(args.gf_dedupTol))
 
-    # generic residual filter wiring
-    _set_if_has(alg, "ResidualFilterEnable", args.gf_residualFilterEnable)
-    _set_if_has(alg, "ResidualMaxPull",      args.gf_residualMaxPull)
-    _set_if_has(alg, "ResidualMaxChi2",      args.gf_residualMaxChi2)
+    # Grouping / clustering / retry knobs
+    _set_if_has(alg, "MinGroupSize",          int(args.gf_minGroup))
+    _set_if_has(alg, "UseFallbackClustering", bool(args.gf_useFallback))
+    _set_if_has(alg, "FallbackEpsCM",         float(args.gf_fallbackEpsCM))
+    _set_if_has(alg, "FallbackMinPts",        int(args.gf_fallbackMinPts))
+    _set_if_has(alg, "RetryIfNoFitterInfo",   bool(args.gf_retry))
+    _set_if_has(alg, "RetryMeasInfl",         float(args.gf_retryMeasInfl))
+    _set_if_has(alg, "RetrySeedPosInfl",      float(args.gf_retrySeedPos))
+    _set_if_has(alg, "RetrySeedMomInfl",      float(args.gf_retrySeedMom))
+    _set_if_has(alg, "MaxMeasPerGroup",       int(args.gf_maxMeasPerGroup))
 
-    # pass JobTag into GenFit2DCHFitter (if the property exists)
+    # Optional “legacy” property names (harmless if absent)
+    _set_if_has(alg, "pdgHypothesis", int(args.gf_pdg))
+
+    # Outlier / residual filters
+    _set_if_has(alg, "FilterZOutliers",     bool(args.gf_filterZOutliers))
+    _set_if_has(alg, "ZOutlierAbsMM",       float(args.gf_zOutlierAbsMM))
+    _set_if_has(alg, "ZOutlierNSigma",      float(args.gf_zOutlierNSigma))
+    _set_if_has(alg, "ZOutlierMinFracKeep", float(args.gf_zOutlierMinFracKeep))
+
+    _set_if_has(alg, "ResidualFilterEnable", bool(args.gf_residualFilterEnable))
+    _set_if_has(alg, "ResidualMaxPull",      float(args.gf_residualMaxPull))
+    _set_if_has(alg, "ResidualMaxChi2",      float(args.gf_residualMaxChi2))
+
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] GenFit2DCHFitter configured; output -> '{args.fitOut}'")
@@ -781,9 +814,7 @@ def _configure_simple():
             tried.append(f"{mod}.{name} ({e})")
 
     if Simple is None:
-        msg = "[fitter][WARN] No callable SimpleFitDCHFitter found; tried:\n  " + "\n  ".join(tried)
-        print(msg)
-        print("[fitter][WARN] Falling back to ThreePointFitter.")
+        print("[fitter][WARN] No callable SimpleFitDCHFitter found; falling back to ThreePointFitter.")
         return _configure_threepoint()
 
     alg = Simple("SimpleFitDCHFitter")
@@ -796,19 +827,19 @@ def _configure_simple():
         if _set_if_has(alg, prop, val):
             break
 
-    _set_if_has(alg, "Bz", args.sf_bz)
-    _set_if_has(alg, "PositionUnitScale", args.sf_posScale)
-    _set_if_has(alg, "InternalLengthToMeters", args.sf_len2m)
-    _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
+    _set_if_has(alg, "Bz", float(args.sf_bz))
+    _set_if_has(alg, "PositionUnitScale", float(args.sf_posScale))
+    _set_if_has(alg, "InternalLengthToMeters", float(args.sf_len2m))
+    _set_if_has(alg, "UseMaterialEffects", bool(gf_useMat_effective))
     _set_if_has(alg, "UseTGeoPath", True)
-    _set_if_has(alg, "MinGroupSize",            args.sf_minGroup)
-    _set_if_has(alg, "UseFallbackClustering",   args.sf_useFallback)
-    _set_if_has(alg, "FallbackEpsCM",           args.sf_fallbackEpsCM)
-    _set_if_has(alg, "FallbackMinPts",          args.sf_fallbackMinPts)
-    _set_if_has(alg, "SortHits",                args.sf_sortHits)
-    _set_if_has(alg, "DeduplicateHits",         args.sf_dedup)
-    _set_if_has(alg, "DedupTolMM",              args.sf_dedupTol)
-    _set_if_has(alg, "MaxMeasPerGroup",         args.sf_maxMeasPerGroup)
+    _set_if_has(alg, "MinGroupSize",            int(args.sf_minGroup))
+    _set_if_has(alg, "UseFallbackClustering",   bool(args.sf_useFallback))
+    _set_if_has(alg, "FallbackEpsCM",           float(args.sf_fallbackEpsCM))
+    _set_if_has(alg, "FallbackMinPts",          int(args.sf_fallbackMinPts))
+    _set_if_has(alg, "SortHits",                bool(args.sf_sortHits))
+    _set_if_has(alg, "DeduplicateHits",         bool(args.sf_dedup))
+    _set_if_has(alg, "DedupTolMM",              float(args.sf_dedupTol))
+    _set_if_has(alg, "MaxMeasPerGroup",         int(args.sf_maxMeasPerGroup))
 
     if args.sf_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.sf_outHisto)
@@ -830,54 +861,53 @@ def _configure_threepoint():
         if _set_if_has(alg, prop, val):
             break
 
-    _set_if_has(alg, "Bz", args.tp_bz)
-    _set_if_has(alg, "PDG", args.gf_pdg)
-    _set_if_has(alg, "PositionUnitScale", args.tp_posScale)
-    _set_if_has(alg, "InternalLengthToMeters", args.tp_len2m)
+    _set_if_has(alg, "Bz", float(args.tp_bz))
+    _set_if_has(alg, "PDG", int(args.gf_pdg))
+    _set_if_has(alg, "PositionUnitScale", float(args.tp_posScale))
+    _set_if_has(alg, "InternalLengthToMeters", float(args.tp_len2m))
 
-    _set_if_has(alg, "UseMaterialEffects", args.gf_useMat)
+    _set_if_has(alg, "UseMaterialEffects", bool(gf_useMat_effective))
     _set_if_has(alg, "UseTGeoPath", True)
 
-    _set_if_has(alg, "MinGroupSize",            args.tp_minGroup)
-    _set_if_has(alg, "UseFallbackClustering",   args.tp_useFallback)
-    _set_if_has(alg, "FallbackEpsCM",           args.tp_fallbackEpsCM)
-    _set_if_has(alg, "FallbackMinPts",          args.tp_fallbackMinPts)
-    _set_if_has(alg, "SortHits",                args.tp_sortHits)
-    _set_if_has(alg, "DeduplicateHits",         args.tp_dedup)
-    _set_if_has(alg, "DedupTolMM",              args.tp_dedupTol)
-    _set_if_has(alg, "MaxMeasPerGroup",         args.tp_maxMeasPerGroup)
+    _set_if_has(alg, "MinGroupSize",            int(args.tp_minGroup))
+    _set_if_has(alg, "UseFallbackClustering",   bool(args.tp_useFallback))
+    _set_if_has(alg, "FallbackEpsCM",           float(args.tp_fallbackEpsCM))
+    _set_if_has(alg, "FallbackMinPts",          int(args.tp_fallbackMinPts))
+    _set_if_has(alg, "SortHits",                bool(args.tp_sortHits))
+    _set_if_has(alg, "DeduplicateHits",         bool(args.tp_dedup))
+    _set_if_has(alg, "DedupTolMM",              float(args.tp_dedupTol))
+    _set_if_has(alg, "MaxMeasPerGroup",         int(args.tp_maxMeasPerGroup))
 
     if args.tp_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.tp_outHisto)
 
-    _set_if_has(alg, "MinDeltaPhi",      args.tp_minDeltaPhi)
-    _set_if_has(alg, "MinChordMM",       args.tp_minChordMM)
-    _set_if_has(alg, "MinRadiusMM",      args.tp_minRadiusMM)
-    _set_if_has(alg, "FitTanLambda",     args.tp_fitTanLambda)
-    _set_if_has(alg, "PrintDiagnostics", args.tp_printDiag)
-    _set_if_has(alg, "DiagEveryN",       args.tp_diagEveryN)
+    _set_if_has(alg, "MinDeltaPhi",      float(args.tp_minDeltaPhi))
+    _set_if_has(alg, "MinChordMM",       float(args.tp_minChordMM))
+    _set_if_has(alg, "MinRadiusMM",      float(args.tp_minRadiusMM))
+    _set_if_has(alg, "FitTanLambda",     bool(args.tp_fitTanLambda))
+    _set_if_has(alg, "PrintDiagnostics", bool(args.tp_printDiag))
+    _set_if_has(alg, "DiagEveryN",       int(args.tp_diagEveryN))
 
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] ThreePointFitter configured; output -> '{args.fitOut}'")
     return alg
 
-# Build fitter (with optional fallback)
 fitter_alg = None
 if args.stage == "fit" and requested_fitter != "none":
     if requested_fitter == "genfit2":
         fitter_alg = _configure_genfit2()
         if fitter_alg is None and args.fallbackIfNoGenFit2:
-            print("[fitter][WARN] GenFit2DCHFitter unavailable in this runtime; falling back to SimpleFitDCHFitter.")
+            print("[fitter][WARN] GenFit2DCHFitter unavailable; falling back to SimpleFitDCHFitter.")
             fitter_alg = _configure_simple()
         elif fitter_alg is None:
-            print("[fitter][FATAL] GenFit2 requested but not available and fallback disabled; no tracks will be written.")
+            print("[fitter][FATAL] GenFit2 requested but not available and fallback disabled.")
     elif requested_fitter == "simple":
         fitter_alg = _configure_simple()
     elif requested_fitter == "threepoint":
         fitter_alg = _configure_threepoint()
 
-# --- Optional: collection size probe (if available) ---------------------------
+# Optional size printer
 try:
     from Configurables import EDM4hepCollectionSizePrinter as SizePrinter
     size_printer = SizePrinter(
@@ -888,7 +918,7 @@ try:
 except Exception:
     size_printer = None
 
-# ----------------- AppMgr / pipeline -----------------
+# Assemble pipeline
 top_algs = []
 if args.stage in ("digi", "ggtf", "fit"):
     top_algs.append(dch_digitizer)
@@ -899,7 +929,6 @@ if args.stage == "fit" and fitter_alg is not None:
 if size_printer is not None:
     top_algs.append(size_printer)
 
-# Try reader/writer if available
 try:
     from k4FWCore import getReader, getWriter
     reader = getReader()
@@ -910,7 +939,7 @@ except Exception:
 
 print(f"[pipeline] TopAlg order: {[alg.getFullName() for alg in top_algs]}")
 
-# ---- Ext services ----
+# Services
 ext_svcs = [
     geoservice,
     EventDataSvc("EventDataSvc"),

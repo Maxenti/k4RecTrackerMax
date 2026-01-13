@@ -1,11 +1,10 @@
 #!/bin/bash
-# local_chain.sh — run the k4run stage locally (digi → ggtf → fit)
+# local_chain.sh — run the k4run stage locally (digi → ggtf → fit) + stamp provenance metadata
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_13_2026/eta_+0.00/gun_eta+0.00_E4.4721.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_13_2026/eta_+0.00/reco_eta+0.00_E4.4721.root"
-# Model unchanged; use local file directly
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_13_2026/eta_+0.00/gun_eta+0.00_E0.66874.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_13_2026/eta_+0.00/reco_eta+0.00_E0.66874.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
@@ -22,48 +21,38 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # ----------------- pipeline controls -----------------
 : "${STAGE:=fit}"              # digi|ggtf|fit
-
-# Fitter choice:
-: "${FITTER:=genfit2}"      # genfit2|simple|threepoint|none
-
-# Output collection name from fitter
+: "${FITTER:=genfit2}"         # genfit2|simple|threepoint|none
 : "${FIT_OUT:=auto}"
 
 # ----------------- logging & runtime -----------------
-: "${GGTF_LOG:=DEBUG}"           # INFO|DEBUG
-: "${PRODUCE_3DHITS:=1}"         # 0|1
-: "${MAX_HITS:=100000}"          # cap input hits/event (0=off)
-: "${TIMEOUT_K4RUN:=0}"          # seconds (0=off)
+: "${GGTF_LOG:=DEBUG}"         # INFO|DEBUG
+: "${PRODUCE_3DHITS:=1}"       # 0|1
+
+# IMPORTANT: default off so you don’t accidentally clip “all hits” studies
+: "${MAX_HITS:=0}"             # cap input hits/event (0=off)
+
+: "${TIMEOUT_K4RUN:=0}"        # seconds (0=off)
 
 # GGTF clustering thresholds
 : "${TBETA:=0.6}"
 : "${TD:=0.3}"
 
 # GGTF runtime
-: "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=10.0}"        # wire→circle gate [mm]
-: "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
-: "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
+: "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
+: "${WIRE_GATE_MM:=12.0}"      # wire→circle gate [mm]
+: "${MAX_3D_PER_EVT:=200000}"  # cap spacepoints per event
+: "${MAX_3D_PER_TRK:=20000}"   # cap spacepoints per track
 
-# ----------------- NEW: GGTF debug/coverage/unit knobs -----------------
-# These map to runDCHTestTrackFinder.py flags:
-#   --ggtf-3dPosScale
-#   --ggtf-produceAll3DHits / --no-ggtf-produceAll3DHits
-#   --ggtf-all3DHitsOnly   / --no-ggtf-all3DHitsOnly
-#   --ggtf-all3DHitsTypeValue
-#   --ggtf-applyWireGateTo3DHits   (optional; only passed if explicitly set)
-#   --ggtf-debugPrint3DHitR / --no-ggtf-debugPrint3DHitR
-#
-# Notes:
-#  - If GGTF_tracking.cpp does not define these properties, the Python script will warn and ignore them.
-: "${GGTF_3D_POS_SCALE:=}"            # empty -> don't pass; e.g. 10.0 if cm->mm mismatch
-: "${GGTF_PRODUCE_ALL_3DHITS:=0}"     # 1/0
-: "${GGTF_ALL_3DHITS_ONLY:=0}"        # 1/0
-: "${GGTF_ALL_3DHITS_TYPE:=}"         # empty -> don't pass; e.g. -777
-: "${GGTF_APPLY_WIRE_GATE_TO_3DHITS:=}" # empty -> don't pass; set to 1 or 0 to force
-: "${GGTF_DEBUG_PRINT_3DHIT_R:=0}"    # 1/0
+# ----------------- GGTF debug/coverage/unit knobs (TRI-STATE) -----------------
+# Empty => do NOT pass any flag => do NOT override GGTF_tracking.cpp defaults.
+: "${GGTF_3D_POS_SCALE:=}"               # e.g. 10.0 if cm->mm mismatch (empty => don’t pass)
+: "${GGTF_PRODUCE_ALL_3DHITS:=}"         # empty|1|0
+: "${GGTF_ALL_3DHITS_ONLY:=}"            # empty|1|0
+: "${GGTF_ALL_3DHITS_TYPE:=}"            # empty => don’t pass
+: "${GGTF_APPLY_WIRE_GATE_TO_3DHITS:=}"  # empty|1|0
+: "${GGTF_DEBUG_PRINT_3DHIT_R:=}"        # empty|1|0
 
-# GenFit2 “stability profile” (used when FITTER=genfit2)
+# GenFit2 “stability profile”
 : "${GF_POS_SCALE:=0.1}"           # mm→cm internally
 : "${GF_LEN2M:=0.01}"              # cm→m
 : "${GF_HIT_SIGMA_XY:=0.8}"        # mm
@@ -87,32 +76,32 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 : "${GF_RETRY_SEED_MOM:=5.0}"
 : "${GF_MAX_MEAS_PER_GROUP:=0}"
 
-# NEW: GenFit2 residual filter knobs
+# GenFit2 residual filter knobs
 : "${GF_RES_FILTER:=1}"        # 1=on, 0=off
-: "${GF_RES_MAX_PULL:=5.0}"    # |pull| threshold
-: "${GF_RES_MAX_CHI2:=25.0}"   # per-measurement chi2 threshold
+: "${GF_RES_MAX_PULL:=5.0}"
+: "${GF_RES_MAX_CHI2:=25.0}"
 
-# ThreePointFitter args (match tp-* names in Python)
+# ThreePointFitter args
 : "${FITTER_LOG:=DEBUG}"
-: "${TP_MIN_DELTA_PHI:=0.10}"     # rad
-: "${TP_MIN_CHORD_MM:=10}"        # mm
+: "${TP_MIN_DELTA_PHI:=0.10}"
+: "${TP_MIN_CHORD_MM:=10}"
 : "${TP_MIN_HITS:=6}"
-: "${TP_MIN_RADIUS_MM:=50}"       # mm
+: "${TP_MIN_RADIUS_MM:=50}"
 : "${TP_FIT_TANLAMBDA:=true}"     # true|false
 : "${TP_PRINT_DIAG:=false}"       # true|false
 : "${TP_DIAG_EVERY_N:=100}"
 
-# Field / PDG (used generally)
+# Field / PDG
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
-# New Digi_v02 settings
+# Digi_v02 settings
 : "${DCH_DIGI_VERSION:=v02}"       # v01|v02
 : "${DCH_DEADTIME_NS:=400.0}"
 : "${DCH_XY_MM:=0.10}"
 : "${DCH_Z_MM:=1.0}"
-: "${DCH_GAS_TYPE:=0}"             # 0 HeIso(90/10)
-: "${DCH_DRIFT_VEL_UM_NS:=-1.0}"   # <0 -> auto by gas
+: "${DCH_GAS_TYPE:=0}"
+: "${DCH_DRIFT_VEL_UM_NS:=-1.0}"
 : "${DCH_SIGNAL_VEL_MM_NS:=$(python3 - <<'PY'
 print((2.0/3.0)*299792458e-6)
 PY
@@ -123,15 +112,23 @@ PY
 # label-0 handling
 : "${GGTF_ZERO_MIN:=8}"
 : "${GGTF_WIRE_FRAC:=0.80}"
-: "${GGTF_PROMOTE_ZERO:=1}"   # 1/0
+: "${GGTF_PROMOTE_ZERO:=1}"
 : "${GGTF_SKIP_ZERO_SMALL:=1}"
 : "${GGTF_SKIP_ZERO_ALWAYS:=0}"
 
-# NEW: GGTF truth-PDG wire gating (optional)
-: "${GGTF_TRUTH_GATE:=1}"          # 1=enable, 0=disable
-: "${GGTF_KEEP_PDG:=13}"           # keep muons by default
-: "${GGTF_DROP_UNLINKED:=1}"       # drop wire hits with no truth link
-: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"    # optional override (leave empty to auto-guess)
+# GGTF truth-PDG wire gating
+: "${GGTF_TRUTH_GATE:=1}"
+: "${GGTF_KEEP_PDG:=13}"
+: "${GGTF_DROP_UNLINKED:=1}"
+
+# Safer default: empty => let python auto-guess by digi version
+: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"
+
+# ----------------- provenance stamping -----------------
+: "${STAMPER:=./scripts/stamp_pipeline_metadata.py}"
+: "${STAMP_KEY:=pipeline_metadata_json}"
+: "${JOBTAG:=}"                 # optional
+: "${STAMP_CONFIGS:=1}"         # 1=record configs as configs, 0=skip
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -150,20 +147,8 @@ echo "[cfg] COMPACT_XML=$COMPACT_XML  DCH_SIMHITS=$DCH_SIMHITS  DCH_NAME=$DCH_NA
 echo "[cfg] STAGE=$STAGE FITTER=$FITTER FIT_OUT=$FIT_OUT"
 echo "[cfg] GGTF_LOG=$GGTF_LOG PRODUCE_3DHITS=$PRODUCE_3DHITS MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
 echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK WIRE_GATE_MM=$WIRE_GATE_MM MAX_3D_PER_EVT=$MAX_3D_PER_EVT MAX_3D_PER_TRK=$MAX_3D_PER_TRK"
-
-# NEW prints
-echo "[cfg] GGTF_3D_POS_SCALE=${GGTF_3D_POS_SCALE:-<unset>} GGTF_PRODUCE_ALL_3DHITS=$GGTF_PRODUCE_ALL_3DHITS GGTF_ALL_3DHITS_ONLY=$GGTF_ALL_3DHITS_ONLY"
-echo "[cfg] GGTF_ALL_3DHITS_TYPE=${GGTF_ALL_3DHITS_TYPE:-<unset>} GGTF_APPLY_WIRE_GATE_TO_3DHITS=${GGTF_APPLY_WIRE_GATE_TO_3DHITS:-<unset>} GGTF_DEBUG_PRINT_3DHIT_R=$GGTF_DEBUG_PRINT_3DHIT_R"
-
-echo "[cfg] GF_POS_SCALE=$GF_POS_SCALE GF_LEN2M=$GF_LEN2M GF_HIT_SIGMA_XY=$GF_HIT_SIGMA_XY GF_HIT_SIGMA_Z=$GF_HIT_SIGMA_Z"
-echo "[cfg] GF_SEED_POS_SIGMA=$GF_SEED_POS_SIGMA GF_SEED_MOM_SIGMA=$GF_SEED_MOM_SIGMA GF_DEDUP_TOL=$GF_DEDUP_TOL GF_USE_MAT=$GF_USE_MAT"
-echo "[cfg] GF_SEED_PT_MIN=$GF_SEED_PT_MIN GF_SEED_PT_MAX=$GF_SEED_PT_MAX GF_SEED_P_MIN=$GF_SEED_P_MIN"
-echo "[cfg] GF_MIN_GROUP=$GF_MIN_GROUP GF_USE_FALLBACK=$GF_USE_FALLBACK GF_FALLBACK_EPS_CM=$GF_FALLBACK_EPS_CM GF_FALLBACK_MINPTS=$GF_FALLBACK_MINPTS"
-echo "[cfg] GF_RETRY=$GF_RETRY GF_RETRY_MEAS_INFL=$GF_RETRY_MEAS_INFL GF_RETRY_SEED_POS=$GF_RETRY_SEED_POS GF_RETRY_SEED_MOM=$GF_RETRY_SEED_MOM GF_MAX_MEAS_PER_GROUP=$GF_MAX_MEAS_PER_GROUP"
-echo "[cfg] GF_RES_FILTER=$GF_RES_FILTER GF_RES_MAX_PULL=$GF_RES_MAX_PULL GF_RES_MAX_CHI2=$GF_RES_MAX_CHI2"
-echo "[cfg] GF_BZ=$GF_BZ GF_PDG=$GF_PDG"
-echo "[cfg] TP_MIN_DELTA_PHI=$TP_MIN_DELTA_PHI TP_MIN_CHORD_MM=$TP_MIN_CHORD_MM TP_MIN_HITS=$TP_MIN_HITS TP_MIN_RADIUS_MM=$TP_MIN_RADIUS_MM"
-echo "[cfg] TP_FIT_TANLAMBDA=$TP_FIT_TANLAMBDA TP_PRINT_DIAG=$TP_PRINT_DIAG TP_DIAG_EVERY_N=$TP_DIAG_EVERY_N"
+echo "[cfg] GGTF_3D_POS_SCALE=${GGTF_3D_POS_SCALE:-<unset>} GGTF_PRODUCE_ALL_3DHITS=${GGTF_PRODUCE_ALL_3DHITS:-<unset>} GGTF_ALL_3DHITS_ONLY=${GGTF_ALL_3DHITS_ONLY:-<unset>}"
+echo "[cfg] GGTF_ALL_3DHITS_TYPE=${GGTF_ALL_3DHITS_TYPE:-<unset>} GGTF_APPLY_WIRE_GATE_TO_3DHITS=${GGTF_APPLY_WIRE_GATE_TO_3DHITS:=<unset>} GGTF_DEBUG_PRINT_3DHIT_R=${GGTF_DEBUG_PRINT_3DHIT_R:-<unset>}"
 
 # --- keep memory tame ---
 export OMP_NUM_THREADS=1
@@ -178,11 +163,70 @@ export ORT_ENABLE_MEM_PATTERN=0
 export GAUDI_PLUGIN_PATH="${GAUDI_PLUGIN_PATH:-.}"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-.}"
 
-# logs
 : > k4run.log
 : > progress.log
 
-# Build k4run args (Python script will stage the model)
+# ----------------- auto-collect ALL pipeline knob vars into stamping extras -----------------
+build_stamp_extras () {
+  local -a extras
+  extras+=( --extra "jobtag=${JOBTAG}" )
+  extras+=( --extra "local_chain=1" )
+  extras+=( --extra "input=${INPUT}" )
+  extras+=( --extra "output=${OUTPUT}" )
+  extras+=( --extra "model_spec=${MODEL_SPEC}" )
+  extras+=( --extra "compact_xml=${COMPACT_XML}" )
+  extras+=( --extra "dch_name=${DCH_NAME}" )
+  extras+=( --extra "dch_simhits=${DCH_SIMHITS}" )
+
+  # Include any variable whose name starts with these prefixes:
+  # DCH_, GGTF_, GF_, TP_ plus a few globals
+  local v
+  while IFS= read -r v; do
+    # Skip huge/unhelpful process vars or internal bash vars if any slip in
+    [[ "$v" == "_" ]] && continue
+    [[ "$v" == "PWD" || "$v" == "OLDPWD" || "$v" == "SHLVL" ]] && continue
+
+    # Only stamp if it exists (it will) and is not an unbound expansion
+    # Use indirect expansion safely; values may contain spaces (rare) -> still okay in one arg
+    local val="${!v-}"
+    extras+=( --extra "${v}=${val}" )
+  done < <(
+    compgen -v \
+      | LC_ALL=C sort \
+      | awk '
+          /^(DCH_|GGTF_|GF_|TP_)/ {print; next}
+          /^(STAGE|FITTER|FIT_OUT|GGTF_LOG|PRODUCE_3DHITS|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK|WIRE_GATE_MM|MAX_3D_PER_EVT|MAX_3D_PER_TRK|FITTER_LOG)$/ {print; next}
+        '
+  )
+
+  printf '%s\n' "${extras[@]}"
+}
+
+# Build once (stable for the run)
+mapfile -t STAMP_EXTRAS < <(build_stamp_extras)
+
+stamp_root () {
+  local stage="$1"; shift
+  local outfile="$1"; shift
+  local cmdline="$1"; shift
+
+  if [[ ! -x "$STAMPER" && ! -f "$STAMPER" ]]; then
+    echo "[meta][WARN] stamper not found at $STAMPER (skipping metadata stamp)"
+    return 0
+  fi
+  if [[ -z "$outfile" || ! -f "$outfile" ]]; then
+    echo "[meta][WARN] output file missing for stage '$stage': '$outfile' (skipping stamp)"
+    return 0
+  fi
+
+  local -a SARGS
+  SARGS+=( --root "$outfile" --stage "$stage" --cmd "$cmdline" --workdir "$PWD" --key "$STAMP_KEY" )
+
+  # Append auto extras + caller extras (configs/inputs/etc)
+  python3 "$STAMPER" "${SARGS[@]}" "${STAMP_EXTRAS[@]}" "$@" \
+    >/dev/null 2>&1 || echo "[meta][WARN] stamp failed for stage '$stage' (non-fatal)"
+}
+
 K4_ARGS=(
   ./runDCHTestTrackFinder.py
   --inputFile  "$INPUT"
@@ -204,74 +248,74 @@ K4_ARGS=(
   --max3DPerTrack     "${MAX_3D_PER_TRK}"
 )
 
-# Optional toggles converted to presence/absence
-[[ "${PRODUCE_3DHITS}" == "1" ]] && K4_ARGS+=( --produce3DHits )
-[[ "${MAX_HITS}" -gt 0 ]]        && K4_ARGS+=( --maxHitsPerEvent "${MAX_HITS}" )
+# Produce3DHits (explicit both ways)
+if [[ "${PRODUCE_3DHITS}" == "1" ]]; then
+  K4_ARGS+=( --produce3DHits )
+else
+  K4_ARGS+=( --no-produce3DHits )
+fi
 
-# ----------------- NEW: GGTF debug/coverage/unit CLI wiring -----------------
-# 3dPosScale only if non-empty
+# Max hits cap only if >0
+[[ "${MAX_HITS}" -gt 0 ]] && K4_ARGS+=( --maxHitsPerEvent "${MAX_HITS}" )
+
+# ---- GGTF debug/coverage/unit CLI wiring (tri-state) ----
 if [[ -n "${GGTF_3D_POS_SCALE}" ]]; then
   K4_ARGS+=( --ggtf-3dPosScale "${GGTF_3D_POS_SCALE}" )
 fi
 
-# booleans
-if [[ "${GGTF_PRODUCE_ALL_3DHITS}" == "1" ]]; then
-  K4_ARGS+=( --ggtf-produceAll3DHits )
-else
-  K4_ARGS+=( --no-ggtf-produceAll3DHits )
+if [[ -n "${GGTF_PRODUCE_ALL_3DHITS}" ]]; then
+  if [[ "${GGTF_PRODUCE_ALL_3DHITS}" == "1" ]]; then
+    K4_ARGS+=( --ggtf-produceAll3DHits )
+  else
+    K4_ARGS+=( --no-ggtf-produceAll3DHits )
+  fi
 fi
 
-if [[ "${GGTF_ALL_3DHITS_ONLY}" == "1" ]]; then
-  K4_ARGS+=( --ggtf-all3DHitsOnly )
-else
-  K4_ARGS+=( --no-ggtf-all3DHitsOnly )
+if [[ -n "${GGTF_ALL_3DHITS_ONLY}" ]]; then
+  if [[ "${GGTF_ALL_3DHITS_ONLY}" == "1" ]]; then
+    K4_ARGS+=( --ggtf-all3DHitsOnly )
+  else
+    K4_ARGS+=( --no-ggtf-all3DHitsOnly )
+  fi
 fi
 
-# all3DHitsTypeValue only if non-empty
 if [[ -n "${GGTF_ALL_3DHITS_TYPE}" ]]; then
   K4_ARGS+=( --ggtf-all3DHitsTypeValue "${GGTF_ALL_3DHITS_TYPE}" )
 fi
 
-# ApplyWireGateTo3DHits is tri-state: only pass if explicitly set (1 or 0)
 if [[ -n "${GGTF_APPLY_WIRE_GATE_TO_3DHITS}" ]]; then
   if [[ "${GGTF_APPLY_WIRE_GATE_TO_3DHITS}" == "1" ]]; then
     K4_ARGS+=( --ggtf-applyWireGateTo3DHits )
   else
-    # There is no --no- flag in the python for this one (it’s tri-state), so we encode False by passing the flag via an explicit value approach:
-    # The python parser defines it as store_true with default=None, so it can’t accept a value.
-    # Therefore: to force False, you should use a different flag style in python.
-    # For now: treat 0 as "do not pass" (meaning: leave default behavior in GGTF_tracking).
-    echo "[warn] GGTF_APPLY_WIRE_GATE_TO_3DHITS=0 requested, but CLI flag is store_true-only; not passing (leaving default)." | tee -a k4run.log
+    K4_ARGS+=( --no-ggtf-applyWireGateTo3DHits )
   fi
 fi
 
-if [[ "${GGTF_DEBUG_PRINT_3DHIT_R}" == "1" ]]; then
-  K4_ARGS+=( --ggtf-debugPrint3DHitR )
-else
-  K4_ARGS+=( --no-ggtf-debugPrint3DHitR )
+if [[ -n "${GGTF_DEBUG_PRINT_3DHIT_R}" ]]; then
+  if [[ "${GGTF_DEBUG_PRINT_3DHIT_R}" == "1" ]]; then
+    K4_ARGS+=( --ggtf-debugPrint3DHitR )
+  else
+    K4_ARGS+=( --no-ggtf-debugPrint3DHitR )
+  fi
 fi
 
-# --- GGTF truth-PDG gating CLI wiring (optional) ---
+# --- GGTF truth-PDG gating CLI wiring ---
 if [[ "${GGTF_TRUTH_GATE}" == "1" ]]; then
   K4_ARGS+=( --ggtf-filterInputWiresByTruthPdg )
 else
   K4_ARGS+=( --no-ggtf-filterInputWiresByTruthPdg )
 fi
-
 K4_ARGS+=( --ggtf-keepTruthPdg "${GGTF_KEEP_PDG}" )
-
 if [[ "${GGTF_DROP_UNLINKED}" == "1" ]]; then
   K4_ARGS+=( --ggtf-dropWireIfUnlinked )
 else
   K4_ARGS+=( --no-ggtf-dropWireIfUnlinked )
 fi
-
-# Optional override (only pass if non-empty)
 if [[ -n "${GGTF_WIRE_SIMLINK_COLL}" ]]; then
   K4_ARGS+=( --ggtf-wireSimLinkColl "${GGTF_WIRE_SIMLINK_COLL}" )
 fi
 
-# --- GenFit2 options (harmless for other fitters; Python only sets what exists) ---
+# --- GenFit2 / digi args ---
 K4_ARGS+=(
   --gf-posScale     "${GF_POS_SCALE}"
   --gf-len2m        "${GF_LEN2M}"
@@ -296,7 +340,7 @@ K4_ARGS+=(
   --dch-readout-dur-ns   "${DCH_READOUT_DUR_NS}"
 )
 
-# NEW: residual filter CLI wiring
+# Residual filter
 if [[ "${GF_RES_FILTER}" == "1" ]]; then
   K4_ARGS+=( --gf-residualFilterEnable )
 else
@@ -305,6 +349,7 @@ fi
 K4_ARGS+=( --gf-residualMaxPull "${GF_RES_MAX_PULL}" )
 K4_ARGS+=( --gf-residualMaxChi2 "${GF_RES_MAX_CHI2}" )
 
+# Label-0 handling
 K4_ARGS+=( --ggtf-zeroMinSizeKeep "${GGTF_ZERO_MIN}" )
 K4_ARGS+=( --ggtf-minWireFracKeep "${GGTF_WIRE_FRAC}" )
 
@@ -317,12 +362,14 @@ fi
 [[ "${GGTF_SKIP_ZERO_SMALL}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
 [[ "${GGTF_SKIP_ZERO_ALWAYS}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
 
+# Mat effects
 if [[ "${GF_USE_MAT}" == "1" ]]; then
   K4_ARGS+=( --gf-useMat )
 else
   K4_ARGS+=( --no-gf-useMat )
 fi
 
+# Fallback & retry
 K4_ARGS+=( --gf-minGroup "${GF_MIN_GROUP}" --gf-fallbackEpsCM "${GF_FALLBACK_EPS_CM}" --gf-fallbackMinPts "${GF_FALLBACK_MINPTS}" )
 if [[ "${GF_USE_FALLBACK}" == "1" ]]; then
   K4_ARGS+=( --gf-useFallback )
@@ -337,17 +384,18 @@ else
   K4_ARGS+=( --no-gf-retry )
 fi
 
-# --- ThreePointFitter-specific args ---
+# ThreePointFitter args
 K4_ARGS+=( --tp-minDeltaPhi "${TP_MIN_DELTA_PHI}" )
 K4_ARGS+=( --tp-minChordMM  "${TP_MIN_CHORD_MM}" )
 K4_ARGS+=( --tp-minGroup    "${TP_MIN_HITS}" )
 K4_ARGS+=( --tp-minRadiusMM "${TP_MIN_RADIUS_MM}" )
-# booleans for tp-fitTanLambda / tp-printDiag
+
 if [[ "${TP_FIT_TANLAMBDA}" == "true" ]]; then
   K4_ARGS+=( --tp-fitTanLambda )
 else
   K4_ARGS+=( --no-tp-fitTanLambda )
 fi
+
 if [[ "${TP_PRINT_DIAG}" == "true" ]]; then
   K4_ARGS+=( --tp-printDiag --tp-diagEveryN "${TP_DIAG_EVERY_N}" )
 else
@@ -364,6 +412,52 @@ run_cmd() {
   fi
 }
 
+# ----------------- stage-output discovery -----------------
+guess_stage_file () {
+  local stage="$1"
+  local out="$2"
+  local dir base stem ext
+  dir="$(dirname "$out")"
+  base="$(basename "$out")"
+  ext="${base##*.}"
+  stem="${base%.*}"
+
+  case "$stage" in
+    digi)
+      for cand in \
+        "${dir}/${stem}_digi.${ext}" \
+        "${dir}/${stem}.digi.${ext}" \
+        "${dir}/digi_${base}" \
+        "${dir}/digi.${ext}" \
+        "${dir}/digi.root" \
+        "${dir}/${stem}_digi.root" \
+        "${out}"
+      do
+        [[ -f "$cand" ]] && { echo "$cand"; return 0; }
+      done
+      ;;
+    ggtf)
+      for cand in \
+        "${dir}/${stem}_ggtf.${ext}" \
+        "${dir}/${stem}.ggtf.${ext}" \
+        "${dir}/ggtf_${base}" \
+        "${dir}/ggtf.root" \
+        "${dir}/${stem}_ggtf.root" \
+        "${out}"
+      do
+        [[ -f "$cand" ]] && { echo "$cand"; return 0; }
+      done
+      ;;
+    fit|reco|*)
+      [[ -f "$out" ]] && { echo "$out"; return 0; }
+      ;;
+  esac
+
+  [[ -f "$out" ]] && { echo "$out"; return 0; }
+  echo ""
+}
+
+# ----------------- run -----------------
 ( run_cmd /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" ) 2>&1 \
   | tee -a k4run.log \
   | awk '/GGTF_tracking|RSS=|Peak=|TOTAL|flatten:|onnx:|clustering|unique|bucket|build|Application Manager|tracks=|MemoryAuditor/{print; fflush()}' > progress.log
@@ -391,6 +485,50 @@ if [[ $K4_RC -ne 0 ]]; then
     echo "[note] k4run rc=$K4_RC but output looks fine; overriding to 0."
     K4_RC=0
   fi
+fi
+
+# ----------------- stamping per step -----------------
+# Stamp the INPUT (record its own provenance plus the run knobs used downstream)
+if [[ -f "$INPUT" ]]; then
+  stamp_root "input" "$INPUT" "local_chain.sh (record input provenance only)" \
+    --input "$INPUT" \
+    --config "$COMPACT_XML" \
+    --config "./runDCHTestTrackFinder.py" \
+    --config "$MODEL_SPEC"
+fi
+
+DIGI_FILE="$(guess_stage_file digi "$OUTPUT")"
+GGTF_FILE="$(guess_stage_file ggtf "$OUTPUT")"
+FIT_FILE="$(guess_stage_file fit  "$OUTPUT")"
+
+K4_CMD="k4run ${K4_ARGS[*]}"
+
+if [[ -f "$OUTPUT" ]]; then
+  stamp_root "final" "$OUTPUT" "$K4_CMD" \
+    --input "$INPUT" \
+    --config "./runDCHTestTrackFinder.py" \
+    --config "$COMPACT_XML" \
+    --config "$MODEL_SPEC"
+fi
+
+if [[ -n "$DIGI_FILE" && -f "$DIGI_FILE" && "$DIGI_FILE" != "$OUTPUT" ]]; then
+  stamp_root "digi" "$DIGI_FILE" "$K4_CMD" \
+    --input "$INPUT" \
+    --config "./runDCHTestTrackFinder.py" \
+    --config "$COMPACT_XML"
+fi
+
+if [[ -n "$GGTF_FILE" && -f "$GGTF_FILE" && "$GGTF_FILE" != "$OUTPUT" ]]; then
+  stamp_root "ggtf" "$GGTF_FILE" "$K4_CMD" \
+    --input "$INPUT" \
+    --config "./runDCHTestTrackFinder.py" \
+    --config "$MODEL_SPEC"
+fi
+
+if [[ -n "$FIT_FILE" && -f "$FIT_FILE" && "$FIT_FILE" != "$OUTPUT" ]]; then
+  stamp_root "fit" "$FIT_FILE" "$K4_CMD" \
+    --input "$INPUT" \
+    --config "./runDCHTestTrackFinder.py"
 fi
 
 echo "Run complete"
