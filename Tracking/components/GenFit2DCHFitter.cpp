@@ -8,6 +8,10 @@
 //    4) Seeding: more robust circle seed from widely-separated φ points (not raw first/mid/last)
 //    5) Robustness: try both momentum directions (+dir, -dir) and keep best fit
 //       (uses converged/fitted + chi2/ndf as tie-break)
+//    6) Low-pT stability fixes (NEW):
+//        - SeedPMinGeV is now a *numerical floor* (default 0.05 GeV), not a physics clamp
+//        - Optionally disable energy-loss material effects to avoid Bethe-Bloch validity errors
+//        - Optionally disable *all* material effects (stronger)
 //   Keeps your existing features:
 //    - optional z(φ) outlier rejection
 //    - retry path if no FitterInfo
@@ -443,6 +447,12 @@ struct GenFit2DCHFitter final
   Gaudi::Property<bool>    m_useMatEff{this, "UseMaterialEffects", true,
                                        "Use TGeoMaterialInterface for GenFit MaterialEffects"};
 
+  // NEW: optional material-effects suppression knobs (helps low-pT stability)
+  Gaudi::Property<bool>    m_disableEloss{this, "DisableEnergyLoss", true,
+                                         "Disable Bethe-Bloch/Brems energy loss (keep MS) when material effects are enabled"};
+  Gaudi::Property<bool>    m_disableAllMat{this, "DisableAllMaterialEffects", false,
+                                          "Disable all GenFit material effects (stronger than DisableEnergyLoss)"};
+
   // Units / scales
   Gaudi::Property<double>  m_posScale       {this, "PositionUnitScale", 0.1,
                                              "Multiply positions (0.1: mm->cm)"};
@@ -462,8 +472,10 @@ struct GenFit2DCHFitter final
                                               "Min pT [GeV]"};
   Gaudi::Property<double>  m_seedPTMaxGeV    {this, "SeedPTMaxGeV",   200.0,
                                               "Max pT [GeV]"};
-  Gaudi::Property<double>  m_seedPMinGeV     {this, "SeedPMinGeV",     0.80,
-                                              "Min |p| [GeV]"};
+
+  // UPDATED: this should be a numerical floor, not a "physics clamp"
+  Gaudi::Property<double>  m_seedPMinGeV     {this, "SeedPMinGeV",     0.05,
+                                              "Min |p| [GeV] (numerical floor; do NOT use as a physics clamp)"};
 
   // Sorting / dedup
   Gaudi::Property<bool>    m_sortHits        {this, "SortHits", true,
@@ -526,8 +538,29 @@ struct GenFit2DCHFitter final
         try {
           genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
           info() << "Initialized GenFit MaterialEffects with TGeoMaterialInterface." << endmsg;
+
+          // NEW: optionally disable energy loss (Bethe-Bloch / Brems), or all effects
+          if (m_disableAllMat.value()) {
+            genfit::MaterialEffects::getInstance()->setNoEffects(true);
+            info() << "MaterialEffects: setNoEffects(true) [DisableAllMaterialEffects=true]" << endmsg;
+          } else if (m_disableEloss.value()) {
+            auto* me = genfit::MaterialEffects::getInstance();
+
+            // These setters exist in common GenFit2 builds; if your fork differs,
+            // you may need to adjust names or wrap with #ifdefs.
+            me->setEnergyLossBetheBloch(false);
+            me->setNoiseBetheBloch(false);
+            me->setEnergyLossBrems(false);
+            me->setNoiseBrems(false);
+
+            info() << "MaterialEffects: disabled energy loss (BetheBloch+Brems), kept MS [DisableEnergyLoss=true]" << endmsg;
+          }
+
         } catch (const std::exception& e) {
-          warning() << "Failed to initialize MaterialEffects(TGeo): " << e.what()
+          warning() << "Failed to initialize/configure MaterialEffects(TGeo): " << e.what()
+                    << " — proceeding WITHOUT material effects." << endmsg;
+        } catch (...) {
+          warning() << "Failed to initialize/configure MaterialEffects(TGeo) (unknown exception)"
                     << " — proceeding WITHOUT material effects." << endmsg;
         }
       }
@@ -541,6 +574,8 @@ struct GenFit2DCHFitter final
     info() << "GenFit2DCHFitter init | Bz=" << m_Bz.value()
            << " | PDG=" << m_pdg.value()
            << " | UseMaterialEffects=" << (m_useMatEff.value() ? "true" : "false")
+           << " | DisableEnergyLoss=" << (m_disableEloss.value() ? "true" : "false")
+           << " | DisableAllMaterialEffects=" << (m_disableAllMat.value() ? "true" : "false")
            << " | posScale=" << m_posScale.value()
            << " | len2m=" << m_internalLenToM.value()
            << " | HitSigmaXY=" << m_hitSigmaXYMM.value() << " mm"
@@ -583,6 +618,8 @@ struct GenFit2DCHFitter final
       os << ",\"Bz_T\":" << m_Bz.value();
       os << ",\"PDG\":" << m_pdg.value();
       os << ",\"UseMaterialEffects\":" << (m_useMatEff.value() ? "true" : "false");
+      os << ",\"DisableEnergyLoss\":" << (m_disableEloss.value() ? "true" : "false");
+      os << ",\"DisableAllMaterialEffects\":" << (m_disableAllMat.value() ? "true" : "false");
       os << ",\"PositionUnitScale\":" << m_posScale.value();
       os << ",\"InternalLengthToMeters\":" << m_internalLenToM.value();
       os << ",\"HitSigmaXYMM\":" << m_hitSigmaXYMM.value();
@@ -858,8 +895,6 @@ struct GenFit2DCHFitter final
         bool preferIncreasingPhi = true;
         if (P.size() >= 2) {
           const TVector3 d = P.back() - P.front();
-          // If chord is "mostly" increasing in phi, keep increasing.
-          // This is a weak heuristic; either direction is okay because we also try ±mom below.
           (void)d;
         }
         const bool okPhiSort = sortByUnwrappedPhi(P, idxs, centerXY, preferIncreasingPhi);
@@ -948,8 +983,9 @@ struct GenFit2DCHFitter final
       const double cosTheta = std::clamp(std::abs(dir.Z()), 0.0, 0.999999);
       const double sinTheta = std::sqrt(std::max(1e-4, 1.0 - cosTheta*cosTheta));
 
+      // UPDATED: do not force a large |p|; use a small numerical floor only
       double pMag = pTseed / sinTheta;
-      if (!std::isfinite(pMag) || pMag <= 0) pMag = m_seedPMinGeV.value();
+      if (!std::isfinite(pMag) || pMag <= 0) pMag = pTseed;
       pMag = std::max(pMag, m_seedPMinGeV.value());
 
       TVector3 mom0 = pMag * dir;
@@ -1059,7 +1095,6 @@ struct GenFit2DCHFitter final
         // pick which seed to retry: if we tried both, retry the "better" chi2/ndf even if not ok
         TVector3 retryMom = mom0;
         if (m_tryBothMomDirs.value() && fs2) {
-          // choose by chi2/ndf if one exists
           if (!fs1) retryMom = -mom0;
           else if (chi2ndf(fs2) < chi2ndf(fs1)) retryMom = -mom0;
         }

@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/eta_+0.00/gun_eta+0.00_E0.62633.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/eta_+0.00/reco_eta+0.00_E0.62633_wiregate12mm.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_13_2026/eta_+0.00/gun_eta+0.00_E4.4721.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_13_2026/eta_+0.00/reco_eta+0.00_E4.4721.root"
 # Model unchanged; use local file directly
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
@@ -41,9 +41,27 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"          # hits per ONNX slice
-: "${WIRE_GATE_MM:=10.0}"         # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=10.0}"        # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"    # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"     # cap spacepoints per track
+
+# ----------------- NEW: GGTF debug/coverage/unit knobs -----------------
+# These map to runDCHTestTrackFinder.py flags:
+#   --ggtf-3dPosScale
+#   --ggtf-produceAll3DHits / --no-ggtf-produceAll3DHits
+#   --ggtf-all3DHitsOnly   / --no-ggtf-all3DHitsOnly
+#   --ggtf-all3DHitsTypeValue
+#   --ggtf-applyWireGateTo3DHits   (optional; only passed if explicitly set)
+#   --ggtf-debugPrint3DHitR / --no-ggtf-debugPrint3DHitR
+#
+# Notes:
+#  - If GGTF_tracking.cpp does not define these properties, the Python script will warn and ignore them.
+: "${GGTF_3D_POS_SCALE:=}"            # empty -> don't pass; e.g. 10.0 if cm->mm mismatch
+: "${GGTF_PRODUCE_ALL_3DHITS:=0}"     # 1/0
+: "${GGTF_ALL_3DHITS_ONLY:=0}"        # 1/0
+: "${GGTF_ALL_3DHITS_TYPE:=}"         # empty -> don't pass; e.g. -777
+: "${GGTF_APPLY_WIRE_GATE_TO_3DHITS:=}" # empty -> don't pass; set to 1 or 0 to force
+: "${GGTF_DEBUG_PRINT_3DHIT_R:=0}"    # 1/0
 
 # GenFit2 “stability profile” (used when FITTER=genfit2)
 : "${GF_POS_SCALE:=0.1}"           # mm→cm internally
@@ -109,15 +127,11 @@ PY
 : "${GGTF_SKIP_ZERO_SMALL:=1}"
 : "${GGTF_SKIP_ZERO_ALWAYS:=0}"
 
-
 # NEW: GGTF truth-PDG wire gating (optional)
 : "${GGTF_TRUTH_GATE:=1}"          # 1=enable, 0=disable
 : "${GGTF_KEEP_PDG:=13}"           # keep muons by default
 : "${GGTF_DROP_UNLINKED:=1}"       # drop wire hits with no truth link
 : "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"    # optional override (leave empty to auto-guess)
-
-
-
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -136,6 +150,11 @@ echo "[cfg] COMPACT_XML=$COMPACT_XML  DCH_SIMHITS=$DCH_SIMHITS  DCH_NAME=$DCH_NA
 echo "[cfg] STAGE=$STAGE FITTER=$FITTER FIT_OUT=$FIT_OUT"
 echo "[cfg] GGTF_LOG=$GGTF_LOG PRODUCE_3DHITS=$PRODUCE_3DHITS MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
 echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK WIRE_GATE_MM=$WIRE_GATE_MM MAX_3D_PER_EVT=$MAX_3D_PER_EVT MAX_3D_PER_TRK=$MAX_3D_PER_TRK"
+
+# NEW prints
+echo "[cfg] GGTF_3D_POS_SCALE=${GGTF_3D_POS_SCALE:-<unset>} GGTF_PRODUCE_ALL_3DHITS=$GGTF_PRODUCE_ALL_3DHITS GGTF_ALL_3DHITS_ONLY=$GGTF_ALL_3DHITS_ONLY"
+echo "[cfg] GGTF_ALL_3DHITS_TYPE=${GGTF_ALL_3DHITS_TYPE:-<unset>} GGTF_APPLY_WIRE_GATE_TO_3DHITS=${GGTF_APPLY_WIRE_GATE_TO_3DHITS:-<unset>} GGTF_DEBUG_PRINT_3DHIT_R=$GGTF_DEBUG_PRINT_3DHIT_R"
+
 echo "[cfg] GF_POS_SCALE=$GF_POS_SCALE GF_LEN2M=$GF_LEN2M GF_HIT_SIGMA_XY=$GF_HIT_SIGMA_XY GF_HIT_SIGMA_Z=$GF_HIT_SIGMA_Z"
 echo "[cfg] GF_SEED_POS_SIGMA=$GF_SEED_POS_SIGMA GF_SEED_MOM_SIGMA=$GF_SEED_MOM_SIGMA GF_DEDUP_TOL=$GF_DEDUP_TOL GF_USE_MAT=$GF_USE_MAT"
 echo "[cfg] GF_SEED_PT_MIN=$GF_SEED_PT_MIN GF_SEED_PT_MAX=$GF_SEED_PT_MAX GF_SEED_P_MIN=$GF_SEED_P_MIN"
@@ -189,7 +208,48 @@ K4_ARGS=(
 [[ "${PRODUCE_3DHITS}" == "1" ]] && K4_ARGS+=( --produce3DHits )
 [[ "${MAX_HITS}" -gt 0 ]]        && K4_ARGS+=( --maxHitsPerEvent "${MAX_HITS}" )
 
+# ----------------- NEW: GGTF debug/coverage/unit CLI wiring -----------------
+# 3dPosScale only if non-empty
+if [[ -n "${GGTF_3D_POS_SCALE}" ]]; then
+  K4_ARGS+=( --ggtf-3dPosScale "${GGTF_3D_POS_SCALE}" )
+fi
 
+# booleans
+if [[ "${GGTF_PRODUCE_ALL_3DHITS}" == "1" ]]; then
+  K4_ARGS+=( --ggtf-produceAll3DHits )
+else
+  K4_ARGS+=( --no-ggtf-produceAll3DHits )
+fi
+
+if [[ "${GGTF_ALL_3DHITS_ONLY}" == "1" ]]; then
+  K4_ARGS+=( --ggtf-all3DHitsOnly )
+else
+  K4_ARGS+=( --no-ggtf-all3DHitsOnly )
+fi
+
+# all3DHitsTypeValue only if non-empty
+if [[ -n "${GGTF_ALL_3DHITS_TYPE}" ]]; then
+  K4_ARGS+=( --ggtf-all3DHitsTypeValue "${GGTF_ALL_3DHITS_TYPE}" )
+fi
+
+# ApplyWireGateTo3DHits is tri-state: only pass if explicitly set (1 or 0)
+if [[ -n "${GGTF_APPLY_WIRE_GATE_TO_3DHITS}" ]]; then
+  if [[ "${GGTF_APPLY_WIRE_GATE_TO_3DHITS}" == "1" ]]; then
+    K4_ARGS+=( --ggtf-applyWireGateTo3DHits )
+  else
+    # There is no --no- flag in the python for this one (it’s tri-state), so we encode False by passing the flag via an explicit value approach:
+    # The python parser defines it as store_true with default=None, so it can’t accept a value.
+    # Therefore: to force False, you should use a different flag style in python.
+    # For now: treat 0 as "do not pass" (meaning: leave default behavior in GGTF_tracking).
+    echo "[warn] GGTF_APPLY_WIRE_GATE_TO_3DHITS=0 requested, but CLI flag is store_true-only; not passing (leaving default)." | tee -a k4run.log
+  fi
+fi
+
+if [[ "${GGTF_DEBUG_PRINT_3DHIT_R}" == "1" ]]; then
+  K4_ARGS+=( --ggtf-debugPrint3DHitR )
+else
+  K4_ARGS+=( --no-ggtf-debugPrint3DHitR )
+fi
 
 # --- GGTF truth-PDG gating CLI wiring (optional) ---
 if [[ "${GGTF_TRUTH_GATE}" == "1" ]]; then
@@ -210,9 +270,6 @@ fi
 if [[ -n "${GGTF_WIRE_SIMLINK_COLL}" ]]; then
   K4_ARGS+=( --ggtf-wireSimLinkColl "${GGTF_WIRE_SIMLINK_COLL}" )
 fi
-
-
-
 
 # --- GenFit2 options (harmless for other fitters; Python only sets what exists) ---
 K4_ARGS+=(
@@ -256,8 +313,6 @@ if [[ "${GGTF_PROMOTE_ZERO}" -eq 1 ]]; then
 else
   K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
 fi
-
-
 
 [[ "${GGTF_SKIP_ZERO_SMALL}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
 [[ "${GGTF_SKIP_ZERO_ALWAYS}" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )

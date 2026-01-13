@@ -9,8 +9,13 @@
 #      --ggtf-dropWireIfUnlinked / --no-ggtf-dropWireIfUnlinked
 #      --ggtf-wireSimLinkColl (optional override)
 #
+# NEW (this edit):
+#  - Adds optional GGTF debug/coverage/unit knobs (settable from CLI)
+#    These are applied only if the compiled GGTF_tracking has the corresponding Gaudi::Property.
+#    If the property does not exist, a warning is printed and the run continues.
+#
 # NOTE:
-#  - This gating is MC-truth dependent. If the link collection is absent/empty,
+#  - Truth-gating is MC-truth dependent. If the link collection is absent/empty,
 #    GGTF_tracking will auto-disable the gate for that event (per C++ update).
 
 import os
@@ -99,6 +104,33 @@ parser.add_argument("--produce3DHits", action="store_true", default=True,
                     help="If set, also write GGTF_3DHits")
 parser.add_argument("--ggtfLog", choices=["INFO","DEBUG"], default="INFO",
                     help="GGTF_tracking OutputLevel")
+
+# ----------------- NEW: GGTF debug / coverage / unit knobs -------------------
+# These only take effect if the compiled GGTF_tracking.cpp defines the property.
+parser.add_argument("--ggtf-3dPosScale", type=float, default=None,
+                    help="If supported: scale applied when writing GGTF_3DHits positions (e.g. 10.0 if cm->mm).")
+parser.add_argument("--ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
+                    action="store_true", default=False,
+                    help="If supported: emit 3D hits for ALL clustered inputs (planar + wire), not only gated wires.")
+parser.add_argument("--no-ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
+                    action="store_false")
+
+parser.add_argument("--ggtf-all3DHitsOnly", dest="ggtf_all3DHitsOnly",
+                    action="store_true", default=False,
+                    help="If supported: when ProduceAll3DHits is on, do NOT also produce the per-track 3D hits (avoid duplicates).")
+parser.add_argument("--no-ggtf-all3DHitsOnly", dest="ggtf_all3DHitsOnly",
+                    action="store_false")
+
+parser.add_argument("--ggtf-all3DHitsTypeValue", type=int, default=None,
+                    help="If supported: set Type for the 'all-3D-hits' stream to a constant (e.g. -777) for easy spotting.")
+parser.add_argument("--ggtf-applyWireGateTo3DHits", dest="ggtf_applyWireGateTo3DHits",
+                    action="store_true", default=None,
+                    help="If supported: when True, apply wire gate to 3D hit emission. When False, still output 3D dot even if failing gate.")
+parser.add_argument("--ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
+                    action="store_true", default=False,
+                    help="If supported: print quick diagnostics (e.g. sample radii/units) for the 3D hits each event.")
+parser.add_argument("--no-ggtf-debugPrint3DHitR", dest="ggtf_debugPrint3DHitR",
+                    action="store_false")
 
 # ----------------- NEW: GGTF truth-PDG gating for wire hits -------------------
 parser.add_argument(
@@ -305,7 +337,6 @@ parser.add_argument(
 
 # -----------------------------------------------------------------------------
 
-
 args = parser.parse_args()
 print(f"[GF2] UseMaterialEffects={args.gf_useMat}")
 
@@ -341,7 +372,7 @@ try:
     GaudiApp().AuditTools = True
 except Exception:
     pass
-AuditorSvc().Auditors = [ ChronoAuditor(), MemoryAuditor() ]
+AuditorSvc().Auditors = [ChronoAuditor(), MemoryAuditor()]
 
 # ----------------- IO -----------------
 svc = IOSvc("IOSvc")
@@ -451,10 +482,10 @@ _set_if_has_digitizer(dch_digitizer, "zResolution_mm",  args.zResolution_mm)
 _set_if_has_digitizer(dch_digitizer, "xyResolution_mm", args.xyResolution_mm)
 
 # v02-specific (silently ignored by v01)
-_set_if_has_digitizer(dch_digitizer, "Deadtime_ns",              args.dch_deadtime_ns)
-_set_if_has_digitizer(dch_digitizer, "DriftVelocity_um_per_ns",  args.dch_drift_um_ns)
-_set_if_has_digitizer(dch_digitizer, "SignalVelocity_mm_per_ns", args.dch_sig_mm_ns)
-_set_if_has_digitizer(dch_digitizer, "GasType",                  args.dch_gas_type)
+_set_if_has_digitizer(dch_digitizer, "Deadtime_ns",               args.dch_deadtime_ns)
+_set_if_has_digitizer(dch_digitizer, "DriftVelocity_um_per_ns",   args.dch_drift_um_ns)
+_set_if_has_digitizer(dch_digitizer, "SignalVelocity_mm_per_ns",  args.dch_sig_mm_ns)
+_set_if_has_digitizer(dch_digitizer, "GasType",                   args.dch_gas_type)
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowStartTime_ns", args.rw_start_ns)
 _set_if_has_digitizer(dch_digitizer, "ReadoutWindowDuration_ns",  args.rw_dur_ns)
 
@@ -482,7 +513,6 @@ def _guess_wire_simlink_collections():
 
     # Best-guess defaults by digi version (safe even if absent; GGTF_tracking will auto-disable gate if empty)
     if args.dchDigiVersion == "v02":
-        # common naming you referenced in prior debugging
         return ["DCHDigi2SimLinkCollection", "DCHDigiSimLinkCollection", "DCHDigi2SimLink", "DCHDigiSimLink"]
     else:
         return ["DCHDigiSimLinkCollection", "DCHDigi2SimLinkCollection", "DCHDigiSimLink", "DCHDigi2SimLink"]
@@ -510,6 +540,18 @@ GGTF.ModelPath = stage_model(args.modelPath)
 GGTF.Tbeta = args.tbeta
 GGTF.Td    = args.td
 
+# ----------------- Helper: quiet property setter (GGTF) -----------------
+def _set_if_has_g(obj, name, value):
+    try:
+        if hasattr(obj, name):
+            setattr(obj, name, value)
+            print(f"[GGTF] set {name} = {value}")
+            return True
+    except Exception as e:
+        print(f"[GGTF][warn] could not set {name}: {e}")
+    return False
+
+# Label-0 handling knobs
 for name, val in [
     ("ZeroMinSizeKeep", args.ggtf_zeroMinSizeKeep),
     ("MinWireFracKeep", args.ggtf_minWireFracKeep),
@@ -517,75 +559,67 @@ for name, val in [
     ("SkipZeroIfSmall", args.ggtf_skipZeroIfSmall),
     ("SkipZeroAlways", args.ggtf_skipZeroAlways),
 ]:
-    try:
-        setattr(GGTF, name, val)
-    except Exception as e:
-        print(f"[warn] could not set GGTF.{name}: {e}")
+    _set_if_has_g(GGTF, name, val)
 
+# Core runtime knobs
 for name, val in [
     ("WireGateMM", args.wireGateMM),
     ("OnnxChunk", args.onnxChunk),
     ("Max3DHitsPerEvent", args.max3DHitsPerEvent),
     ("Max3DPerTrack", args.max3DPerTrack),
 ]:
-    try:
-        setattr(GGTF, name, val)
-    except Exception as e:
-        print(f"[warn] could not set GGTF.{name}: {e}")
+    _set_if_has_g(GGTF, name, val)
 
-try:
-    GGTF.Produce3DHits = bool(args.produce3DHits)
-except Exception:
-    pass
+_set_if_has_g(GGTF, "Produce3DHits", bool(args.produce3DHits))
 
-try:
-    if int(args.maxHitsPerEvent) > 0:
-        GGTF.MaxHitsPerEvent = int(args.maxHitsPerEvent)
-except Exception:
-    try:
-        if int(args.maxHitsPerEvent) > 0:
-            GGTF.maxHitsPerEvent = int(args.maxHitsPerEvent)
-    except Exception:
-        print("[warn] GGTF.MaxHitsPerEvent property not present; ignoring.")
+# MaxHitsPerEvent name differs across some builds
+if int(args.maxHitsPerEvent) > 0:
+    if not _set_if_has_g(GGTF, "MaxHitsPerEvent", int(args.maxHitsPerEvent)):
+        if not _set_if_has_g(GGTF, "maxHitsPerEvent", int(args.maxHitsPerEvent)):
+            print("[GGTF][warn] MaxHitsPerEvent property not present; ignoring.")
 
-# NEW: wire truth-PDG gating controls
-try:
-    GGTF.FilterInputWiresByTruthPdg = bool(args.ggtf_filterInputWiresByTruthPdg)
-    print(f"[GGTF] FilterInputWiresByTruthPdg = {GGTF.FilterInputWiresByTruthPdg}")
-except Exception as e:
-    print(f"[GGTF][warn] could not set FilterInputWiresByTruthPdg: {e}")
+# Truth-PDG gating
+_set_if_has_g(GGTF, "FilterInputWiresByTruthPdg", bool(args.ggtf_filterInputWiresByTruthPdg))
+_set_if_has_g(GGTF, "KeepTruthPdg", int(args.ggtf_keepTruthPdg))
+_set_if_has_g(GGTF, "DropWireIfUnlinked", bool(args.ggtf_dropWireIfUnlinked))
 
-try:
-    GGTF.KeepTruthPdg = int(args.ggtf_keepTruthPdg)
-    print(f"[GGTF] KeepTruthPdg = {GGTF.KeepTruthPdg}")
-except Exception as e:
-    print(f"[GGTF][warn] could not set KeepTruthPdg: {e}")
+# NEW: write JobTag into GGTF metadata
+_set_if_has_g(GGTF, "JobTag", job_tag)
 
-try:
-    GGTF.DropWireIfUnlinked = bool(args.ggtf_dropWireIfUnlinked)
-    print(f"[GGTF] DropWireIfUnlinked = {GGTF.DropWireIfUnlinked}")
-except Exception as e:
-    print(f"[GGTF][warn] could not set DropWireIfUnlinked: {e}")
+# NEW: optional debug/coverage/unit knobs (only if present in compiled component)
+if args.ggtf_3dPosScale is not None:
+    _set_if_has_g(GGTF, "ThreeDHitPosScale", float(args.ggtf_3dPosScale))
 
-# NEW: pass JobTag into GGTF_tracking so it writes it into GGTF_trackingConfig metadata
-try:
-    GGTF.JobTag = job_tag
-    print(f"[GGTF] JobTag set to '{job_tag}'")
-except Exception as e:
-    print(f"[GGTF][warn] could not set JobTag: {e}")
+_set_if_has_g(GGTF, "ProduceAll3DHits", bool(args.ggtf_produceAll3DHits))
+_set_if_has_g(GGTF, "All3DHitsOnly", bool(args.ggtf_all3DHitsOnly))
+if args.ggtf_all3DHitsTypeValue is not None:
+    _set_if_has_g(GGTF, "All3DHitsTypeValue", int(args.ggtf_all3DHitsTypeValue))
+
+# tri-state: only set ApplyWireGateTo3DHits if user explicitly provided (default=None)
+if args.ggtf_applyWireGateTo3DHits is not None:
+    _set_if_has_g(GGTF, "ApplyWireGateTo3DHits", bool(args.ggtf_applyWireGateTo3DHits))
+
+_set_if_has_g(GGTF, "DebugPrint3DHitR", bool(args.ggtf_debugPrint3DHitR))
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
+
 print(
-    f"[GGTF] stage={args.stage} ModelPath={GGTF.ModelPath} Tbeta={GGTF.Tbeta} Td={GGTF.Td} "
-    f"produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
+    f"[GGTF] stage={args.stage} ModelPath={getattr(GGTF,'ModelPath','n/a')} "
+    f"Tbeta={getattr(GGTF,'Tbeta','n/a')} Td={getattr(GGTF,'Td','n/a')} "
+    f"Produce3DHits={getattr(GGTF,'Produce3DHits','n/a')} "
     f"MaxHitsPerEvent={getattr(GGTF,'MaxHitsPerEvent',getattr(GGTF,'maxHitsPerEvent','n/a'))} "
-    f"wireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
-    f"onnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
-    f"max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
-    f"max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
-    f"log={args.ggtfLog}  wireColl={wire_coll} "
-    f"wireSimLinkColls={wire_simlink_colls} "
-    f"truthGate={args.ggtf_filterInputWiresByTruthPdg} keepPDG={args.ggtf_keepTruthPdg} dropUnlinked={args.ggtf_dropWireIfUnlinked}"
+    f"WireGateMM={getattr(GGTF,'WireGateMM','n/a')} "
+    f"OnnxChunk={getattr(GGTF,'OnnxChunk','n/a')} "
+    f"Max3DHitsPerEvent={getattr(GGTF,'Max3DHitsPerEvent','n/a')} "
+    f"Max3DPerTrack={getattr(GGTF,'Max3DPerTrack','n/a')} "
+    f"log={args.ggtfLog} wireColl={wire_coll} wireSimLinkColls={wire_simlink_colls} "
+    f"truthGate={args.ggtf_filterInputWiresByTruthPdg} keepPDG={args.ggtf_keepTruthPdg} dropUnlinked={args.ggtf_dropWireIfUnlinked} "
+    f"3dPosScale={getattr(GGTF,'ThreeDHitPosScale','n/a')} "
+    f"ProduceAll3DHits={getattr(GGTF,'ProduceAll3DHits','n/a')} "
+    f"All3DHitsOnly={getattr(GGTF,'All3DHitsOnly','n/a')} "
+    f"All3DHitsTypeValue={getattr(GGTF,'All3DHitsTypeValue','n/a')} "
+    f"ApplyWireGateTo3DHits={getattr(GGTF,'ApplyWireGateTo3DHits','n/a')} "
+    f"DebugPrint3DHitR={getattr(GGTF,'DebugPrint3DHitR','n/a')}"
 )
 
 # ----------------- Helper: quiet property setter -----------------
@@ -710,18 +744,18 @@ def _configure_genfit2():
     _set_if_has(alg, "minHitsOnTrack", 4)
     _set_if_has(alg, "maxChi2", 1e6)
 
-    # NEW: z(phi) outlier filter wiring
+    # z(phi) outlier filter wiring
     _set_if_has(alg, "FilterZOutliers",     args.gf_filterZOutliers)
     _set_if_has(alg, "ZOutlierAbsMM",       args.gf_zOutlierAbsMM)
     _set_if_has(alg, "ZOutlierNSigma",      args.gf_zOutlierNSigma)
     _set_if_has(alg, "ZOutlierMinFracKeep", args.gf_zOutlierMinFracKeep)
 
-    # NEW: generic residual filter wiring
+    # generic residual filter wiring
     _set_if_has(alg, "ResidualFilterEnable", args.gf_residualFilterEnable)
     _set_if_has(alg, "ResidualMaxPull",      args.gf_residualMaxPull)
     _set_if_has(alg, "ResidualMaxChi2",      args.gf_residualMaxChi2)
 
-    # NEW: pass JobTag into GenFit2DCHFitter (if the property exists)
+    # pass JobTag into GenFit2DCHFitter (if the property exists)
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] GenFit2DCHFitter configured; output -> '{args.fitOut}'")
@@ -779,7 +813,6 @@ def _configure_simple():
     if args.sf_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.sf_outHisto)
 
-    # NEW: pass JobTag into SimpleFitDCHFitter
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] SimpleFitDCHFitter configured; output -> '{args.fitOut}'")
@@ -817,14 +850,13 @@ def _configure_threepoint():
     if args.tp_outHisto:
         _set_if_has(alg, "OutputHistoFile", args.tp_outHisto)
 
-    _set_if_has(alg, "MinDeltaPhi",     args.tp_minDeltaPhi)
-    _set_if_has(alg, "MinChordMM",      args.tp_minChordMM)
-    _set_if_has(alg, "MinRadiusMM",     args.tp_minRadiusMM)
-    _set_if_has(alg, "FitTanLambda",    args.tp_fitTanLambda)
+    _set_if_has(alg, "MinDeltaPhi",      args.tp_minDeltaPhi)
+    _set_if_has(alg, "MinChordMM",       args.tp_minChordMM)
+    _set_if_has(alg, "MinRadiusMM",      args.tp_minRadiusMM)
+    _set_if_has(alg, "FitTanLambda",     args.tp_fitTanLambda)
     _set_if_has(alg, "PrintDiagnostics", args.tp_printDiag)
-    _set_if_has(alg, "DiagEveryN",      args.tp_diagEveryN)
+    _set_if_has(alg, "DiagEveryN",       args.tp_diagEveryN)
 
-    # NEW: pass JobTag into ThreePointFitter
     _set_if_has(alg, "JobTag", job_tag)
 
     print(f"[fitter] ThreePointFitter configured; output -> '{args.fitOut}'")
@@ -832,7 +864,6 @@ def _configure_threepoint():
 
 # Build fitter (with optional fallback)
 fitter_alg = None
-
 if args.stage == "fit" and requested_fitter != "none":
     if requested_fitter == "genfit2":
         fitter_alg = _configure_genfit2()
