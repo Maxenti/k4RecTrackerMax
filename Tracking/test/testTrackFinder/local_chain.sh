@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_13_2026/eta_+0.00/gun_eta+0.00_E0.66874.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_13_2026/eta_+0.00/reco_eta+0.00_E0.66874.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_14_2026/eta_+0.00/gun_eta+0.00_E60.88.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_14_2026/eta_+0.00/reco_eta+0.00_E60.88allhits.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
@@ -39,7 +39,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # GGTF runtime
 : "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
-: "${WIRE_GATE_MM:=12.0}"      # wire→circle gate [mm]
+: "${WIRE_GATE_MM:=20.0}"      # wire→circle gate [mm]
 : "${MAX_3D_PER_EVT:=200000}"  # cap spacepoints per event
 : "${MAX_3D_PER_TRK:=20000}"   # cap spacepoints per track
 
@@ -97,7 +97,7 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # Digi_v02 settings
 : "${DCH_DIGI_VERSION:=v02}"       # v01|v02
-: "${DCH_DEADTIME_NS:=400.0}"
+: "${DCH_DEADTIME_NS:=450.0}"
 : "${DCH_XY_MM:=0.10}"
 : "${DCH_Z_MM:=1.0}"
 : "${DCH_GAS_TYPE:=0}"
@@ -107,7 +107,7 @@ print((2.0/3.0)*299792458e-6)
 PY
 )}"
 : "${DCH_READOUT_START_NS:=1.0}"
-: "${DCH_READOUT_DUR_NS:=450.0}"
+: "${DCH_READOUT_DUR_NS:=2000.0}"
 
 # label-0 handling
 : "${GGTF_ZERO_MIN:=8}"

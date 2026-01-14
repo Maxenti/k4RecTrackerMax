@@ -10,6 +10,10 @@
 #  - Makes the “summary print” report the *actual* configured GGTF properties (not just args).
 #  - Digitizer resolver now respects --dchDigiVersion (v01/v02) preference order.
 #  - Explicitly sets v02 output collection names when supported (keeps names consistent).
+#  - FIX (this revision):
+#      * Robust looper filter wiring WITHOUT importing GaudiSequencer from Gaudi.Configurables.
+#        We now (a) import DCHLooperEventFilter reliably, and (b) find a Sequencer configurable
+#        if available; otherwise we fall back to placing the filter first in TopAlg.
 #
 # NOTE:
 #  - Truth-gating is MC-truth dependent. If the link collection is absent/empty,
@@ -54,7 +58,7 @@ parser.add_argument(
 )
 
 # ----------------- Digitizer selection (v01/v02) -----------------
-parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v01",
+parser.add_argument("--dchDigiVersion", choices=["v01","v02"], default="v02",
                     help="Choose DCH digitizer implementation")
 
 # v01 common knobs (still honored when present)
@@ -83,7 +87,7 @@ parser.add_argument("--dch-gas-type",        dest="dch_gas_type",    type=int,  
                     help="[v02] gas: 0 He(90)-iC4H10(10), 1 He, 2 Ar(50)-C2H6(50), 3 Ar")
 parser.add_argument("--rw-start-ns",         dest="rw_start_ns",     type=float, default=1.0,
                     help="[v02] readout window start (ns)")
-parser.add_argument("--rw-duration-ns",      dest="rw_dur_ns",       type=float, default=450.0,
+parser.add_argument("--rw-duration-ns",      dest="rw_dur_ns",       type=float, default=2000.0,
                     help="[v02] readout window duration (ns)")
 
 # ----------------- GGTF clustering -----------------
@@ -115,7 +119,7 @@ parser.add_argument("--ggtf-threeDHitPosScale", type=float, default=None,
                     help="Alias for --ggtf-3dPosScale.")
 
 parser.add_argument("--ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
-                    action="store_true", default=True,
+                    action="store_true", default=False,
                     help="If supported: emit 3D hits for ALL FLATTENED inputs (planar + wire) right after flatten.")
 parser.add_argument("--no-ggtf-produceAll3DHits", dest="ggtf_produceAll3DHits",
                     action="store_false")
@@ -344,6 +348,29 @@ parser.add_argument(
     help="Max per-hit chi2 to keep a measurement in the residual filter",
 )
 
+# ----------------- Looper event filter (C++ Gaudi Alg) -----------------
+parser.add_argument("--looperFilter", dest="looperFilter", action="store_true", default=True,
+                    help="Enable DCHLooperEventFilter (veto events with too-late simhit times / too many simhits).")
+parser.add_argument("--no-looperFilter", dest="looperFilter", action="store_false",
+                    help="Disable DCHLooperEventFilter (default).")
+
+parser.add_argument("--looperColl", default="",
+                    help="SimTrackerHit collection to filter on (default: --dchSimHits).")
+
+parser.add_argument("--looperTmaxNs", type=float, default=450.0,
+                    help="Veto event if max(simhit.time) > this [ns].")
+
+parser.add_argument("--looperNHitsMax", type=int, default=30000,
+                    help="Veto event if nSimHits > this (<=0 disables this cut).")
+
+parser.add_argument("--looperKeepEmpty", action="store_true", default=False,
+                    help="If set, keep events with 0 simhits (default: drop empty events).")
+
+parser.add_argument("--looperPassIfMissing", dest="looperPassIfMissing", action="store_true", default=True,
+                    help="If simhit collection is missing, PASS the event (default True).")
+parser.add_argument("--no-looperPassIfMissing", dest="looperPassIfMissing", action="store_false",
+                    help="If simhit collection is missing, FAIL the job immediately (safer).")
+
 # -----------------------------------------------------------------------------
 args = parser.parse_args()
 
@@ -397,6 +424,7 @@ geoservice = GeoSvc("GeoSvc")
 geoservice.detectors = [args.compactXML] if args.compactXML else []
 geoservice.OutputLevel = INFO
 print(f"[Geo] compactXML={args.compactXML}  DD4hep_XMLPATH={os.environ.get('DD4hep_XMLPATH','')}")
+
 
 # --------- Model staging helper ----------
 def stage_model(spec: str) -> str:
@@ -872,7 +900,7 @@ def _configure_threepoint():
     _set_if_has(alg, "MinGroupSize",            int(args.tp_minGroup))
     _set_if_has(alg, "UseFallbackClustering",   bool(args.tp_useFallback))
     _set_if_has(alg, "FallbackEpsCM",           float(args.tp_fallbackEpsCM))
-    _set_if_has(alg, "FallbackMinPts",          int(args.tp_fallbackMinPts))
+    _set_if_has(alg, "FallbackMinPts",          float(args.tp_fallbackMinPts))
     _set_if_has(alg, "SortHits",                bool(args.tp_sortHits))
     _set_if_has(alg, "DeduplicateHits",         bool(args.tp_dedup))
     _set_if_has(alg, "DedupTolMM",              float(args.tp_dedupTol))
@@ -918,17 +946,145 @@ try:
 except Exception:
     size_printer = None
 
-# Assemble pipeline
+# ----------------- Optional looper filter wrapper -----------------
 top_algs = []
-if args.stage in ("digi", "ggtf", "fit"):
-    top_algs.append(dch_digitizer)
-if args.stage in ("ggtf", "fit"):
-    top_algs.append(GGTF)
-if args.stage == "fit" and fitter_alg is not None:
-    top_algs.append(fitter_alg)
-if size_printer is not None:
-    top_algs.append(size_printer)
 
+def _cfg_get(name: str):
+    """Best-effort: fetch a Configurable class by name from Configurables."""
+    try:
+        m = __import__("Configurables", fromlist=[name])
+        return getattr(m, name)
+    except Exception:
+        return None
+
+def _try_set_any(obj, candidates, value, label):
+    """
+    Try to set the first property in 'candidates' that exists on obj.
+    Returns the property name used, or None.
+    """
+    for prop in candidates:
+        try:
+            if hasattr(obj, prop):
+                setattr(obj, prop, value)
+                print(f"[looperFilter] set {prop} = {value}  ({label})")
+                return prop
+        except Exception as e:
+            print(f"[looperFilter][WARN] failed setting {prop} ({label}): {e}")
+    return None
+
+def _dump_props(obj, prefix="[looperFilter]"):
+    """Print available properties for debugging (safe)."""
+    try:
+        props = obj.getDefaultProperties()
+        keys = sorted(list(props.keys()))
+        print(f"{prefix} Available properties ({len(keys)}): {keys}")
+    except Exception as e:
+        # Fallback: Gaudi configurables can be weird; at least show dir().
+        print(f"{prefix} Could not read getDefaultProperties(): {e}")
+        print(f"{prefix} dir() sample: {[k for k in dir(obj) if not k.startswith('_')][:80]}")
+
+# Assemble pipeline members (the stuff we want to run if event passes filter)
+reco_members = []
+if args.stage in ("digi", "ggtf", "fit"):
+    reco_members.append(dch_digitizer)
+if args.stage in ("ggtf", "fit"):
+    reco_members.append(GGTF)
+if args.stage == "fit" and fitter_alg is not None:
+    reco_members.append(fitter_alg)
+if size_printer is not None:
+    reco_members.append(size_printer)
+
+if args.looperFilter:
+    # Use collection override if provided, else fall back to --dchSimHits
+    looper_coll = args.looperColl.strip() if args.looperColl.strip() else args.dchSimHits
+
+    DCHLooperEventFilter = _cfg_get("DCHLooperEventFilter")
+    if DCHLooperEventFilter is None:
+        paths = os.environ.get("GAUDI_PLUGIN_PATH", "(unset)")
+        raise RuntimeError(
+            "[looperFilter] Enabled but could not import DCHLooperEventFilter.\n"
+            "Make sure your C++ plugin is built+installed and GAUDI_PLUGIN_PATH includes it.\n"
+            f"GAUDI_PLUGIN_PATH={paths}"
+        )
+
+    # Try to find a Sequencer configurable (name differs across stacks)
+    Sequencer = _cfg_get("GaudiSequencer") or _cfg_get("Sequencer") or _cfg_get("AthSequencer")
+
+    looper = DCHLooperEventFilter("DCHLooperEventFilter")
+    looper.OutputLevel = INFO
+
+    # --- Set input collection name (property name differs across implementations) ---
+    input_prop_used = _try_set_any(
+        looper,
+        candidates=[
+            # most common Gaudi::Property names
+            "InputSimHits",
+            "InputSimHitCollection",
+            "InputSimHitCollections",
+            "SimHitCollection",
+            "SimHits",
+            "InputCollection",
+            "InputCollections",
+            # common python-side / legacy names
+            "inputHits",
+            "inHits",
+            "InputHits",
+            "InputHitCollection",
+            "InputHitCollections",
+        ],
+        value=looper_coll,
+        label="input collection",
+    )
+
+    if input_prop_used is None:
+        print(
+            "[looperFilter][WARN] DCHLooperEventFilter has no recognized input-collection property "
+            f"to set to '{looper_coll}'. Disabling looper filter for this run to avoid crashing."
+        )
+        _dump_props(looper, prefix="[looperFilter]")
+        # Fall back to no filter
+        top_algs = reco_members
+        print("[looperFilter] disabled (auto)")
+
+    else:
+        # --- Cuts (property names may also differ; set best-effort) ---
+        _try_set_any(looper, ["TmaxNs", "MaxTimeNs", "Tmax", "MaxTime"], float(args.looperTmaxNs), "Tmax cut")
+        _try_set_any(looper, ["NHitsMax", "MaxNHits", "NHits", "MaxHits"], int(args.looperNHitsMax), "NHits cut")
+        _try_set_any(looper, ["KeepEmpty", "KeepEmptyEvents", "PassEmpty"], bool(args.looperKeepEmpty), "KeepEmpty")
+
+        if not args.looperPassIfMissing:
+            print("[looperFilter][WARN] --no-looperPassIfMissing requested, but unless your C++ alg exposes a "
+                  "PassIfMissing/FailIfMissing property, python cannot enforce it here.")
+
+        if Sequencer is None:
+            # No sequencer available -> run filter first, but cannot guarantee skip-on-fail
+            print("[looperFilter][WARN] No Sequencer/GaudiSequencer configurable found. "
+                  "Running looper as first TopAlg (no sequencer).")
+            top_algs = [looper] + reco_members
+        else:
+            seq = Sequencer("RecoSeq")
+
+            # Different sequencers expose this differently; set what exists.
+            if hasattr(seq, "IgnoreFilterPassed"):
+                seq.IgnoreFilterPassed = False  # IMPORTANT when available
+            if hasattr(seq, "Members"):
+                seq.Members = [looper] + reco_members
+            elif hasattr(seq, "members"):
+                seq.members = [looper] + reco_members
+            else:
+                print("[looperFilter][WARN] Sequencer has no Members attribute; falling back to flat TopAlg.")
+                top_algs = [looper] + reco_members
+
+            if not top_algs:
+                top_algs = [seq]
+
+        print(f"[looperFilter] ENABLED: coll='{looper_coll}' TmaxNs={args.looperTmaxNs} NHitsMax={args.looperNHitsMax}")
+
+else:
+    top_algs = reco_members
+    print("[looperFilter] disabled")
+
+# Wrap with Reader/Writer if available
 try:
     from k4FWCore import getReader, getWriter
     reader = getReader()
@@ -938,6 +1094,7 @@ except Exception:
     pass
 
 print(f"[pipeline] TopAlg order: {[alg.getFullName() for alg in top_algs]}")
+
 
 # Services
 ext_svcs = [

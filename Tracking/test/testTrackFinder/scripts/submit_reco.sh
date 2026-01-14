@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # -------- EDIT THESE --------
-IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples}"   # where DDSim gun files live
-OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples}"
+IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples/1_14_2026}"   # where DDSim gun files live
+OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples2/1_14_2026}"
 COMPACT_XML="${COMPACT_XML:-/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml}"
 MODEL_PATH="${MODEL_PATH:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx}"
 

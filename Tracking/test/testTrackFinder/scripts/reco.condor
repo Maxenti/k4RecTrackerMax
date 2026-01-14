@@ -23,7 +23,7 @@ error   = logs/debug.$(ClusterId).$(ProcId).err
 log     = logs/debug.$(ClusterId).$(ProcId).log
 
 # --- User knobs ---------------------------------------------------
-outdir     = /eos/user/c/cglenn/reco_samples
+outdir     = /eos/user/c/cglenn/reco_samples2/1_14_2026
 compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
 
 # Tracking / fitting knobs
