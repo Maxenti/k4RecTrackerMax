@@ -10,168 +10,16 @@
 #  - Makes the “summary print” report the *actual* configured GGTF properties (not just args).
 #  - Digitizer resolver now respects --dchDigiVersion (v01/v02) preference order.
 #  - Explicitly sets v02 output collection names when supported (keeps names consistent).
-#  - FIX (this revision):
-#      * Robust looper filter wiring WITHOUT importing GaudiSequencer from Gaudi.Configurables.
-#        We now (a) import DCHLooperEventFilter reliably, and (b) find a Sequencer configurable
-#        if available; otherwise we fall back to placing the filter first in TopAlg.
+#  - Robust looper filter wiring WITHOUT importing GaudiSequencer from Gaudi.Configurables.
+#
+# CRITICAL FIX (this revision):
+#  - Instantiate UniqueIDGenSvc with the NAME "UniqueIDGenSvc".
+#    Your DCHdigi_v02 resolves it by serviceLocator()->service("UniqueIDGenSvc") by default.
+#    If you create it as "uidSvc", digitization will FAIL at initialize().
 #
 # NOTE:
 #  - Truth-gating is MC-truth dependent. If the link collection is absent/empty,
 #    GGTF_tracking may effectively disable the gate for that event in C++.
-
-
-# DOC:
-# Summary: Main Gaudi/k4run options “glue” for the IDEA DCH reconstruction chain. Runs (optional) DCH digitization → GGTF_tracking (ONNX ML track finding + 3D spacepoints) → selectable fitter (GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter), with robust component discovery, model staging (local/.md5/http/root://), optional looper event veto, and per-job JobTag propagation into all stages when supported.
-#
-# Primary entrypoints:
-#   1) Direct (advanced): k4run runDCHTestTrackFinder.py [CLI flags...]
-#   2) Recommended (project default): ./local_chain.sh [INPUT OUTPUT MODEL_SPEC COMPACT_XML DCH_SIMHITS DCH_NAME]
-#      - local_chain.sh sets sane env limits (OMP/MKL/ORT arenas), builds a complete flag list,
-#        runs k4run, and stamps provenance metadata into the ROOT files.
-#
-# Usage:
-#   # (Recommended) Run the full chain locally via wrapper:
-#   ./local_chain.sh \
-#     /path/to/sim_or_digi.root \
-#     /path/to/reco.root \
-#     model.onnx|model.onnx.md5|https://...|root://... \
-#     /path/to/IDEA_compact.xml \
-#     DCHCollection \
-#     DCH_v2
-#
-#   # Direct: full chain (digi → GGTF → fit), v02 digi + GenFit2:
-#   k4run runDCHTestTrackFinder.py \
-#     --inputFile sim.root --outputFile reco.root \
-#     --compactXML IDEA.xml --modelPath model.onnx.md5 \
-#     --dchDigiVersion v02 --stage fit --fitter genfit2
-#
-#   # Direct: digitization only (write wire digis, no GGTF/fitting):
-#   k4run runDCHTestTrackFinder.py --stage digi --fitter none \
-#     --inputFile sim.root --outputFile digi.root --dchDigiVersion v02
-#
-#   # Direct: GGTF + fit starting from an already-digitized file:
-#   k4run runDCHTestTrackFinder.py --stage fit --fitter genfit2 \
-#     --inputFile digi.root --outputFile reco.root --modelPath model.onnx
-#
-# Inputs:
-#   - --inputFile: EDM4hep ROOT input produced by ddsim, digitization, or a prior stage.
-#   - --compactXML: DD4hep compact XML (geometry/services).
-#       * REQUIRED when using GenFit2 with UseMaterialEffects(effective)=True.
-#   - --modelPath: GGTF ONNX model spec. Supported forms:
-#       * local path to .onnx
-#       * local .onnx.md5  -> downloads from Key4HEP testFiles using the md5 key
-#       * http(s):// URL   -> wget to ./model.onnx
-#       * root:// URL      -> xrdcp to ./model.onnx
-#   - --dchSimHits: SimTrackerHit collection name in input (default "DCHCollection").
-#   - --dchName: DD4hep detector name for the chamber (default "DCH_v2").
-#   - Environment: requires k4RecTracker/Key4HEP runtime; C++ plugins visible via GAUDI_PLUGIN_PATH.
-#
-# Outputs:
-#   - --outputFile: EDM4hep ROOT output containing the selected stage products.
-#   - JobTag:
-#       * --jobTag overrides; otherwise an auto tag is generated:
-#         "runDCHTestTrackFinder.py|input=<...>|stage=<...>|fitter=<...>|digi=<...>"
-#       * JobTag is forwarded into digitizer / GGTF / fitter when the component exposes a "JobTag" property.
-#
-# Stages (pipeline control):
-#   - --stage digi: digitizer only
-#   - --stage ggtf: digitizer + GGTF_tracking
-#   - --stage fit : digitizer + GGTF_tracking + selected fitter (default)
-#
-# Digitization (DCHdigi resolver):
-#   - Controlled by --dchDigiVersion {v01,v02} (default v02).
-#   - The script resolves the requested implementation first, then falls back across known module/class names:
-#       DCHdigiConf.DCHdigi_v02 / Configurables.DCHdigi_v02 / TrackingConf.DCHdigi_v02 (and similarly v01).
-#   - Best-effort property mapping via hasattr() keeps compatibility across nightlies.
-#   - Default output collection naming (kept consistent when properties exist):
-#       * v02:
-#           - wire digis: "DCHDigi2Collection"
-#           - sim links : "DCHDigi2SimLinkCollection"
-#       * v01:
-#           - wire digis: "DCH_DigiCollection"
-#           - sim links : "DCHDigiSimLinkCollection"
-#   - v02 timing/config knobs supported when available:
-#       --dch-deadtime-ns, --dch-gas-type, --dch-drift-vel-um-ns, --dch-signal-vel-mm-ns,
-#       --rw-start-ns, --rw-duration-ns, and resolution aliases --dch-xy-mm / --dch-z-mm.
-#
-# GGTF_tracking (ML track finding + 3D hits):
-#   - Inputs:
-#       * InputWireHitCollections = [ wire digi collection selected by --dchDigiVersion ]
-#       * InputWireSimLinkCollections = auto-guessed by digi version, or overridden by --ggtf-wireSimLinkColl
-#   - Outputs:
-#       * tracks:   "CDCHTracks"
-#       * 3D hits:  "GGTF_3DHits" (toggle via --produce3DHits / --no-produce3DHits)
-#   - Key knobs:
-#       * clustering thresholds: --tbeta, --td
-#       * runtime gates/caps: --wireGateMM, --onnxChunk, --max3DHitsPerEvent, --max3DPerTrack
-#       * optional input cap: --maxHitsPerEvent (0=off; only applied if >0)
-#       * label-0 handling: --ggtf-zeroMinSizeKeep, --ggtf-minWireFracKeep, promote/skip toggles
-#       * optional truth-PDG gating on wire digis:
-#           --ggtf-filterInputWiresByTruthPdg, --ggtf-keepTruthPdg, --ggtf-dropWireIfUnlinked
-#   - Compatibility knobs (optional / best-effort if properties exist):
-#       --ggtf-3dPosScale, --ggtf-produceAll3DHits, --ggtf-all3DHitsOnly, --ggtf-all3DHitsTypeValue,
-#       --ggtf-applyWireGateTo3DHits, --ggtf-debugPrint3DHitR
-#   - Logging: --ggtfLog {INFO,DEBUG}
-#   - This script prints an explicit “[GGTF] configured | …” line showing the ACTUAL GGTF properties after wiring.
-#
-# Fitters (post-GGTF):
-#   - Controlled by --fitter {genfit2,simple,threepoint,none} and --fitOut <collection>.
-#   - All fitters consume GGTF_3DHits and produce an EDM4hep tracks collection named by --fitOut.
-#
-#   GenFit2DCHFitter (default):
-#     - Uses DD4hepFieldSvc if available; else ConstBFieldSvc; else falls back to fitter Bz property (warn).
-#     - Uses DD4hepMaterialSvc or GenFitMaterialSvc if available; else forces UseMaterialEffects=False (warn).
-#     - If fitter=genfit2 and UseMaterialEffects(effective)=True, --compactXML is REQUIRED (TGeo path needed).
-#     - Key knobs (prefix gf-): B-field, PDG, measurement sigmas, seeding, grouping/fallback, retry, dedup, filters.
-#     - IMPORTANT wiring honored:
-#         --gf-sortHits / --no-gf-sortHits
-#         --gf-dedup / --no-gf-dedup
-#         --gf-dedupTol
-#         --gf-residualFilterEnable (+ pull/chi2 knobs), optional z-outlier filter knobs
-#
-#   SimpleFitDCHFitter:
-#     - Lightweight/robust fallback if GenFit2 unavailable or for fast scans.
-#
-#   ThreePointFitter:
-#     - Minimal fitter for debugging/robustness; supports diagnostic settings and geometric quality cuts.
-#
-# Optional event veto (looper filter):
-#   - --looperFilter (default on here; wrapper may choose otherwise): enables DCHLooperEventFilter if available.
-#   - Purpose: reject “looper”/pathological events (e.g., too-late hit times / too many simhits) before reconstruction.
-#   - If a Sequencer configurable is available, wraps the pipeline in a sequencer so that failed events skip members.
-#     If no sequencer exists, filter is placed first in TopAlg (reduced skip guarantees; still prevents wasted work).
-#   - Inputs:
-#       * collection: --looperColl (default: --dchSimHits)
-#       * cuts: --looperTmaxNs, --looperNHitsMax, --looperKeepEmpty, --looperPassIfMissing
-#
-# Provenance/metadata (wrapper-level behavior):
-#   - When run via local_chain.sh, provenance stamping is applied using scripts/stamp_pipeline_metadata.py:
-#       * stamps the INPUT file (as “input” stage) and the OUTPUT (as “final”) plus per-stage intermediates if found
-#       * records full CLI cmdline and a large set of environment/knob key-values (DCH_*, GGTF_*, GF_*, TP_*, etc.)
-#   - This python options script itself does not stamp ROOT metadata; it only forwards JobTag to components.
-#
-# Connects-To:
-#   - Wrapper + provenance:
-#       * local_chain.sh (recommended driver)
-#       * scripts/stamp_pipeline_metadata.py (ROOT metadata stamping used by local_chain.sh)
-#   - Pipeline components configured:
-#       * DCHdigi_v02 / DCHdigi_v01
-#       * GGTF_tracking
-#       * GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter
-#       * DCHLooperEventFilter (optional)
-#       * EDM4hepCollectionSizePrinter (optional QA)
-#
-# Gotchas / verification:
-#   - Truth-PDG gating requires wire digi → truth link collections to exist and be populated; otherwise gating may be ineffective.
-#   - Property names differ across nightlies; this script uses hasattr()+fallback names and prints configured values—always check:
-#       “[digitizer] set …”, “[GGTF] configured …”, and “[fitter] set …” lines in logs.
-#   - For “all hits” studies ensure --maxHitsPerEvent=0 (default) and watch the GGTF caps (max3DHitsPerEvent/max3DPerTrack).
-#
-# Tags: pipeline, k4run, gaudi, IDEA, DCH, digitization, GGTF, onnx, genfit2, tracking, provenance, crash-safe
-# DOC_END
-
-
-
 
 
 import os
@@ -231,7 +79,7 @@ parser.add_argument("--dch-readout-start-ns", type=float, dest="rw_start_ns",
 parser.add_argument("--dch-readout-dur-ns",   type=float, dest="rw_dur_ns",
                     help="Alias for --rw-duration-ns")
 
-parser.add_argument("--dch-deadtime-ns",     dest="dch_deadtime_ns", type=float, default=400.0,
+parser.add_argument("--dch-deadtime-ns",     dest="dch_deadtime_ns", type=float, default=450.0,
                     help="[v02] cell deadtime (ns)")
 parser.add_argument("--dch-drift-vel-um-ns", dest="dch_drift_um_ns", type=float, default=-1.0,
                     help="[v02] drift velocity (um/ns). If <0, auto by GasType")
@@ -242,7 +90,7 @@ parser.add_argument("--dch-gas-type",        dest="dch_gas_type",    type=int,  
                     help="[v02] gas: 0 He(90)-iC4H10(10), 1 He, 2 Ar(50)-C2H6(50), 3 Ar")
 parser.add_argument("--rw-start-ns",         dest="rw_start_ns",     type=float, default=1.0,
                     help="[v02] readout window start (ns)")
-parser.add_argument("--rw-duration-ns",      dest="rw_dur_ns",       type=float, default=2000.0,
+parser.add_argument("--rw-duration-ns",      dest="rw_dur_ns",       type=float, default=900.0,
                     help="[v02] readout window duration (ns)")
 
 # ----------------- GGTF clustering -----------------
@@ -618,7 +466,7 @@ def stage_model(spec: str) -> str:
 def _resolve_dch_digitizer(version: str):
     tried = []
 
-    # Prefer the requested version first (this was previously not respected).
+    # Prefer the requested version first.
     if version == "v02":
         preferred = [("DCHdigiConf", "DCHdigi_v02"), ("Configurables", "DCHdigi_v02"), ("TrackingConf", "DCHdigi_v02")]
         fallback  = [("DCHdigiConf", "DCHdigi_v01"), ("Configurables", "DCHdigi_v01"), ("TrackingConf", "DCHdigi_v01")]
@@ -665,7 +513,7 @@ _set_if_has_digitizer(dch_digitizer, "DCH_name", args.dchName)
 _set_if_has_digitizer(dch_digitizer, "InputSimHitCollection", [args.dchSimHits])
 _set_if_has_digitizer(dch_digitizer, "HeaderName", ["EventHeader"])
 
-# Keep output names consistent with your pipeline conventions when the properties exist.
+# Keep output names consistent when the properties exist.
 if args.dchDigiVersion == "v02":
     _set_if_has_digitizer(dch_digitizer, "OutputDigihitCollection", ["DCHDigi2Collection"])
     _set_if_has_digitizer(dch_digitizer, "OutputLinkCollection",    ["DCHDigi2SimLinkCollection"])
@@ -738,7 +586,7 @@ def _set_if_has_g(obj, name, value):
         print(f"[GGTF][warn] could not set {name}: {e}")
     return False
 
-# Label-0 handling (always apply)
+# Label-0 handling
 for name, val in [
     ("ZeroMinSizeKeep", int(args.ggtf_zeroMinSizeKeep)),
     ("MinWireFracKeep", float(args.ggtf_minWireFracKeep)),
@@ -748,14 +596,13 @@ for name, val in [
 ]:
     _set_if_has_g(GGTF, name, val)
 
-# Core GGTF runtime knobs (always apply)
+# Core GGTF runtime knobs
 for name, val in [
     ("WireGateMM", float(args.wireGateMM)),
     ("OnnxChunk", int(args.onnxChunk)),
     ("Max3DHitsPerEvent", int(args.max3DHitsPerEvent)),
     ("Max3DPerTrack", int(args.max3DPerTrack)),
 ]:
-    # Some builds may use slightly different capitalization; try a couple common variants.
     if not _set_if_has_g(GGTF, name, val):
         if name.endswith("MM") and _set_if_has_g(GGTF, name[:-2] + "Mm", val):
             pass
@@ -770,11 +617,10 @@ if int(args.maxHitsPerEvent) > 0:
 else:
     print("[GGTF] maxHitsPerEvent=0 -> no cap")
 
-# Truth gating (always apply if property exists)
+# Truth gating
 _set_if_has_g(GGTF, "FilterInputWiresByTruthPdg", bool(args.ggtf_filterInputWiresByTruthPdg))
 _set_if_has_g(GGTF, "KeepTruthPdg", int(args.ggtf_keepTruthPdg))
 _set_if_has_g(GGTF, "DropWireIfUnlinked", bool(args.ggtf_dropWireIfUnlinked))
-
 _set_if_has_g(GGTF, "JobTag", job_tag)
 
 # Optional knobs
@@ -798,7 +644,6 @@ if args.ggtf_debugPrint3DHitR is not None:
 
 GGTF.OutputLevel = DEBUG if args.ggtfLog == "DEBUG" else INFO
 
-# IMPORTANT: print the *actual configured* properties (not just args)
 def _ggtf_prop(name, fallback="n/a"):
     return getattr(GGTF, name, fallback)
 
@@ -959,7 +804,7 @@ def _configure_genfit2():
     _set_if_has(alg, "RetrySeedMomInfl",      float(args.gf_retrySeedMom))
     _set_if_has(alg, "MaxMeasPerGroup",       int(args.gf_maxMeasPerGroup))
 
-    # Optional “legacy” property names (harmless if absent)
+    # Optional “legacy” property names
     _set_if_has(alg, "pdgHypothesis", int(args.gf_pdg))
 
     # Outlier / residual filters
@@ -1115,15 +960,25 @@ def _cfg_get(name: str):
 def _try_set_any(obj, candidates, value, label):
     """
     Try to set the first property in 'candidates' that exists on obj.
+    Also tries [value] if value is a string and the property expects a vector<string>.
     Returns the property name used, or None.
     """
     for prop in candidates:
+        if not hasattr(obj, prop):
+            continue
         try:
-            if hasattr(obj, prop):
-                setattr(obj, prop, value)
-                print(f"[looperFilter] set {prop} = {value}  ({label})")
-                return prop
+            setattr(obj, prop, value)
+            print(f"[looperFilter] set {prop} = {value}  ({label})")
+            return prop
         except Exception as e:
+            # Try list form if it might be vector<string>
+            if isinstance(value, str):
+                try:
+                    setattr(obj, prop, [value])
+                    print(f"[looperFilter] set {prop} = {[value]}  ({label}, list-fallback)")
+                    return prop
+                except Exception:
+                    pass
             print(f"[looperFilter][WARN] failed setting {prop} ({label}): {e}")
     return None
 
@@ -1134,11 +989,10 @@ def _dump_props(obj, prefix="[looperFilter]"):
         keys = sorted(list(props.keys()))
         print(f"{prefix} Available properties ({len(keys)}): {keys}")
     except Exception as e:
-        # Fallback: Gaudi configurables can be weird; at least show dir().
         print(f"{prefix} Could not read getDefaultProperties(): {e}")
         print(f"{prefix} dir() sample: {[k for k in dir(obj) if not k.startswith('_')][:80]}")
 
-# Assemble pipeline members (the stuff we want to run if event passes filter)
+# Assemble pipeline members
 reco_members = []
 if args.stage in ("digi", "ggtf", "fit"):
     reco_members.append(dch_digitizer)
@@ -1150,7 +1004,6 @@ if size_printer is not None:
     reco_members.append(size_printer)
 
 if args.looperFilter:
-    # Use collection override if provided, else fall back to --dchSimHits
     looper_coll = args.looperColl.strip() if args.looperColl.strip() else args.dchSimHits
 
     DCHLooperEventFilter = _cfg_get("DCHLooperEventFilter")
@@ -1162,17 +1015,14 @@ if args.looperFilter:
             f"GAUDI_PLUGIN_PATH={paths}"
         )
 
-    # Try to find a Sequencer configurable (name differs across stacks)
     Sequencer = _cfg_get("GaudiSequencer") or _cfg_get("Sequencer") or _cfg_get("AthSequencer")
 
     looper = DCHLooperEventFilter("DCHLooperEventFilter")
     looper.OutputLevel = INFO
 
-    # --- Set input collection name (property name differs across implementations) ---
     input_prop_used = _try_set_any(
         looper,
         candidates=[
-            # most common Gaudi::Property names
             "InputSimHits",
             "InputSimHitCollection",
             "InputSimHitCollections",
@@ -1180,7 +1030,6 @@ if args.looperFilter:
             "SimHits",
             "InputCollection",
             "InputCollections",
-            # common python-side / legacy names
             "inputHits",
             "inHits",
             "InputHits",
@@ -1197,12 +1046,9 @@ if args.looperFilter:
             f"to set to '{looper_coll}'. Disabling looper filter for this run to avoid crashing."
         )
         _dump_props(looper, prefix="[looperFilter]")
-        # Fall back to no filter
         top_algs = reco_members
         print("[looperFilter] disabled (auto)")
-
     else:
-        # --- Cuts (property names may also differ; set best-effort) ---
         _try_set_any(looper, ["TmaxNs", "MaxTimeNs", "Tmax", "MaxTime"], float(args.looperTmaxNs), "Tmax cut")
         _try_set_any(looper, ["NHitsMax", "MaxNHits", "NHits", "MaxHits"], int(args.looperNHitsMax), "NHits cut")
         _try_set_any(looper, ["KeepEmpty", "KeepEmptyEvents", "PassEmpty"], bool(args.looperKeepEmpty), "KeepEmpty")
@@ -1212,16 +1058,13 @@ if args.looperFilter:
                   "PassIfMissing/FailIfMissing property, python cannot enforce it here.")
 
         if Sequencer is None:
-            # No sequencer available -> run filter first, but cannot guarantee skip-on-fail
             print("[looperFilter][WARN] No Sequencer/GaudiSequencer configurable found. "
                   "Running looper as first TopAlg (no sequencer).")
             top_algs = [looper] + reco_members
         else:
             seq = Sequencer("RecoSeq")
-
-            # Different sequencers expose this differently; set what exists.
             if hasattr(seq, "IgnoreFilterPassed"):
-                seq.IgnoreFilterPassed = False  # IMPORTANT when available
+                seq.IgnoreFilterPassed = False
             if hasattr(seq, "Members"):
                 seq.Members = [looper] + reco_members
             elif hasattr(seq, "members"):
@@ -1229,7 +1072,6 @@ if args.looperFilter:
             else:
                 print("[looperFilter][WARN] Sequencer has no Members attribute; falling back to flat TopAlg.")
                 top_algs = [looper] + reco_members
-
             if not top_algs:
                 top_algs = [seq]
 
@@ -1250,12 +1092,12 @@ except Exception:
 
 print(f"[pipeline] TopAlg order: {[alg.getFullName() for alg in top_algs]}")
 
-
 # Services
+# CRITICAL: create UniqueIDGenSvc with the NAME "UniqueIDGenSvc" (not "uidSvc")
 ext_svcs = [
     geoservice,
     EventDataSvc("EventDataSvc"),
-    UniqueIDGenSvc("uidSvc"),
+    UniqueIDGenSvc("UniqueIDGenSvc"),
     RndmGenSvc(),
     svc,
 ]

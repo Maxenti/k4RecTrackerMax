@@ -3,9 +3,7 @@
 set -euo pipefail
 
 # ------------------------ Key4HEP environment ------------------------
-
 K4SETUP=/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
-
 
 # Source only if not already set; clear "$@" while sourcing
 if [[ -z "${KEY4HEP_STACK:-}" && -z "${K4ENV:-}" ]]; then
@@ -50,7 +48,7 @@ command -v xrdcp  >/dev/null 2>&1  || { echo "FATAL: xrdcp not found" >&2; exit 
 # ---------------------------- Parameters ----------------------------
 pt=$(jq -r '.pt' "$PARAMS_JSON")
 eta=$(jq -r '.eta' "$PARAMS_JSON")
-p=$(jq -r '.p' "$PARAMS_JSON")
+p=$(jq -r '.p' "$PARAMS_JSON")          # NOTE: this is |p| [GeV] from your grid (pt*cosh(eta))
 theta=$(jq -r '.theta' "$PARAMS_JSON")
 nev=$(jq -r '.nev' "$PARAMS_JSON")
 particle=$(jq -r '.particle' "$PARAMS_JSON")
@@ -73,7 +71,8 @@ print(s.replace("+","").replace("-","m"))
 PY
 )
 rel_dir="eta_${eta_tag}"
-file_name="gun_eta${eta_tag}_E${pt_tag}.root"
+# IMPORTANT: this tag is pT, not energy
+file_name="gun_eta${eta_tag}_pt${pt_tag}.root"
 
 # Local scratch output
 SCRATCH="${TMPDIR:-$PWD}"
@@ -84,17 +83,27 @@ EOS_POSIX="${OUT_DIR_BASE%/}/${rel_dir}/${file_name}"
 EOS_DIR_POSIX="$(dirname "$EOS_POSIX")"
 EOS_URL="root://eosuser.cern.ch//${EOS_POSIX#/}"
 
-echo "[job] eta=$eta  pt=$pt  p=$p  theta=$theta  nev=$nev  seed=$seed"
+echo "[job] eta=$eta  pt=$pt  p=$p  theta=$theta  nev=$nev  seed=$seed  particle=$particle"
 echo "[job] LOCAL_OUT=$LOCAL_OUT"
 echo "[job] EOS_POSIX=$EOS_POSIX"
 echo "[job] EOS_URL=$EOS_URL"
+
+# Quick kinematic self-check: p/cosh(eta) should equal pt (within rounding)
+python3 - "$pt" "$eta" "$p" <<'PY'
+import math,sys
+pt=float(sys.argv[1]); eta=float(sys.argv[2]); p=float(sys.argv[3])
+pt_from_p = p/math.cosh(eta) if math.isfinite(eta) else float("nan")
+print(f"[check] pt={pt:.6g}  eta={eta:.6g}  p={p:.6g}  p/cosh(eta)={pt_from_p:.6g}")
+PY
 
 # Ensure EOS directory exists
 export XRD_RUNFORKHANDLER=1
 xrdfs eosuser.cern.ch mkdir -p "//${EOS_DIR_POSIX#/}" || true
 
 # ---------------------------- Gun options ---------------------------
-phi_opts=( --gun.phiMin 0*deg --gun.phiMax 360*deg )
+# Quote "*deg" to avoid bash glob-expansion on worker nodes.
+phi_opts=( --gun.phiMin "0*deg" --gun.phiMax "360*deg" )
+# If your JSON requests uniform phi, set distribution uniform; otherwise keep default.
 [[ "${phi_uniform}" == "true" ]] && phi_opts+=( --gun.distribution uniform )
 
 theta_min="$theta"; theta_max="$theta"
@@ -119,7 +128,6 @@ PY
   echo "[job] theta smear: [${theta_min}, ${theta_max}] rad"
 fi
 
-
 stamp_metadata_local () {
   local rootfile="$1"
 
@@ -128,9 +136,10 @@ stamp_metadata_local () {
   [[ -s "$stamper" ]] || stamper="./stamp_ddsim_metadata.py"
   [[ -s "$stamper" ]] || { echo "[meta][WARN] stamper not found, skipping."; return 0; }
 
+  # IMPORTANT: we are configuring the gun with MOMENTUM magnitude (|p|), not energy.
   local cmdline
   cmdline=$(
-    printf "ddsim --compactFile %q --numberOfEvents %q --random.seed %q --enableGun --gun.particle %q --gun.energy %q --gun.distribution uniform --gun.thetaMin %q --gun.thetaMax %q %s --outputFile %q" \
+    printf "ddsim --compactFile %q --numberOfEvents %q --random.seed %q --enableGun --gun.particle %q --gun.momentum %q --gun.distribution uniform --gun.thetaMin %q --gun.thetaMax %q %s --outputFile %q" \
       "$COMPACT_XML" "$nev" "$seed" "$particle" "${p}*GeV" "${theta_min}*rad" "${theta_max}*rad" "${phi_opts[*]}" "$rootfile"
   )
 
@@ -199,7 +208,8 @@ run_ddsim_local () {
     --random.seed "$seed" \
     --enableGun \
     --gun.particle "$particle" \
-    --gun.energy "${p}*GeV" \
+    --gun.momentumMin "${p}*GeV" \
+    --gun.momentumMax "${p}*GeV" \
     --gun.distribution uniform \
     --gun.thetaMin "${theta_min}*rad" \
     --gun.thetaMax "${theta_max}*rad" \

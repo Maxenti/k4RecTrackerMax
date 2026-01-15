@@ -3,6 +3,7 @@
 // STL
 #include <string>
 #include <cmath>
+#include <tuple>
 
 // Gaudi
 #include "Gaudi/Accumulators.h"
@@ -60,14 +61,6 @@ public:
 
   StatusCode initialize() override final;
 
-  // Fast zero-truncated Poisson sampler
-  inline int sample_zero_truncated_poisson(double lambda, TRandom3& gen) const {
-    const double u = gen.Uniform(std::exp(-lambda), 1.0);
-    const double t = -std::log(u);
-    const int    k = gen.Poisson(lambda - t);
-    return 1 + k;
-  }
-
 private:
   SmartIF<IUniqueIDGenSvc> m_uniqueIDSvc{nullptr};
   Gaudi::Property<std::string> m_uidSvcName{
@@ -104,9 +97,20 @@ private:
       this, "xyResolution_mm", 0.1,
       "Spatial resolution perpendicular to the wire, in mm."};
 
+  // Optional extra time jitter (geo-focused knob)
+  Gaudi::Property<double> m_time_resolution_ns{
+      this, "timeResolution_ns", 0.0,
+      "Additional Gaussian time jitter applied to hit time [ns]. (0 disables)"};
+
   // Deadtime of a cell in ns
   Gaudi::Property<double> m_deadtime_ns{
       this, "Deadtime_ns", 400.0, "Deadtime of a cell in ns."};
+
+  // If true, a train includes hits within deadtime of the FIRST hit (true deadtime model).
+  // If false, uses the original 'chain' model (each hit within deadtime of previous).
+  Gaudi::Property<bool> m_deadtimeFromFirstHit{
+      this, "DeadtimeFromFirstHit", true,
+      "If true: group hits into a train if (t - t0) < deadtime. If false: compare to previous hit."};
 
   // Gas drift velocity in um/ns
   Gaudi::Property<double> m_drift_velocity_um_per_ns{
@@ -120,10 +124,20 @@ private:
       199.86163866666667,
       "Signal velocity in the wire in mm/ns (default = (2/3)*c)."};
 
+  // Guard against cos(stereo) ~ 0
+  Gaudi::Property<double> m_minAbsCosStereo{
+      this, "MinAbsCosStereo", 1e-3,
+      "Minimum |cos(stereoAngle)| allowed to compute readout distance. Below -> skip."};
+
   // Gas mixture
   Gaudi::Property<int> m_GasType{
       this, "GasType", {0},
       "0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar."};
+
+  // Cluster model (pseudo-physical) toggle
+  Gaudi::Property<bool> m_useClusterModel{
+      this, "UseClusterModel", false,
+      "If true, estimate clusters from beta*gamma and path length. If false, store zero clusters (geo-only digitizer)."};
 
   // Readout window
   Gaudi::Property<double> m_ReadoutWindowStartTime_ns{
@@ -139,13 +153,19 @@ private:
       this, "JobTag", "",
       "Optional external tag (e.g. input file name or run label)"};
 
-  // ✅ Correct for your MetaDataHandle.h
+  // Metadata handle
   k4FWCore::MetaDataHandle<std::string> m_digiMeta;
 
   /// Convert EDM4hep Vector3d to TVector3
   TVector3 toTVector3(const edm4hep::Vector3d& v) const { return {v[0], v[1], v[2]}; }
   /// Convert TVector3 to EDM4hep Vector3d
   edm4hep::Vector3d toEDM4hepVector(const TVector3& v) const { return {v.X(), v.Y(), v.Z()}; }
+
+  // Sampling helpers
+  inline unsigned sample_poisson_nonnegative(double mean, TRandom3& gen) const {
+    if (!(mean > 0.0) || !std::isfinite(mean)) return 0u;
+    return static_cast<unsigned>(gen.Poisson(mean));
+  }
 
   double get_drift_time_ns(double distance_to_wire_mm) const;
   double get_signal_travel_time_ns(double distance_to_readout_mm) const;
