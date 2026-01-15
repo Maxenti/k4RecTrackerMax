@@ -367,7 +367,7 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/reco_filelist.txt` |  | no |  |
 | `test/testTrackFinder/reco_scan.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/run_dch_chain.sh` | !/bin/bash | no |  |
-| `test/testTrackFinder/runDCHTestTrackFinder.py` | Best-effort: fetch a Configurable class by name from Configurables. | no |  |
+| `test/testTrackFinder/runDCHTestTrackFinder.py` | Main Gaudi/k4run options “glue” for the IDEA DCH reconstruction chain. Runs (optional) DCH digitization → GGTF_tracking (ONNX ML track finding + 3D spacepoints) → selectable fitter (GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter), with robust component discovery, model staging (local/.md5/http/root://), optional looper event veto, and per-job JobTag propagation into all stages when supported. Primary entrypoints: 1) Direct (advanced): k4run runDCHTestTrackFinder.py [CLI flags...] 2) Recommended (project default): ./local_chain.sh [INPUT OUTPUT MODEL_SPEC COMPACT_XML DCH_SIMHITS DCH_NAME] - local_chain.sh sets sane env limits (OMP/MKL/ORT arenas), builds a complete flag list, runs k4run, and stamps provenance metadata into the ROOT files. | yes | DCH, GGTF, IDEA, crash-safe, digitization, gaudi, genfit2, k4run, onnx, pipeline, provenance, tracking |
 | `test/testTrackFinder/runTestTrackFinder.py` | ################# Parser | no |  |
 | `test/testTrackFinder/scan_pt_resolution.py` | filename pattern | no |  |
 | `test/testTrackFinder/scan_pt_time_by_event.py` | scan_pt_time_by_event.py | no |  |

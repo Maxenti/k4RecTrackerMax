@@ -15,7 +15,7 @@ python3 scripts/mk_ddsim_grid.py \
   --out "$GRID_JSON" \
   --pt-min 1 --pt-max 200 --pt-n 50 \
   --etas "0, 0.1, 0.5, 1.0, 1.5, 2.0" \
-  --nev 1000 --particle mu- --theta-smear 3.0
+  --nev 1000 --particle mu- --theta-smear 0.0
 echo "Wrote $(wc -l < "$GRID_JSON") lines to $GRID_JSON"
 
 echo "[prep] Splitting JSONL into per-job files under params/"

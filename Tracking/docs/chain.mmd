@@ -1,4 +1,16 @@
 flowchart LR
+  __DCHLooperEventFilter__optional_["* DCHLooperEventFilter (optional)"]
+  __DCHdigi_v02___DCHdigi_v01["* DCHdigi_v02 / DCHdigi_v01"]
+  __EDM4hepCollectionSizePrinter__optional_QA_["* EDM4hepCollectionSizePrinter (optional QA)"]
+  __GGTF_tracking["* GGTF_tracking"]
+  __GenFit2DCHFitter___SimpleFitDCHFitter___ThreePointFitter["* GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter"]
+  __local_chain_sh__recommended_driver_["* local_chain.sh (recommended driver)"]
+  __scripts_stamp_pipeline_metadata_py__ROOT_metadata_stamping_used_by_local_chain_sh_["* scripts/stamp_pipeline_metadata.py (ROOT metadata stamping used by local_chain.sh)"]
+  __For__all_hits__studies_ensure___maxHitsPerEvent_0__default__and_watch_the_GGTF_caps__max3DHitsPerEvent_max3DPerTrack__["- For “all hits” studies ensure --maxHitsPerEvent=0 (default) and watch the GGTF caps (max3DHitsPerEvent/max3DPerTrack)."]
+  __Pipeline_components_configured_["- Pipeline components configured:"]
+  __Property_names_differ_across_nightlies__this_script_uses_hasattr___fallback_names_and_prints_configured_values_always_check_["- Property names differ across nightlies; this script uses hasattr()+fallback names and prints configured values—always check:"]
+  __Truth_PDG_gating_requires_wire_digi___truth_link_collections_to_exist_and_be_populated__otherwise_gating_may_be_ineffective_["- Truth-PDG gating requires wire digi → truth link collections to exist and be populated; otherwise gating may be ineffective."]
+  __Wrapper___provenance_["- Wrapper + provenance:"]
   ___["..."]
   Alg__CDCHHits["Alg::CDCHHits"]
   Alg__CDCHTracks["Alg::CDCHTracks"]
@@ -112,6 +124,7 @@ flowchart LR
   Alg__tracker["Alg::tracker"]
   Alg__view_tracks_metadata["Alg::view_tracks_metadata"]
   CMakeLists_txt["CMakeLists.txt"]
+  Gotchas___verification_["Gotchas / verification:"]
   components_DCHLooperEventFilter_cpp["components/DCHLooperEventFilter.cpp"]
   components_GGTF_tracking_cpp["components/GGTF_tracking.cpp"]
   components_GenFit2DCHFitter_cpp["components/GenFit2DCHFitter.cpp"]
@@ -490,6 +503,7 @@ flowchart LR
   test_testTrackFinder_view_tracks_event_py["test/testTrackFinder/view_tracks_event.py"]
   test_testTracksFromGenParticles_runTracksFromGenParticles_py["test/testTracksFromGenParticles/runTracksFromGenParticles.py"]
   test_testTracksFromGenParticles_test_TracksFromGenParticles_sh["test/testTracksFromGenParticles/test_TracksFromGenParticles.sh"]
+  __digitizer__set_______GGTF__configured_____and___fitter__set____lines_in_logs_["“[digitizer] set …”, “[GGTF] configured …”, and “[fitter] set …” lines in logs."]
   CMakeLists_txt --> Alg__Noddsim_track_test
   CMakeLists_txt --> Alg__test_TrackFinder
   CMakeLists_txt --> Alg__test_TracksFromGenParticles
@@ -603,6 +617,18 @@ flowchart LR
   test_testTrackFinder_reco_all_sh --> Alg__genfit2
   test_testTrackFinder_reco_scan_sh --> Alg__genfit2
   test_testTrackFinder_reco_scan_sh --> test_testTrackFinder_runDCHTestTrackFinder_py
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __DCHLooperEventFilter__optional_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __DCHdigi_v02___DCHdigi_v01
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __EDM4hepCollectionSizePrinter__optional_QA_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __GGTF_tracking
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __GenFit2DCHFitter___SimpleFitDCHFitter___ThreePointFitter
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __local_chain_sh__recommended_driver_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __scripts_stamp_pipeline_metadata_py__ROOT_metadata_stamping_used_by_local_chain_sh_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __For__all_hits__studies_ensure___maxHitsPerEvent_0__default__and_watch_the_GGTF_caps__max3DHitsPerEvent_max3DPerTrack__
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __Pipeline_components_configured_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __Property_names_differ_across_nightlies__this_script_uses_hasattr___fallback_names_and_prints_configured_values_always_check_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __Truth_PDG_gating_requires_wire_digi___truth_link_collections_to_exist_and_be_populated__otherwise_gating_may_be_ineffective_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __Wrapper___provenance_
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__CDCHTracks
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHCollection
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHDigi2Collection
@@ -640,6 +666,8 @@ flowchart LR
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__genfit2
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__outputTracks
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__tp_fitTanLambda
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Gotchas___verification_
+  test_testTrackFinder_runDCHTestTrackFinder_py --> __digitizer__set_______GGTF__configured_____and___fitter__set____lines_in_logs_
   test_testTrackFinder_runTestTrackFinder_py --> Alg__CDCHTracks
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCHCollection
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCH_DigiCollection
