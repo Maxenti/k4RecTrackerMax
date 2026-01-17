@@ -749,7 +749,7 @@ def main():
     ap = argparse.ArgumentParser(description="Scan TrackState.time/omega + observability + diagnostics (logs to file).")
     ap.add_argument("--input", required=True, help="Input EDM4hep ROOT file")
     ap.add_argument("--trackCollection", default="GenFitTracks", help="Track collection name (default: GenFitTracks)")
-    ap.add_argument("--hitCollection", default="GGTF_3DHits",
+    ap.add_argument("--hitCollection", default="GGTF_SenseWireHits",
                     help="Hit collection to use for observability (use 'auto' to autodetect)")
     ap.add_argument("--expectedPt", type=float, required=True, help="Expected pT for this sample [GeV]")
 

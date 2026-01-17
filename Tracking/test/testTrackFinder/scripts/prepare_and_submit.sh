@@ -48,6 +48,12 @@ python3 scripts/mk_ddsim_grid.py \
 echo "[prep] Wrote $(wc -l < "$GRID_JSON") lines to $GRID_JSON"
 echo
 
+
+echo "[prep] Clearing old params/ and queue_items.txt"
+mkdir -p params
+rm -f params/job_*.json
+rm -f scripts/queue_items.txt
+
 # --- Split into per-job JSON files + queue list ---
 echo "[prep] Splitting JSONL into per-job files under params/"
 : > scripts/queue_items.txt

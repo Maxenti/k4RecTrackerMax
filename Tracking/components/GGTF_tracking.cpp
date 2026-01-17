@@ -1,25 +1,19 @@
 //======================================================================
-// GGTF_tracking.cpp  (tracks + optional 3D hits output)  [ROBUST / PHYSICS-SAFE]
+// GGTF_tracking.cpp  (tracks + optional labeled SenseWireHits output)  [ROBUST / PHYSICS-SAFE]
 //   - Designed for DCH-only workflows (no planar hits required)
-//   - Produces per-track GGTF_3DHits suitable for fitting
-//   - Optional debug “ALL input hits -> 3D hits” goes to a SEPARATE collection
-//     to avoid contaminating physics fit groups.
-//
-// Key robustness fixes vs your previous file:
-//   (R1) Debug “all-input” 3D hits are written to OutputAll3DHits (default "GGTF_All3DHits").
-//        They NEVER mix into GGTF_3DHits. (No -777 mega-group accidental fit.)
-//   (R2) Wire 3D hits default to ONNX midpoint (Mmid) for stability.
-//   (R3) Wire covariances are ANISOTROPIC in the local (xprime,yprime,dir) basis:
-//        sigma_xprime ~ sigma_drift (measured), sigma_yprime inflated (unmeasured), sigma_dir ~ sigma_along_wire.
-//        Covariance is rotated into global XYZ and scaled consistently with ThreeDHitPosScale.
-//   (R4) No “forcing” via distance clamp in physics path. Optional outlier rejection uses |d| threshold.
-//   (R5) Defensive guards: missing collections, bad errors, NaNs, excessive sizes.
-//   (R6) Since you have DCH-only, planar-related code remains safe if empty (no special logic required).
+//   - Runs ONNX embedding + clustering to build extension::TrackCollection (unchanged behavior)
+//   - Outputs per-track *labeled* SenseWireHits (wire+drift info) for the fitter to consume
+//       * OutputSenseWireHits default: "GGTF_SenseWireHits"
+//       * Each output SenseWireHit has .type = cluster label (same as Track.type)
+//   - Optional debug output: ALL used wire inputs copied to a separate SenseWireHit collection
+//       * OutputAllSenseWireHits default: "GGTF_AllSenseWireHits"
+//       * Each debug hit has .type = AllSenseWireHitsTypeValue (default -777)
+//   - Keeps robust guards: truth PDG gating, absurd |d| dropping, missing collections, etc.
 //
 // Notes:
-//   - Track-building (ONNX + clustering) still uses the flattened inputs.
-//   - 3DHits are for downstream visualization and fitting. With anisotropic cov, the fitter can
-//     downweight the unmeasured tangential direction properly.
+//   - We do NOT output 3D spacepoints anymore. The fitter should build WireMeasurementNew directly
+//     from the (wire position, phi, stereo, drift distance+error, along-wire error) stored in SenseWireHit.
+//   - Track-building (ONNX + clustering) still uses flattened inputs (including a derived midpoint Mmid).
 //======================================================================
 
 #include <algorithm>
@@ -59,7 +53,6 @@
 
 // EDM4hep & extensions
 #include "edm4hep/TrackerHitPlaneCollection.h"
-#include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/MCParticle.h"
 
@@ -111,44 +104,6 @@ inline uint64_t oid_key(const podio::ObjectID& oid) {
   return (uint64_t(uint32_t(oid.collectionID)) << 32) | uint64_t(uint32_t(oid.index));
 }
 
-// EDM4hep CovMatrix3f is packed (xx,xy,xz,yy,yz,zz)
-inline edm4hep::CovMatrix3f pack_cov3f(double xx, double xy, double xz, double yy, double yz, double zz) {
-  edm4hep::CovMatrix3f C;
-  C[0] = float(xx);
-  C[1] = float(xy);
-  C[2] = float(xz);
-  C[3] = float(yy);
-  C[4] = float(yz);
-  C[5] = float(zz);
-  return C;
-}
-
-// Build global covariance from local orthonormal basis {e0,e1,e2} and diagonal variances.
-// C = sum_i (sigma_i^2) * (e_i e_i^T)
-inline edm4hep::CovMatrix3f cov_from_basis_diag(const TVector3& e0,
-                                               const TVector3& e1,
-                                               const TVector3& e2,
-                                               double s0_mm,
-                                               double s1_mm,
-                                               double s2_mm) {
-  const double v0 = s0_mm * s0_mm;
-  const double v1 = s1_mm * s1_mm;
-  const double v2 = s2_mm * s2_mm;
-
-  const double ex0 = e0.X(), ey0 = e0.Y(), ez0 = e0.Z();
-  const double ex1 = e1.X(), ey1 = e1.Y(), ez1 = e1.Z();
-  const double ex2 = e2.X(), ey2 = e2.Y(), ez2 = e2.Z();
-
-  const double xx = v0*ex0*ex0 + v1*ex1*ex1 + v2*ex2*ex2;
-  const double xy = v0*ex0*ey0 + v1*ex1*ey1 + v2*ex2*ey2;
-  const double xz = v0*ex0*ez0 + v1*ex1*ez1 + v2*ex2*ez2;
-  const double yy = v0*ey0*ey0 + v1*ey1*ey1 + v2*ey2*ey2;
-  const double yz = v0*ey0*ez0 + v1*ey1*ez1 + v2*ey2*ez2;
-  const double zz = v0*ez0*ez0 + v1*ez1*ez1 + v2*ez2*ez2;
-
-  return pack_cov3f(xx, xy, xz, yy, yz, zz);
-}
-
 inline bool finite_vec3(const TVector3& v) {
   return std::isfinite(v.X()) && std::isfinite(v.Y()) && std::isfinite(v.Z());
 }
@@ -157,6 +112,31 @@ inline TVector3 safe_unit(const TVector3& v, const TVector3& fallback) {
   const double m2 = v.Mag2();
   if (!(m2 > 0.0) || !std::isfinite(m2)) return fallback;
   return (1.0 / std::sqrt(m2)) * v;
+}
+
+// Copy a SenseWireHit (best effort; includes common fields used by digitizer + fitter)
+inline void copy_sensewirehit(const extension::SenseWireHit& in, extension::MutableSenseWireHit& out) {
+  // Core scalar fields
+  try { out.setCellID(in.getCellID()); } catch (...) {}
+  try { out.setTime(in.getTime()); } catch (...) {}
+  try { out.setEDep(in.getEDep()); } catch (...) {}
+  try { out.setEDepError(in.getEDepError()); } catch (...) {}
+  try { out.setQuality(in.getQuality()); } catch (...) {}
+
+  // Geometry / measurement fields
+  try { out.setWireStereoAngle(in.getWireStereoAngle()); } catch (...) {}
+  try { out.setWireAzimuthalAngle(in.getWireAzimuthalAngle()); } catch (...) {}
+  try { out.setPosition(in.getPosition()); } catch (...) {}
+  try { out.setPositionAlongWireError(in.getPositionAlongWireError()); } catch (...) {}
+  try { out.setDistanceToWire(in.getDistanceToWire()); } catch (...) {}
+  try { out.setDistanceToWireError(in.getDistanceToWireError()); } catch (...) {}
+
+  // If your EDM extension has electron clusters stored
+  try {
+    for (auto e : in.getNElectrons()) out.addToNElectrons(e);
+  } catch (...) {
+    // ignore if not present in this build
+  }
 }
 
 }  // namespace
@@ -170,14 +150,14 @@ inline TVector3 safe_unit(const TVector3& v, const TVector3& fallback) {
  *   - vector<SenseWireHitSimTrackerHitLinkCollection*>   (MC-truth link)        [may be empty]
  *
  * Outputs:
- *   - extension::TrackCollection          (as upstream)
- *   - edm4hep::TrackerHit3DCollection     ("GGTF_3DHits") per-track physics 3D hits
- *   - edm4hep::TrackerHit3DCollection     ("GGTF_All3DHits") debug-only (optional)
+ *   - extension::TrackCollection              (as upstream)
+ *   - extension::SenseWireHitCollection       ("GGTF_SenseWireHits") per-track labeled wires (type=cluster label)
+ *   - extension::SenseWireHitCollection       ("GGTF_AllSenseWireHits") debug-only (optional; type=AllSenseWireHitsTypeValue)
  */
 struct GGTF_tracking final
     : k4FWCore::MultiTransformer<std::tuple<extension::TrackCollection,
-                                           edm4hep::TrackerHit3DCollection,
-                                           edm4hep::TrackerHit3DCollection>(
+                                           extension::SenseWireHitCollection,
+                                           extension::SenseWireHitCollection>(
           const std::vector<const edm4hep::TrackerHitPlaneCollection*>&,
           const std::vector<const extension::SenseWireHitCollection*>&,
           const std::vector<const extension::SenseWireHitSimTrackerHitLinkCollection*>&)> {
@@ -192,10 +172,9 @@ struct GGTF_tracking final
              KeyValues("InputWireHitCollections", std::vector<std::string>{"InputWireHitCollections"}),
              KeyValues("InputWireSimLinkCollections", std::vector<std::string>{"InputWireSimLinkCollections"})},
             {KeyValues("OutputTracksGGTF", std::vector<std::string>{"OutputTracksGGTF"}),
-             KeyValues("Output3DHits", std::vector<std::string>{"GGTF_3DHits"}),
-             KeyValues("OutputAll3DHits", std::vector<std::string>{"GGTF_All3DHits"})}),
+             KeyValues("OutputSenseWireHits", std::vector<std::string>{"GGTF_SenseWireHits"}),
+             KeyValues("OutputAllSenseWireHits", std::vector<std::string>{"GGTF_AllSenseWireHits"})}),
         m_cfgMeta("GGTF_trackingConfig", Gaudi::DataHandle::Writer) {
-
     m_geoSvc = serviceLocator()->service(m_geoSvcName);
   }
 
@@ -207,53 +186,21 @@ struct GGTF_tracking final
   Gaudi::Property<int> m_maxHitsPerEvent{this, "MaxHitsPerEvent", 0, "Cap input hits per event (0=off)"};
   Gaudi::Property<int> m_onnxChunk{this, "OnnxChunk", 4096, "Chunk size for ONNX inference"};
 
-  // Physics 3D hits (per-track)
-  Gaudi::Property<bool> m_produce3DHits{this, "Produce3DHits", true, "Emit per-track GGTF_3DHits"};
-  Gaudi::Property<int>  m_max3DHitsPerEvent{this, "Max3DHitsPerEvent", 200000, "Cap per-track 3D hits per event"};
-  Gaudi::Property<int>  m_max3DPerTrack{this, "Max3DPerTrack", 20000, "Cap per-track 3D hits per track"};
+  // Output wires for fitter
+  Gaudi::Property<bool> m_produceSenseWireHits{this, "ProduceSenseWireHits", true,
+                                               "Emit per-track labeled SenseWireHits (GGTF_SenseWireHits)"};
 
-  // Debug all-input 3D hits (separate collection)
-  Gaudi::Property<bool> m_produceAll3DHits{this, "ProduceAll3DHits", false,
-                                          "If true, create GGTF_All3DHits for ALL flattened inputs (debug/coverage)."};
-  Gaudi::Property<int>  m_all3DHitsTypeValue{this, "All3DHitsTypeValue", -777,
-                                            "Type value for GGTF_All3DHits points (debug-only)."};
-  Gaudi::Property<int>  m_maxAll3DHitsPerEvent{this, "MaxAll3DHitsPerEvent", 300000,
-                                              "Cap debug all-input 3D hits per event"};
-
-  // Units / diagnostics
-  Gaudi::Property<double> m_threeDHitPosScale{
-      this, "ThreeDHitPosScale", 1.0,
-      "Scale applied to all written 3D hit positions. Covariances are scaled by scale^2 accordingly."};
-  Gaudi::Property<bool> m_debugPrint3DHitR{
-      this, "DebugPrint3DHitR", false,
-      "Print a few sample r=sqrt(x^2+y^2) values of produced 3D hits early in event"};
-
-  // Scalars propagation into 3D hits
-  Gaudi::Property<bool> m_propagateScalars{this, "PropagateScalars", true,
-                                          "Copy cellID/time/quality/EDep/EDepError into 3D hits (best effort)"};
-
-  // Fallback sigmas if errors are missing/bad
-  Gaudi::Property<double> m_defaultSigmaXYMM{this, "DefaultSigmaXYMM", 0.15, "Fallback sigma for planar-like XY [mm]"};
-  Gaudi::Property<double> m_defaultSigmaZMM{this, "DefaultSigmaZMM", 2.0, "Fallback sigma for Z / along-wire [mm]"};
+  // Debug all-input wires (separate collection)
+  Gaudi::Property<bool> m_produceAllSenseWireHits{this, "ProduceAllSenseWireHits", false,
+                                                  "If true, create GGTF_AllSenseWireHits for ALL used wire inputs (debug)."};
+  Gaudi::Property<int> m_allSenseWireHitsTypeValue{this, "AllSenseWireHitsTypeValue", -777,
+                                                   "Type value for GGTF_AllSenseWireHits hits (debug-only)."};
 
   // Wire handling robustness
   Gaudi::Property<bool>   m_dropWireIfAbsDTooLarge{this, "DropWireIfAbsDTooLarge", true,
                                                    "Drop wire digi from GGTF processing if |d| > MaxAbsDMM"};
   Gaudi::Property<double> m_maxAbsDMM{this, "MaxAbsDMM", 30.0,
                                       "Maximum allowed |distanceToWire| [mm] before dropping (if enabled)"};
-
-  // Wire covariance model: anisotropy in local basis
-  Gaudi::Property<double> m_wireSigmaTScale{this, "WireSigmaTScale", 10.0,
-                                            "Tangential sigma multiplier: sigma_t = max(WireSigmaTMinMM, WireSigmaTScale*sigma_r)"};
-  Gaudi::Property<double> m_wireSigmaTMinMM{this, "WireSigmaTMinMM", 2.0,
-                                            "Minimum tangential sigma [mm] for wire 3D hits"};
-  Gaudi::Property<double> m_wireSigmaTMaxMM{this, "WireSigmaTMaxMM", 100.0,
-                                            "Maximum tangential sigma [mm] for wire 3D hits (safety cap)"};
-
-  // Choose wire 3D point position mode (default midpoint for stability)
-  // 0 = midpoint (recommended), 1 = wire center (wp), 2 = legacy projected (NOT recommended; not implemented here)
-  Gaudi::Property<int> m_wire3DMode{this, "Wire3DMode", 0,
-                                    "Wire 3D hit position: 0=midpoint (recommended), 1=wire center (wp)."};
 
   // Label-0 guards (unchanged)
   Gaudi::Property<int> m_zeroMinSizeKeep{
@@ -324,15 +271,11 @@ struct GGTF_tracking final
     auto [rss, hwm] = readRSSkB();
     info() << "GGTF_tracking init | model=" << m_modelPath.value()
            << " | Tbeta=" << m_tbeta.value() << " | Td=" << m_td.value()
-           << " | Produce3DHits=" << (m_produce3DHits.value() ? "true" : "false")
-           << " | ProduceAll3DHits=" << (m_produceAll3DHits.value() ? "true" : "false")
-           << " | Wire3DMode=" << m_wire3DMode.value()
-           << " | ThreeDHitPosScale=" << m_threeDHitPosScale.value()
+           << " | ProduceSenseWireHits=" << (m_produceSenseWireHits.value() ? "true" : "false")
+           << " | ProduceAllSenseWireHits=" << (m_produceAllSenseWireHits.value() ? "true" : "false")
+           << " | AllSenseWireHitsTypeValue=" << m_allSenseWireHitsTypeValue.value()
            << " | MaxAbsDMM=" << m_maxAbsDMM.value()
            << " | DropWireIfAbsDTooLarge=" << (m_dropWireIfAbsDTooLarge.value() ? "true" : "false")
-           << " | WireSigmaTScale=" << m_wireSigmaTScale.value()
-           << " | WireSigmaTMinMM=" << m_wireSigmaTMinMM.value()
-           << " | WireSigmaTMaxMM=" << m_wireSigmaTMaxMM.value()
            << " | OnnxChunk=" << m_onnxChunk.value()
            << " | MaxHitsPerEvent=" << m_maxHitsPerEvent.value()
            << " | ZeroMinSizeKeep=" << m_zeroMinSizeKeep.value()
@@ -359,23 +302,13 @@ struct GGTF_tracking final
       cfg << ",\"ModelPath\":\"" << m_modelPath.value() << "\"";
       cfg << ",\"Tbeta\":" << m_tbeta.value();
       cfg << ",\"Td\":" << m_td.value();
-      cfg << ",\"Produce3DHits\":" << (m_produce3DHits.value() ? "true" : "false");
-      cfg << ",\"ProduceAll3DHits\":" << (m_produceAll3DHits.value() ? "true" : "false");
-      cfg << ",\"All3DHitsTypeValue\":" << m_all3DHitsTypeValue.value();
-      cfg << ",\"ThreeDHitPosScale\":" << m_threeDHitPosScale.value();
-      cfg << ",\"Wire3DMode\":" << m_wire3DMode.value();
+      cfg << ",\"ProduceSenseWireHits\":" << (m_produceSenseWireHits.value() ? "true" : "false");
+      cfg << ",\"ProduceAllSenseWireHits\":" << (m_produceAllSenseWireHits.value() ? "true" : "false");
+      cfg << ",\"AllSenseWireHitsTypeValue\":" << m_allSenseWireHitsTypeValue.value();
       cfg << ",\"DropWireIfAbsDTooLarge\":" << (m_dropWireIfAbsDTooLarge.value() ? "true" : "false");
       cfg << ",\"MaxAbsDMM\":" << m_maxAbsDMM.value();
-      cfg << ",\"WireSigmaTScale\":" << m_wireSigmaTScale.value();
-      cfg << ",\"WireSigmaTMinMM\":" << m_wireSigmaTMinMM.value();
-      cfg << ",\"WireSigmaTMaxMM\":" << m_wireSigmaTMaxMM.value();
       cfg << ",\"OnnxChunk\":" << m_onnxChunk.value();
       cfg << ",\"MaxHitsPerEvent\":" << m_maxHitsPerEvent.value();
-      cfg << ",\"Max3DHitsPerEvent\":" << m_max3DHitsPerEvent.value();
-      cfg << ",\"Max3DPerTrack\":" << m_max3DPerTrack.value();
-      cfg << ",\"MaxAll3DHitsPerEvent\":" << m_maxAll3DHitsPerEvent.value();
-      cfg << ",\"DefaultSigmaXYMM\":" << m_defaultSigmaXYMM.value();
-      cfg << ",\"DefaultSigmaZMM\":" << m_defaultSigmaZMM.value();
       cfg << ",\"DchName\":\"" << m_dchName.value() << "\"";
       cfg << ",\"ZeroMinSizeKeep\":" << m_zeroMinSizeKeep.value();
       cfg << ",\"MinWireFracKeep\":" << m_minWireFracKeep.value();
@@ -401,7 +334,7 @@ struct GGTF_tracking final
   }
 
   // ---------- main ----------
-  std::tuple<extension::TrackCollection, edm4hep::TrackerHit3DCollection, edm4hep::TrackerHit3DCollection>
+  std::tuple<extension::TrackCollection, extension::SenseWireHitCollection, extension::SenseWireHitCollection>
   operator()(const std::vector<const edm4hep::TrackerHitPlaneCollection*>& inputPlanarHitCollections,
              const std::vector<const extension::SenseWireHitCollection*>& inputWireHitCollections,
              const std::vector<const extension::SenseWireHitSimTrackerHitLinkCollection*>& inputWireSimLinkCollections) const override {
@@ -409,9 +342,9 @@ struct GGTF_tracking final
     ++m_evt;
     StepTimer t_all;
 
-    extension::TrackCollection      outputTracks;
-    edm4hep::TrackerHit3DCollection output3D;      // per-track physics hits
-    edm4hep::TrackerHit3DCollection outputAll3D;   // debug all-input hits
+    extension::TrackCollection         outputTracks;
+    extension::SenseWireHitCollection  outputWires;     // per-track labeled wires for fitter
+    extension::SenseWireHitCollection  outputAllWires;  // debug all-input wires (optional)
 
     auto logMem = [&](const char* tag) {
       auto [rss, hwm] = readRSSkB();
@@ -475,30 +408,13 @@ struct GGTF_tracking final
       nEst = m_maxHitsPerEvent;
     }
 
-    std::vector<float>   gInputs;
-    std::vector<int64_t> tagType, tagA, tagB;   // type: 0=planar, 1=wire; A=collection index, B=hit index
+    std::vector<float>   gInputs;                 // (N,7)
+    std::vector<int64_t> tagType, tagA, tagB;     // type: 0=planar, 1=wire; A=collection index, B=hit index
     gInputs.reserve(std::max<int64_t>(nEst * 7, 128));
     tagType.reserve(std::max<int64_t>(nEst, 128));
     tagA.reserve(tagType.capacity());
     tagB.reserve(tagType.capacity());
 
-    // midCache: the ONNX position used for embedding (planar: pos, wire: Mmid)
-    std::vector<TVector3> midCache;
-    midCache.reserve(tagType.capacity());
-
-    // For wires: store local orthonormal basis (xprime,yprime,dir) and errors.
-    // Vectors aligned with flatIdx; for non-wire entries, we store defaults.
-    std::vector<TVector3> basis0, basis1, basis2;
-    std::vector<float>    wireSigmaR_mm, wireSigmaZ_mm;
-    std::vector<float>    wireAbsD_mm;
-    basis0.reserve(tagType.capacity());
-    basis1.reserve(tagType.capacity());
-    basis2.reserve(tagType.capacity());
-    wireSigmaR_mm.reserve(tagType.capacity());
-    wireSigmaZ_mm.reserve(tagType.capacity());
-    wireAbsD_mm.reserve(tagType.capacity());
-
-    // counters
     int64_t droppedTruth = 0, droppedAbsD = 0;
 
     auto push_planar = [&](int ic, int ih, const edm4hep::TrackerHitPlane& h) {
@@ -507,17 +423,6 @@ struct GGTF_tracking final
       tagType.push_back(0);
       tagA.push_back(ic);
       tagB.push_back(ih);
-
-      TVector3 v(p.x, p.y, p.z);
-      midCache.emplace_back(v);
-
-      // Default basis for planar-like: use global axes
-      basis0.emplace_back(1, 0, 0);
-      basis1.emplace_back(0, 1, 0);
-      basis2.emplace_back(0, 0, 1);
-      wireSigmaR_mm.emplace_back(float(m_defaultSigmaXYMM.value()));
-      wireSigmaZ_mm.emplace_back(float(m_defaultSigmaZMM.value()));
-      wireAbsD_mm.emplace_back(0.f);
     };
 
     auto push_wire = [&](int ic, int ih, const extension::SenseWireHit& h) {
@@ -527,8 +432,8 @@ struct GGTF_tracking final
         return;
       }
 
-      const auto  wp   = h.getPosition();
-      const double d   = double(h.getDistanceToWire());
+      const auto  wp    = h.getPosition();
+      const double d    = double(h.getDistanceToWire());
       const double absd = std::abs(d);
 
       // Optional drop on absurd |d| (avoid forcing/clamping)
@@ -540,64 +445,42 @@ struct GGTF_tracking final
       const double phi = double(h.getWireAzimuthalAngle());
       const double st  = double(h.getWireStereoAngle());
 
-      // Wire direction
+      // Wire direction (unit)
       TVector3 dir(0, 0, 1);
       dir.RotateX(st);
       dir.RotateZ(phi);
-      dir = safe_unit(dir, TVector3(0,0,1));
+      dir = safe_unit(dir, TVector3(0, 0, 1));
 
-      // Local basis in plane perpendicular-ish to wire:
-      // xprime is chosen so that z component cancels to keep it numerically stable;
-      // yprime completes right-handed system.
+      // Local xprime (stable), then yprime
       TVector3 xprime(1.0, 0.0, -dir.X() / std::max(1e-12, dir.Z()));
-      xprime = safe_unit(xprime, TVector3(1,0,0));
+      xprime = safe_unit(xprime, TVector3(1, 0, 0));
       TVector3 yprime = dir.Cross(xprime);
-      yprime = safe_unit(yprime, TVector3(0,1,0));
-      // Re-orthonormalize xprime to be safe
-      xprime = safe_unit(yprime.Cross(dir), TVector3(1,0,0));
+      yprime = safe_unit(yprime, TVector3(0, 1, 0));
+      xprime = safe_unit(yprime.Cross(dir), TVector3(1, 0, 0));
 
-      // Compute endpoints in the local xprime direction at +/- d (as originally done)
+      // Build a derived midpoint Mmid for ONNX embedding using +/-d along xprime around the wire point.
       const TVector3 wpos(wp.x, wp.y, wp.z);
       const TVector3 L = wpos + xprime * (-d);
       const TVector3 R = wpos + xprime * (+d);
       const TVector3 Mmid = 0.5 * (L + R);
-
       if (!finite_vec3(Mmid)) return;
 
-      // ONNX input: position = Mmid, and wire direction vector = (R-L)
+      // ONNX input: [x,y,z, isPlanar(0), wireDirVec(x,y,z)]
       const TVector3 dvec = (R - L);
       gInputs.insert(gInputs.end(),
                      {float(Mmid.X()), float(Mmid.Y()), float(Mmid.Z()),
                       0.f,
-                      float(dvec.X()),
-                      float(dvec.Y()),
-                      float(dvec.Z())});
+                      float(dvec.X()), float(dvec.Y()), float(dvec.Z())});
       tagType.push_back(1);
       tagA.push_back(ic);
       tagB.push_back(ih);
-
-      midCache.emplace_back(Mmid);
-
-      // store basis and errors
-      basis0.emplace_back(xprime);
-      basis1.emplace_back(yprime);
-      basis2.emplace_back(dir);
-
-      double sR = double(h.getDistanceToWireError());
-      double sZ = double(h.getPositionAlongWireError());
-      if (!(sR > 0.0) || !std::isfinite(sR)) sR = m_defaultSigmaXYMM.value();
-      if (!(sZ > 0.0) || !std::isfinite(sZ)) sZ = m_defaultSigmaZMM.value();
-
-      wireSigmaR_mm.emplace_back(float(sR));
-      wireSigmaZ_mm.emplace_back(float(sZ));
-      wireAbsD_mm.emplace_back(float(absd));
     };
 
     {
       StepTimer t_flat;
       int ic = 0;
 
-      // Planar (safe if empty — you said you have none)
+      // Planar (safe if empty)
       for (auto c : inputPlanarHitCollections) {
         if (!c) { ++ic; continue; }
         for (int i = 0, n = c->size(); i < n; ++i) {
@@ -608,7 +491,7 @@ struct GGTF_tracking final
         if (m_maxHitsPerEvent > 0 && (int)tagType.size() >= m_maxHitsPerEvent) break;
       }
 
-      // Wires (your main case)
+      // Wires (main case)
       ic = 0;
       for (auto c : inputWireHitCollections) {
         if (!c) { ++ic; continue; }
@@ -628,178 +511,36 @@ struct GGTF_tracking final
 
     const int64_t nHits = (int64_t)tagType.size();
     if (nHits == 0) {
-      return std::make_tuple(std::move(outputTracks), std::move(output3D), std::move(outputAll3D));
+      return std::make_tuple(std::move(outputTracks), std::move(outputWires), std::move(outputAllWires));
     }
     logMem("after-flatten");
 
-    // -------- 3D hit helpers (positions + cov scaling) --------
-    const double posScale = m_threeDHitPosScale.value();
-    const double covScale = posScale * posScale;
-
-    int dbgPrinted = 0;
-    auto maybe_dbg_print_r = [&](const edm4hep::Vector3d& p, const char* tag) {
-      if (!m_debugPrint3DHitR.value()) return;
-      if (dbgPrinted >= 6) return;
-      const double r = std::sqrt(p.x * p.x + p.y * p.y);
-      info() << "[evt " << m_evt << "] DBG3D(" << tag << "): x=" << p.x << " y=" << p.y << " z=" << p.z
-             << " r=" << r << " (ThreeDHitPosScale=" << posScale << ")" << endmsg;
-      ++dbgPrinted;
-    };
-
-    auto make_position = [&](double x, double y, double z) -> edm4hep::Vector3d {
-      return edm4hep::Vector3d{posScale * x, posScale * y, posScale * z};
-    };
-
-    // Planar 3D (rare/none for you) — keep safe/fallback
-    auto add_planar_3d = [&](const edm4hep::TrackerHitPlane& hp,
-                             int typeValue,
-                             edm4hep::TrackerHit3DCollection& out) -> bool {
-      if (!m_produce3DHits.value()) return false;
-      auto h = out.create();
-      const auto p = hp.getPosition();
-      const auto sp = make_position(p.x, p.y, p.z);
-      h.setPosition(sp);
-      maybe_dbg_print_r(sp, "planar");
-
-      if (m_propagateScalars.value()) {
-        try { h.setCellID(hp.getCellID()); } catch (...) {}
-        try { h.setTime(hp.getTime()); } catch (...) { h.setTime(0.f); }
-        try { h.setQuality(hp.getQuality()); } catch (...) {}
-        try { h.setEDep(hp.getEDep()); } catch (...) { h.setEDep(0.f); }
-        try { h.setEDepError(hp.getEDepError()); } catch (...) { h.setEDepError(0.f); }
-      }
-      try { h.setType(typeValue); } catch (...) {}
-
-      const double sx = std::max(1e-6, m_defaultSigmaXYMM.value());
-      const double sz = std::max(1e-6, m_defaultSigmaZMM.value());
-      // isotropic fallback
-      h.setCovMatrix(pack_cov3f(covScale*sx*sx, 0, 0, covScale*sx*sx, 0, covScale*sz*sz));
-      return true;
-    };
-
-    // Wire 3D (physics): midpoint by default + anisotropic covariance in local basis
-    auto add_wire_3d = [&](const extension::SenseWireHit& hw,
-                           int64_t flatIdx,
-                           int typeValue,
-                           edm4hep::TrackerHit3DCollection& out) -> bool {
-      if (!m_produce3DHits.value()) return false;
-
-      auto h = out.create();
-
-      // Choose position mode
-      TVector3 P;
-      if (m_wire3DMode.value() == 1) {
-        const auto wp = hw.getPosition();
-        P = TVector3(wp.x, wp.y, wp.z);
-      } else {
-        // recommended: midpoint used for ONNX
-        P = midCache[flatIdx];
-      }
-      if (!finite_vec3(P)) return false;
-
-      const auto sp = make_position(P.X(), P.Y(), P.Z());
-      h.setPosition(sp);
-      maybe_dbg_print_r(sp, "wire");
-
-      if (m_propagateScalars.value()) {
-        try { h.setCellID(hw.getCellID()); } catch (...) {}
-        try { h.setTime(hw.getTime()); } catch (...) { h.setTime(0.f); }
-        try { h.setQuality(hw.getQuality()); } catch (...) {}
-        try { h.setEDep(hw.getEDep()); } catch (...) { h.setEDep(0.f); }
-        try { h.setEDepError(hw.getEDepError()); } catch (...) { h.setEDepError(0.f); }
-      }
-      try { h.setType(typeValue); } catch (...) {}
-
-      // Local basis (xprime,yprime,dir)
-      const TVector3 e0 = safe_unit(basis0[flatIdx], TVector3(1,0,0)); // measured drift direction
-      const TVector3 e1 = safe_unit(basis1[flatIdx], TVector3(0,1,0)); // unmeasured tangential
-      const TVector3 e2 = safe_unit(basis2[flatIdx], TVector3(0,0,1)); // along-wire
-
-      double sR = double(wireSigmaR_mm[flatIdx]);
-      double sZ = double(wireSigmaZ_mm[flatIdx]);
-      if (!(sR > 0.0) || !std::isfinite(sR)) sR = m_defaultSigmaXYMM.value();
-      if (!(sZ > 0.0) || !std::isfinite(sZ)) sZ = m_defaultSigmaZMM.value();
-
-      // Inflate tangential uncertainty (unmeasured by drift)
-      double sT = m_wireSigmaTScale.value() * sR;
-      sT = std::max(sT, m_wireSigmaTMinMM.value());
-      sT = std::min(sT, m_wireSigmaTMaxMM.value());
-      sT = std::max(1e-6, sT);
-      sR = std::max(1e-6, sR);
-      sZ = std::max(1e-6, sZ);
-
-      auto Cmm = cov_from_basis_diag(e0, e1, e2, sR, sT, sZ);
-
-      // Apply position scaling to covariance (units consistency)
-      Cmm[0] *= float(covScale);
-      Cmm[1] *= float(covScale);
-      Cmm[2] *= float(covScale);
-      Cmm[3] *= float(covScale);
-      Cmm[4] *= float(covScale);
-      Cmm[5] *= float(covScale);
-
-      h.setCovMatrix(Cmm);
-      return true;
-    };
-
-    // Debug “all-input” 3D hits (separate collection; never pollutes physics)
-    if (m_produceAll3DHits.value()) {
-      StepTimer t_dbg3d;
+    // -------- optional debug: ALL used wire inputs -> outputAllWires --------
+    if (m_produceAllSenseWireHits.value()) {
+      StepTimer t_dbg;
       int made = 0;
-      const int typeValue = m_all3DHitsTypeValue.value();
+      const int typeValue = m_allSenseWireHitsTypeValue.value();
 
       for (int64_t flatIdx = 0; flatIdx < nHits; ++flatIdx) {
-        if (m_maxAll3DHitsPerEvent.value() > 0 && made >= m_maxAll3DHitsPerEvent.value()) break;
-
-        const int64_t t  = tagType[flatIdx];
+        if (tagType[flatIdx] != 1) continue; // wires only
         const int64_t ia = tagA[flatIdx];
         const int64_t ib = tagB[flatIdx];
 
-        if (t == 0) {
-          // planar
-          const auto& hp = (*inputPlanarHitCollections[ia])[int(ib)];
-          if (add_planar_3d(hp, typeValue, outputAll3D)) ++made;
-        } else {
-          // wire (use midpoint for debug dots)
-          const auto& hw = (*inputWireHitCollections[ia])[int(ib)];
-          // Make a 3D hit at midpoint, with the same covariance logic (fine for debug)
-          if (!m_produce3DHits.value()) continue;
-          auto h = outputAll3D.create();
-          const TVector3 P = midCache[flatIdx];
-          if (!finite_vec3(P)) continue;
-          const auto sp = make_position(P.X(), P.Y(), P.Z());
-          h.setPosition(sp);
-          maybe_dbg_print_r(sp, "all-wire");
+        if (ia < 0 || ia >= (int64_t)inputWireHitCollections.size()) continue;
+        const auto* coll = inputWireHitCollections[ia];
+        if (!coll) continue;
+        if (ib < 0 || ib >= (int64_t)coll->size()) continue;
 
-          if (m_propagateScalars.value()) {
-            try { h.setCellID(hw.getCellID()); } catch (...) {}
-            try { h.setTime(hw.getTime()); } catch (...) { h.setTime(0.f); }
-            try { h.setQuality(hw.getQuality()); } catch (...) {}
-            try { h.setEDep(hw.getEDep()); } catch (...) { h.setEDep(0.f); }
-            try { h.setEDepError(hw.getEDepError()); } catch (...) { h.setEDepError(0.f); }
-          }
-          try { h.setType(typeValue); } catch (...) {}
-
-          // reuse anisotropic cov (scaled)
-          const TVector3 e0 = safe_unit(basis0[flatIdx], TVector3(1,0,0));
-          const TVector3 e1 = safe_unit(basis1[flatIdx], TVector3(0,1,0));
-          const TVector3 e2 = safe_unit(basis2[flatIdx], TVector3(0,0,1));
-          double sR = double(wireSigmaR_mm[flatIdx]); if (!(sR > 0.0)) sR = m_defaultSigmaXYMM.value();
-          double sZ = double(wireSigmaZ_mm[flatIdx]); if (!(sZ > 0.0)) sZ = m_defaultSigmaZMM.value();
-          double sT = std::min(std::max(m_wireSigmaTScale.value()*sR, m_wireSigmaTMinMM.value()), m_wireSigmaTMaxMM.value());
-          sR = std::max(1e-6, sR); sT = std::max(1e-6, sT); sZ = std::max(1e-6, sZ);
-          auto Cmm = cov_from_basis_diag(e0, e1, e2, sR, sT, sZ);
-          Cmm[0] *= float(covScale); Cmm[1] *= float(covScale); Cmm[2] *= float(covScale);
-          Cmm[3] *= float(covScale); Cmm[4] *= float(covScale); Cmm[5] *= float(covScale);
-          h.setCovMatrix(Cmm);
-
-          ++made;
-        }
+        const auto& hw = (*coll)[int(ib)];
+        auto out = outputAllWires.create();
+        copy_sensewirehit(hw, out);
+        out.setType(typeValue);
+        ++made;
       }
 
-      info() << "[evt " << m_evt << "] ProduceAll3DHits: created3D=" << made
-             << " (collection=GGTF_All3DHits, type=" << typeValue << ")"
-             << " in " << t_dbg3d.ms() << " ms" << endmsg;
+      info() << "[evt " << m_evt << "] ProduceAllSenseWireHits: created=" << made
+             << " (collection=GGTF_AllSenseWireHits, type=" << typeValue << ")"
+             << " in " << t_dbg.ms() << " ms" << endmsg;
     }
 
     // -------- ONNX (chunked) --------
@@ -812,11 +553,14 @@ struct GGTF_tracking final
       while (done < nHits) {
         const int64_t take = std::min<int64_t>(CH, nHits - done);
         const std::vector<int64_t> shape{take, 7};
-        Ort::Value in = Ort::Value::CreateTensor<float>(*m_fInfo,
-                                                        const_cast<float*>(gInputs.data() + done * 7),
-                                                        take * 7,
-                                                        shape.data(),
-                                                        shape.size());
+
+        Ort::Value in = Ort::Value::CreateTensor<float>(
+            *m_fInfo,
+            const_cast<float*>(gInputs.data() + done * 7),
+            take * 7,
+            shape.data(),
+            shape.size());
+
         auto outs = m_fSession->Run(Ort::RunOptions{nullptr},
                                     m_inNames.data(),
                                     &in,
@@ -827,6 +571,7 @@ struct GGTF_tracking final
         std::copy(outptr, outptr + 4 * take, embed.data() + 4 * done);
         done += take;
       }
+
       std::vector<float>().swap(gInputs);
       info() << "[evt " << m_evt << "] onnx: nHits=" << nHits << " in " << t_onnx.ms() << " ms" << endmsg;
     }
@@ -872,46 +617,41 @@ struct GGTF_tracking final
     invIdx = torch::Tensor();
     logMem("after-bucket");
 
-    // -------- assemble tracks + per-track 3D hits --------
-    int total3D = 0;
-
+    // -------- assemble tracks + per-track labeled SenseWireHits --------
     auto add_hit_to_track = [&](extension::MutableTrack& trk,
                                 int64_t flatIdx,
-                                int labelValue,
-                                int& made3D_for_track) {
+                                int labelValue) {
       const int64_t t  = tagType[flatIdx];
       const int64_t ia = tagA[flatIdx];
       const int64_t ib = tagB[flatIdx];
 
       if (t == 0) {
-        // planar (likely none)
-        const auto& hp = (*inputPlanarHitCollections[ia])[int(ib)];
-        if (m_produce3DHits.value() &&
-            (m_max3DHitsPerEvent.value() == 0 || total3D < m_max3DHitsPerEvent.value()) &&
-            (m_max3DPerTrack.value() == 0 || made3D_for_track < m_max3DPerTrack.value())) {
-          if (add_planar_3d(hp, labelValue, output3D)) {
-            ++total3D;
-            ++made3D_for_track;
-          }
-        }
+        // planar (likely none) - keep attaching to Track for completeness
+        if (ia < 0 || ia >= (int64_t)inputPlanarHitCollections.size()) return;
+        const auto* coll = inputPlanarHitCollections[ia];
+        if (!coll) return;
+        if (ib < 0 || ib >= (int64_t)coll->size()) return;
+        const auto& hp = (*coll)[int(ib)];
         trk.addToTrackerHits(hp);
         return;
       }
 
       // wire
-      const auto& hw = (*inputWireHitCollections[ia])[int(ib)];
+      if (ia < 0 || ia >= (int64_t)inputWireHitCollections.size()) return;
+      const auto* coll = inputWireHitCollections[ia];
+      if (!coll) return;
+      if (ib < 0 || ib >= (int64_t)coll->size()) return;
 
-      // per-track 3D hit for fitter/visualization
-      if (m_produce3DHits.value() &&
-          (m_max3DHitsPerEvent.value() == 0 || total3D < m_max3DHitsPerEvent.value()) &&
-          (m_max3DPerTrack.value() == 0 || made3D_for_track < m_max3DPerTrack.value())) {
-        if (add_wire_3d(hw, flatIdx, labelValue, output3D)) {
-          ++total3D;
-          ++made3D_for_track;
-        }
+      const auto& hw = (*coll)[int(ib)];
+
+      // Output labeled wire hit (for fitter), if enabled
+      if (m_produceSenseWireHits.value()) {
+        auto out = outputWires.create();
+        copy_sensewirehit(hw, out);
+        out.setType(labelValue); // IMPORTANT: cluster label for grouping in fitter
       }
 
-      // always attach original wire hit to track (as upstream expects)
+      // Always attach original wire hit to track (as upstream expects)
       trk.addToTrackerHits(hw);
     };
 
@@ -926,7 +666,7 @@ struct GGTF_tracking final
         const int labelValue = uniques_cpu[li].item<int>();
         const auto& vec = groups[li];
 
-        // label-0 guards as before (still useful if ONNX produces zeros)
+        // label-0 guards as before
         if (labelValue == 0) {
           if (m_skipZeroAlways.value()) continue;
 
@@ -945,19 +685,18 @@ struct GGTF_tracking final
         auto trk = outputTracks.create();
         trk.setType(labelValue);
 
-        int made3D_for_track = 0;
-        for (int64_t k : vec) add_hit_to_track(trk, k, labelValue, made3D_for_track);
+        for (int64_t k : vec) add_hit_to_track(trk, k, labelValue);
         ++nTracks;
       }
 
       info() << "[evt " << m_evt << "] build: tracks=" << nTracks
-             << " physics3D=" << total3D
+             << " | outSenseWireHits=" << (int)outputWires.size()
              << " in " << t_build.ms() << " ms" << endmsg;
     }
 
     logMem("after-build");
     info() << "[evt " << m_evt << "] TOTAL " << t_all.ms() << " ms" << endmsg;
-    return std::make_tuple(std::move(outputTracks), std::move(output3D), std::move(outputAll3D));
+    return std::make_tuple(std::move(outputTracks), std::move(outputWires), std::move(outputAllWires));
   }
 
   StatusCode finalize() override {

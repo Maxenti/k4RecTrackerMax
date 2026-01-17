@@ -1,17 +1,18 @@
 #!/bin/bash
-# local_chain.sh — run the k4run stage locally (digi → ggtf → fit) + stamp provenance metadata
+# local_chain.sh — run locally (digi → ggtf → fit) + stamp provenance metadata
+# Updated for: DCHdigi_v02 + GGTF_tracking labeled SenseWireHits + GenFit2DCHFitter
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/ddsim_mu-_p10GeV_eta1p5.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_15_2026/Test_pt1.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_16_2026/eta_+0.50/gun_eta+0.50_pt53.183.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_16_2026/eta_+0.50/reco_eta+0.50_pt53.183_23_32.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
 DEFAULT_DCH_NAME="DCH_v2"
 ###########################################
 
-# CLI overrides (optional)
+# CLI overrides (optional positional args)
 INPUT="${1:-$DEFAULT_INPUT}"
 OUTPUT="${2:-$DEFAULT_OUTPUT}"
 MODEL_SPEC="${3:-$DEFAULT_MODEL_SPEC}"
@@ -21,89 +22,71 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # ----------------- pipeline controls -----------------
 : "${STAGE:=fit}"              # digi|ggtf|fit
-: "${FITTER:=genfit2}"         # genfit2|simple|threepoint|none
+: "${FITTER:=genfit2}"         # genfit2|none
 : "${FIT_OUT:=auto}"
 
 # ----------------- logging & runtime -----------------
 : "${GGTF_LOG:=DEBUG}"         # INFO|DEBUG
-: "${PRODUCE_3DHITS:=1}"       # 0|1
-
-# IMPORTANT: default off so you don’t accidentally clip “all hits” studies
-: "${MAX_HITS:=0}"             # cap input hits/event (0=off)
-
+: "${FITTER_LOG:=DEBUG}"       # INFO|DEBUG
 : "${TIMEOUT_K4RUN:=0}"        # seconds (0=off)
 
-# GGTF clustering thresholds
+# IMPORTANT: default off so you don’t accidentally clip studies
+: "${MAX_HITS:=0}"             # cap input hits/event (0=off)
+
+# ----------------- GGTF clustering thresholds -----------------
 : "${TBETA:=0.6}"
 : "${TD:=0.3}"
 
-# GGTF runtime
+# Runtime / ONNX slicing
 : "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
-: "${WIRE_GATE_MM:=2.0}"       # wire→circle gate [mm]
-: "${MAX_3D_PER_EVT:=200000}"  # cap spacepoints per event
-: "${MAX_3D_PER_TRK:=20000}"   # cap spacepoints per track
 
-# ----------------- GGTF debug/coverage/unit knobs (TRI-STATE) -----------------
-# Empty => do NOT pass any flag => do NOT override GGTF_tracking.cpp defaults.
-: "${GGTF_3D_POS_SCALE:=}"               # e.g. 10.0 if cm->mm mismatch (empty => don’t pass)
-: "${GGTF_PRODUCE_ALL_3DHITS:=}"         # empty|1|0
-: "${GGTF_ALL_3DHITS_ONLY:=}"            # empty|1|0
-: "${GGTF_ALL_3DHITS_TYPE:=}"            # empty => don’t pass
-: "${GGTF_APPLY_WIRE_GATE_TO_3DHITS:=}"  # empty|1|0
-: "${GGTF_DEBUG_PRINT_3DHIT_R:=}"        # empty|1|0
+# ----------------- NEW: GGTF SenseWireHits output controls -----------------
+: "${GGTF_PRODUCE_SENSEWIREHITS:=1}"      # 1 => emit GGTF_SenseWireHits (for fitter)
+: "${GGTF_PRODUCE_ALL_SENSEWIREHITS:=0}"  # 1 => emit GGTF_AllSenseWireHits debug stream
+: "${GGTF_ALL_SENSEWIREHITS_TYPE:=-777}"  # type value for debug all-stream
 
-# GenFit2 “stability profile”
-: "${GF_POS_SCALE:=0.1}"           # mm→cm internally
-: "${GF_LEN2M:=0.01}"              # cm→m
-: "${GF_HIT_SIGMA_XY:=0.8}"        # mm
-: "${GF_HIT_SIGMA_Z:=6.0}"         # mm
-: "${GF_SEED_POS_SIGMA:=100}"      # mm
-: "${GF_SEED_MOM_SIGMA:=10.0}"     # GeV
-: "${GF_DEDUP_TOL:=0.50}"          # mm
-: "${GF_USE_MAT:=0}"               # 0/1
-: "${GF_SEED_PT_MIN:=0.2}"
-: "${GF_SEED_PT_MAX:=200.0}"
-: "${GF_SEED_P_MIN:=1.2}"          # GeV
+# ----------------- NEW: wire hygiene / safety -----------------
+: "${GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE:=1}"  # drop insane drift distances
+: "${GGTF_MAX_ABS_D_MM:=30.0}"               # |distanceToWire| above this is dropped (if enabled)
 
-# NEW: explicitly control sort/dedup switches (matches python CLI)
-: "${GF_SORT_HITS:=1}"             # 1 => --gf-sortHits, 0 => --no-gf-sortHits
-: "${GF_DEDUP:=1}"                 # 1 => --gf-dedup,    0 => --no-gf-dedup
+# ----------------- label-0 handling -----------------
+: "${GGTF_ZERO_MIN:=8}"
+: "${GGTF_WIRE_FRAC:=0.80}"
+: "${GGTF_PROMOTE_ZERO:=1}"
+: "${GGTF_SKIP_ZERO_SMALL:=1}"
+: "${GGTF_SKIP_ZERO_ALWAYS:=0}"
 
-# Fitter grouping / fallback / retry (GenFit2)
-: "${GF_MIN_GROUP:=7}"
-: "${GF_USE_FALLBACK:=1}"
-: "${GF_FALLBACK_EPS_CM:=4}"
-: "${GF_FALLBACK_MINPTS:=6}"
-: "${GF_RETRY:=1}"
-: "${GF_RETRY_MEAS_INFL:=5.0}"
-: "${GF_RETRY_SEED_POS:=5.0}"
-: "${GF_RETRY_SEED_MOM:=5.0}"
-: "${GF_MAX_MEAS_PER_GROUP:=0}"
+# ----------------- GGTF truth-PDG wire gating -----------------
+# Safer default OFF unless explicitly debugging truth-gated behavior
+: "${GGTF_TRUTH_GATE:=0}"     # 1=on, 0=off
+: "${GGTF_KEEP_PDG:=13}"
+: "${GGTF_DROP_UNLINKED:=1}"
+# Safer default: empty => let python auto-guess by digi version
+: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"
 
-# GenFit2 residual filter knobs
-: "${GF_RES_FILTER:=1}"        # 1=on, 0=off
-: "${GF_RES_MAX_PULL:=5.0}"
-: "${GF_RES_MAX_CHI2:=25.0}"
-
-# ThreePointFitter args
-: "${FITTER_LOG:=DEBUG}"
-: "${TP_MIN_DELTA_PHI:=0.10}"
-: "${TP_MIN_CHORD_MM:=10}"
-: "${TP_MIN_HITS:=6}"
-: "${TP_MIN_RADIUS_MM:=50}"
-: "${TP_FIT_TANLAMBDA:=true}"     # true|false
-: "${TP_PRINT_DIAG:=false}"       # true|false
-: "${TP_DIAG_EVERY_N:=100}"
-
-# Field / PDG
+# ----------------- GenFit2 knobs -----------------
+: "${GF_USE_MAT:=0}"           # 0/1  (if 1, compact XML must exist)
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
-# Digi_v02 settings
+: "${GF_SORT_HITS:=1}"         # 1 => --gf-sortHits, 0 => --no-gf-sortHits
+: "${GF_DEDUP:=1}"             # 1 => --gf-dedup,    0 => --no-gf-dedup
+: "${GF_DEDUP_TOL:=0.10}"      # mm
+
+: "${GF_MIN_GROUP:=6}"
+: "${GF_MAX_MEAS_PER_GROUP:=0}"
+
+# Optional z-outlier filter (off by default)
+: "${GF_FILTER_Z_OUTLIERS:=0}"
+: "${GF_Z_OUTLIER_ABS_MM:=80.0}"
+: "${GF_Z_OUTLIER_NSIGMA:=3.5}"
+: "${GF_Z_OUTLIER_MIN_FRAC_KEEP:=0.5}"
+
+# ----------------- Digi_v02 settings -----------------
 : "${DCH_DIGI_VERSION:=v02}"       # v01|v02
 : "${DCH_DEADTIME_NS:=450.0}"
 : "${DCH_XY_MM:=0.10}"
-: "${DCH_Z_MM:=1.0}"
+: "${DCH_Z_MM:=30.0}"
 : "${DCH_GAS_TYPE:=0}"
 : "${DCH_DRIFT_VEL_UM_NS:=-1.0}"
 : "${DCH_SIGNAL_VEL_MM_NS:=$(python3 - <<'PY'
@@ -111,22 +94,7 @@ print((2.0/3.0)*299792458e-6)
 PY
 )}"
 : "${DCH_READOUT_START_NS:=1.0}"
-: "${DCH_READOUT_DUR_NS:=450.0}"
-
-# label-0 handling
-: "${GGTF_ZERO_MIN:=8}"
-: "${GGTF_WIRE_FRAC:=0.80}"
-: "${GGTF_PROMOTE_ZERO:=1}"
-: "${GGTF_SKIP_ZERO_SMALL:=1}"
-: "${GGTF_SKIP_ZERO_ALWAYS:=0}"
-
-# GGTF truth-PDG wire gating
-: "${GGTF_TRUTH_GATE:=1}"
-: "${GGTF_KEEP_PDG:=13}"
-: "${GGTF_DROP_UNLINKED:=1}"
-
-# Safer default: empty => let python auto-guess by digi version
-: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"
+: "${DCH_READOUT_DUR_NS:=900.0}"
 
 # ----------------- provenance stamping -----------------
 : "${STAMPER:=./scripts/stamp_pipeline_metadata.py}"
@@ -137,10 +105,8 @@ PY
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
   case "${FITTER}" in
-    genfit2)    FIT_OUT="GenFitTracks" ;;
-    simple)     FIT_OUT="SimpleFitTracks" ;;
-    threepoint) FIT_OUT="ThreePointTracks" ;;
-    none|*)     FIT_OUT="Tracks" ;;
+    genfit2) FIT_OUT="GenFitTracks" ;;
+    none|*)  FIT_OUT="Tracks" ;;
   esac
 fi
 
@@ -149,12 +115,11 @@ echo "[cfg] OUTPUT=$OUTPUT"
 echo "[cfg] MODEL_SPEC=$MODEL_SPEC"
 echo "[cfg] COMPACT_XML=$COMPACT_XML  DCH_SIMHITS=$DCH_SIMHITS  DCH_NAME=$DCH_NAME"
 echo "[cfg] STAGE=$STAGE FITTER=$FITTER FIT_OUT=$FIT_OUT"
-echo "[cfg] GGTF_LOG=$GGTF_LOG PRODUCE_3DHITS=$PRODUCE_3DHITS MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
-echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK WIRE_GATE_MM=$WIRE_GATE_MM MAX_3D_PER_EVT=$MAX_3D_PER_EVT MAX_3D_PER_TRK=$MAX_3D_PER_TRK"
-echo "[cfg] GGTF_3D_POS_SCALE=${GGTF_3D_POS_SCALE:-<unset>} GGTF_PRODUCE_ALL_3DHITS=${GGTF_PRODUCE_ALL_3DHITS:-<unset>} GGTF_ALL_3DHITS_ONLY=${GGTF_ALL_3DHITS_ONLY:-<unset>}"
-# FIX: do NOT use := here (it assigns!). Use :- for printing defaults.
-echo "[cfg] GGTF_ALL_3DHITS_TYPE=${GGTF_ALL_3DHITS_TYPE:-<unset>} GGTF_APPLY_WIRE_GATE_TO_3DHITS=${GGTF_APPLY_WIRE_GATE_TO_3DHITS:-<unset>} GGTF_DEBUG_PRINT_3DHIT_R=${GGTF_DEBUG_PRINT_3DHIT_R:-<unset>}"
-echo "[cfg] GF_SORT_HITS=$GF_SORT_HITS GF_DEDUP=$GF_DEDUP"
+echo "[cfg] GGTF_LOG=$GGTF_LOG FITTER_LOG=$FITTER_LOG MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
+echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK"
+echo "[cfg] GGTF_PRODUCE_SENSEWIREHITS=$GGTF_PRODUCE_SENSEWIREHITS GGTF_PRODUCE_ALL_SENSEWIREHITS=$GGTF_PRODUCE_ALL_SENSEWIREHITS"
+echo "[cfg] GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE=$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE GGTF_MAX_ABS_D_MM=$GGTF_MAX_ABS_D_MM"
+echo "[cfg] GF_USE_MAT=$GF_USE_MAT GF_SORT_HITS=$GF_SORT_HITS GF_DEDUP=$GF_DEDUP GF_DEDUP_TOL=$GF_DEDUP_TOL GF_MIN_GROUP=$GF_MIN_GROUP"
 
 # --- keep memory tame ---
 export OMP_NUM_THREADS=1
@@ -194,8 +159,8 @@ build_stamp_extras () {
     compgen -v \
       | LC_ALL=C sort \
       | awk '
-          /^(DCH_|GGTF_|GF_|TP_)/ {print; next}
-          /^(STAGE|FITTER|FIT_OUT|GGTF_LOG|PRODUCE_3DHITS|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK|WIRE_GATE_MM|MAX_3D_PER_EVT|MAX_3D_PER_TRK|FITTER_LOG)$/ {print; next}
+          /^(DCH_|GGTF_|GF_)/ {print; next}
+          /^(STAGE|FITTER|FIT_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK)$/ {print; next}
         '
   )
 
@@ -225,6 +190,7 @@ stamp_root () {
     >/dev/null 2>&1 || echo "[meta][WARN] stamp failed for stage '$stage' (non-fatal)"
 }
 
+# ----------------- build python args -----------------
 K4_ARGS=(
   ./runDCHTestTrackFinder.py
   --inputFile  "$INPUT"
@@ -236,68 +202,53 @@ K4_ARGS=(
   --ggtfLog    "$GGTF_LOG"
   --tbeta      "$TBETA"
   --td         "$TD"
+  --onnxChunk  "$ONNX_CHUNK"
   --fitter     "$FITTER"
   --fitterLog  "$FITTER_LOG"
   --fitOut     "$FIT_OUT"
   --stage      "$STAGE"
-  --onnxChunk  "$ONNX_CHUNK"
-  --wireGateMM "$WIRE_GATE_MM"
-  --max3DHitsPerEvent "$MAX_3D_PER_EVT"
-  --max3DPerTrack     "$MAX_3D_PER_TRK"
+  --dchDigiVersion   "$DCH_DIGI_VERSION"
+  --dch-deadtime-ns  "$DCH_DEADTIME_NS"
+  --xyResolution_mm  "$DCH_XY_MM"
+  --zResolution_mm   "$DCH_Z_MM"
+  --dch-gas-type     "$DCH_GAS_TYPE"
+  --dch-drift-vel-um-ns   "$DCH_DRIFT_VEL_UM_NS"
+  --dch-signal-vel-mm-ns  "$DCH_SIGNAL_VEL_MM_NS"
+  --rw-start-ns      "$DCH_READOUT_START_NS"
+  --rw-duration-ns   "$DCH_READOUT_DUR_NS"
+  --gf-bz           "$GF_BZ"
+  --gf-pdg          "$GF_PDG"
+  --gf-dedupTol     "$GF_DEDUP_TOL"
+  --gf-minGroup     "$GF_MIN_GROUP"
+  --gf-maxMeasPerGroup "$GF_MAX_MEAS_PER_GROUP"
 )
-
-# Produce3DHits (explicit both ways)
-if [[ "$PRODUCE_3DHITS" == "1" ]]; then
-  K4_ARGS+=( --produce3DHits )
-else
-  K4_ARGS+=( --no-produce3DHits )
-fi
 
 # Max hits cap only if >0
 [[ "$MAX_HITS" -gt 0 ]] && K4_ARGS+=( --maxHitsPerEvent "$MAX_HITS" )
 
-# ---- GGTF debug/coverage/unit CLI wiring (tri-state) ----
-if [[ -n "$GGTF_3D_POS_SCALE" ]]; then
-  K4_ARGS+=( --ggtf-3dPosScale "$GGTF_3D_POS_SCALE" )
+# GGTF output toggles
+if [[ "$GGTF_PRODUCE_SENSEWIREHITS" == "1" ]]; then
+  K4_ARGS+=( --ggtf-produceSenseWireHits )
+else
+  K4_ARGS+=( --no-ggtf-produceSenseWireHits )
 fi
 
-if [[ -n "$GGTF_PRODUCE_ALL_3DHITS" ]]; then
-  if [[ "$GGTF_PRODUCE_ALL_3DHITS" == "1" ]]; then
-    K4_ARGS+=( --ggtf-produceAll3DHits )
-  else
-    K4_ARGS+=( --no-ggtf-produceAll3DHits )
-  fi
+if [[ "$GGTF_PRODUCE_ALL_SENSEWIREHITS" == "1" ]]; then
+  K4_ARGS+=( --ggtf-produceAllSenseWireHits )
+else
+  K4_ARGS+=( --no-ggtf-produceAllSenseWireHits )
 fi
+K4_ARGS+=( --ggtf-allSenseWireHitsTypeValue "$GGTF_ALL_SENSEWIREHITS_TYPE" )
 
-if [[ -n "$GGTF_ALL_3DHITS_ONLY" ]]; then
-  if [[ "$GGTF_ALL_3DHITS_ONLY" == "1" ]]; then
-    K4_ARGS+=( --ggtf-all3DHitsOnly )
-  else
-    K4_ARGS+=( --no-ggtf-all3DHitsOnly )
-  fi
+# Wire hygiene
+if [[ "$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE" == "1" ]]; then
+  K4_ARGS+=( --ggtf-dropWireIfAbsDTooLarge )
+else
+  K4_ARGS+=( --no-ggtf-dropWireIfAbsDTooLarge )
 fi
+K4_ARGS+=( --ggtf-maxAbsDMM "$GGTF_MAX_ABS_D_MM" )
 
-if [[ -n "$GGTF_ALL_3DHITS_TYPE" ]]; then
-  K4_ARGS+=( --ggtf-all3DHitsTypeValue "$GGTF_ALL_3DHITS_TYPE" )
-fi
-
-if [[ -n "$GGTF_APPLY_WIRE_GATE_TO_3DHITS" ]]; then
-  if [[ "$GGTF_APPLY_WIRE_GATE_TO_3DHITS" == "1" ]]; then
-    K4_ARGS+=( --ggtf-applyWireGateTo3DHits )
-  else
-    K4_ARGS+=( --no-ggtf-applyWireGateTo3DHits )
-  fi
-fi
-
-if [[ -n "$GGTF_DEBUG_PRINT_3DHIT_R" ]]; then
-  if [[ "$GGTF_DEBUG_PRINT_3DHIT_R" == "1" ]]; then
-    K4_ARGS+=( --ggtf-debugPrint3DHitR )
-  else
-    K4_ARGS+=( --no-ggtf-debugPrint3DHitR )
-  fi
-fi
-
-# --- GGTF truth-PDG gating CLI wiring ---
+# Truth gating
 if [[ "$GGTF_TRUTH_GATE" == "1" ]]; then
   K4_ARGS+=( --ggtf-filterInputWiresByTruthPdg )
 else
@@ -313,32 +264,20 @@ if [[ -n "$GGTF_WIRE_SIMLINK_COLL" ]]; then
   K4_ARGS+=( --ggtf-wireSimLinkColl "$GGTF_WIRE_SIMLINK_COLL" )
 fi
 
-# --- GenFit2 / digi args ---
-K4_ARGS+=(
-  --gf-posScale     "$GF_POS_SCALE"
-  --gf-len2m        "$GF_LEN2M"
-  --gf-hitSigmaXY   "$GF_HIT_SIGMA_XY"
-  --gf-hitSigmaZ    "$GF_HIT_SIGMA_Z"
-  --gf-seedPosSigma "$GF_SEED_POS_SIGMA"
-  --gf-seedMomSigma "$GF_SEED_MOM_SIGMA"
-  --gf-dedupTol     "$GF_DEDUP_TOL"
-  --gf-seedPTMin    "$GF_SEED_PT_MIN"
-  --gf-seedPTMax    "$GF_SEED_PT_MAX"
-  --gf-seedPMin     "$GF_SEED_P_MIN"
-  --gf-bz           "$GF_BZ"
-  --gf-pdg          "$GF_PDG"
-  --dchDigiVersion  "$DCH_DIGI_VERSION"
-  --dch-deadtime-ns "$DCH_DEADTIME_NS"
-  --dch-xy-mm       "$DCH_XY_MM"
-  --dch-z-mm        "$DCH_Z_MM"
-  --dch-gas-type    "$DCH_GAS_TYPE"
-  --dch-drift-vel-um-ns "$DCH_DRIFT_VEL_UM_NS"
-  --dch-signal-vel-mm-ns "$DCH_SIGNAL_VEL_MM_NS"
-  --dch-readout-start-ns "$DCH_READOUT_START_NS"
-  --dch-readout-dur-ns   "$DCH_READOUT_DUR_NS"
-)
+# Label-0 handling
+K4_ARGS+=( --ggtf-zeroMinSizeKeep "$GGTF_ZERO_MIN" )
+K4_ARGS+=( --ggtf-minWireFracKeep "$GGTF_WIRE_FRAC" )
+[[ "$GGTF_PROMOTE_ZERO" -eq 1 ]] && K4_ARGS+=( --ggtf-promoteZeroIfGood ) || K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
+[[ "$GGTF_SKIP_ZERO_SMALL" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
+[[ "$GGTF_SKIP_ZERO_ALWAYS" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
 
-# NEW: wire sort/dedup toggles explicitly
+# GenFit2 switches
+if [[ "$GF_USE_MAT" == "1" ]]; then
+  K4_ARGS+=( --gf-useMat )
+else
+  K4_ARGS+=( --no-gf-useMat )
+fi
+
 if [[ "$GF_SORT_HITS" == "1" ]]; then
   K4_ARGS+=( --gf-sortHits )
 else
@@ -351,67 +290,15 @@ else
   K4_ARGS+=( --no-gf-dedup )
 fi
 
-# Residual filter
-if [[ "$GF_RES_FILTER" == "1" ]]; then
-  K4_ARGS+=( --gf-residualFilterEnable )
+# Optional z-outlier filter
+if [[ "$GF_FILTER_Z_OUTLIERS" == "1" ]]; then
+  K4_ARGS+=( --gf-filterZOutliers )
 else
-  K4_ARGS+=( --no-gf-residualFilterEnable )
+  K4_ARGS+=( --no-gf-filterZOutliers )
 fi
-K4_ARGS+=( --gf-residualMaxPull "$GF_RES_MAX_PULL" )
-K4_ARGS+=( --gf-residualMaxChi2 "$GF_RES_MAX_CHI2" )
-
-# Label-0 handling
-K4_ARGS+=( --ggtf-zeroMinSizeKeep "$GGTF_ZERO_MIN" )
-K4_ARGS+=( --ggtf-minWireFracKeep "$GGTF_WIRE_FRAC" )
-
-if [[ "$GGTF_PROMOTE_ZERO" -eq 1 ]]; then
-  K4_ARGS+=( --ggtf-promoteZeroIfGood )
-else
-  K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
-fi
-
-[[ "$GGTF_SKIP_ZERO_SMALL" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
-[[ "$GGTF_SKIP_ZERO_ALWAYS" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
-
-# Mat effects
-if [[ "$GF_USE_MAT" == "1" ]]; then
-  K4_ARGS+=( --gf-useMat )
-else
-  K4_ARGS+=( --no-gf-useMat )
-fi
-
-# Fallback & retry
-K4_ARGS+=( --gf-minGroup "$GF_MIN_GROUP" --gf-fallbackEpsCM "$GF_FALLBACK_EPS_CM" --gf-fallbackMinPts "$GF_FALLBACK_MINPTS" )
-if [[ "$GF_USE_FALLBACK" == "1" ]]; then
-  K4_ARGS+=( --gf-useFallback )
-else
-  K4_ARGS+=( --no-gf-useFallback )
-fi
-
-K4_ARGS+=( --gf-retryMeasInfl "$GF_RETRY_MEAS_INFL" --gf-retrySeedPos "$GF_RETRY_SEED_POS" --gf-retrySeedMom "$GF_RETRY_SEED_MOM" --gf-maxMeasPerGroup "$GF_MAX_MEAS_PER_GROUP" )
-if [[ "$GF_RETRY" == "1" ]]; then
-  K4_ARGS+=( --gf-retry )
-else
-  K4_ARGS+=( --no-gf-retry )
-fi
-
-# ThreePointFitter args
-K4_ARGS+=( --tp-minDeltaPhi "$TP_MIN_DELTA_PHI" )
-K4_ARGS+=( --tp-minChordMM  "$TP_MIN_CHORD_MM" )
-K4_ARGS+=( --tp-minGroup    "$TP_MIN_HITS" )
-K4_ARGS+=( --tp-minRadiusMM "$TP_MIN_RADIUS_MM" )
-
-if [[ "$TP_FIT_TANLAMBDA" == "true" ]]; then
-  K4_ARGS+=( --tp-fitTanLambda )
-else
-  K4_ARGS+=( --no-tp-fitTanLambda )
-fi
-
-if [[ "$TP_PRINT_DIAG" == "true" ]]; then
-  K4_ARGS+=( --tp-printDiag --tp-diagEveryN "$TP_DIAG_EVERY_N" )
-else
-  K4_ARGS+=( --no-tp-printDiag )
-fi
+K4_ARGS+=( --gf-zOutlierAbsMM "$GF_Z_OUTLIER_ABS_MM" )
+K4_ARGS+=( --gf-zOutlierNSigma "$GF_Z_OUTLIER_NSIGMA" )
+K4_ARGS+=( --gf-zOutlierMinFracKeep "$GF_Z_OUTLIER_MIN_FRAC_KEEP" )
 
 echo "[k4run] args: ${K4_ARGS[*]}" | tee -a k4run.log
 
@@ -423,7 +310,7 @@ run_cmd() {
   fi
 }
 
-# ----------------- stage-output discovery -----------------
+# ----------------- stage-output discovery (unchanged) -----------------
 guess_stage_file () {
   local stage="$1"
   local out="$2"
@@ -471,7 +358,7 @@ guess_stage_file () {
 # ----------------- run -----------------
 ( run_cmd /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" ) 2>&1 \
   | tee -a k4run.log \
-  | awk '/GGTF_tracking|RSS=|Peak=|TOTAL|flatten:|onnx:|clustering|unique|bucket|build|Application Manager|tracks=|MemoryAuditor/{print; fflush()}' > progress.log
+  | awk '/GGTF_tracking|GenFit2DCHFitter|RSS=|Peak=|TOTAL|flatten:|onnx:|clustering|Application Manager|tracks=|MemoryAuditor/{print; fflush()}' > progress.log
 
 K4_RC=${PIPESTATUS[0]}
 
@@ -498,7 +385,7 @@ if [[ $K4_RC -ne 0 ]]; then
   fi
 fi
 
-# ----------------- stamping per step -----------------
+# ----------------- stamping per step (unchanged) -----------------
 if [[ -f "$INPUT" ]]; then
   stamp_root "input" "$INPUT" "local_chain.sh (record input provenance only)" \
     --input "$INPUT" \

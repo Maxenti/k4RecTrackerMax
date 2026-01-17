@@ -2,34 +2,40 @@
 """
 view_tracks_event.py
 
-Visualize GGTF_3DHits, DCH digis, and GenFit2 tracks from an EDM4hep ROOT file.
+Visualize DCH wire-hits (GGTF SenseWireHits), optional raw DCH digis, and GenFit2 tracks
+from an EDM4hep ROOT file.
+
+UPDATED for your NEW pipeline:
+  - GGTF no longer produces GGTF_3DHits (spacepoints).
+  - GenFit2DCHFitter consumes SenseWireHits on candidate tracks and outputs GenFitTracks.
 
 For a chosen event:
-  - GGTF_3DHits positions (x,y,z) and labels (type)
-  - DCHDigi2Collection positions (SenseWireHit positions in mm)
+  - GGTF SenseWireHits positions (x,y,z) and labels (type)
+  - Optional DCHDigi2Collection positions (SenseWireHit positions in mm)
   - GenFitTracks TrackStates (typically one AtIP state per track):
       * helix visualization from (x0,y0,z0, phi, tanLambda, omega) in uniform Bz
 
-Key fixes vs older version:
-  1) Track <-> TrackState association:
-     - We now use GenFitTracks.trackStates_begin/end (or equivalent) to group states per track.
-     - We pick the AtIP-like state per track (heuristic: smallest r^2 among that track’s states;
-       or first state if only one).
-
-  2) Helix handedness:
-     - Removed the forced sign hack.
-     - Use physically consistent curvature sign: sgn = sign(omega * Bz).
-
+Key robustness features:
+  1) Collection auto-detection (optional):
+     - If your requested hit collection doesn't exist, we can auto-pick a GGTF-like
+       collection that has position.{x,y,z} (and ideally .type).
+  2) Track <-> TrackState association:
+     - Uses GenFitTracks.trackStates_begin/end (or equivalent) when available.
+     - Picks AtIP-like state per track (smallest r^2 among that track's states).
   3) Sanity print:
-     - Compare pT stored in TrackState.time (your fitter encodes pT here) to pT derived from omega:
-          pT_from_omega = 1/|omega|   (since omega = q/pT)
-     - If those disagree wildly, you’re either reading the wrong leaves or the file contains
-       corrupted/uninitialized states (or a different omega convention).
-
+     - Compare pT stored in TrackState.time (if your fitter encodes pT here)
+       vs pT derived from omega: pT_from_omega = 1/|omega| (or |q/omega|).
+     - If time is not used anymore, this comparison will just be informational.
   4) Robust leaf discovery:
-     - Handles multiple common branch naming patterns for trackStates + begin/end leaves.
+     - Handles multiple common branch naming patterns.
 
 Writes histograms, canvases, and metadata into a ROOT file (no interactive windows).
+
+Examples:
+  python3 view_tracks_event.py --input reco.root
+  python3 view_tracks_event.py --input reco.root --event 12
+  python3 view_tracks_event.py --input reco.root --hitsCollection GGTF_SenseWireHits
+  python3 view_tracks_event.py --input reco.root --hitsCollection OutputTracksGGTF --hitSource trackhits
 """
 
 import math
@@ -49,8 +55,7 @@ ROOT.gROOT.SetBatch(True)
 # Small helpers
 # ------------------------------------------------------------
 def _find_leaf(tree, name):
-    lf = tree.GetLeaf(name)
-    return lf
+    return tree.GetLeaf(name)
 
 
 def _scan_leaf_by_suffix(tree, coll_name, suffix):
@@ -109,6 +114,7 @@ def resolve_ts_prefix(tree, coll_name):
       - GenFitTracks.TrackStates.*
       - GenFitTracks.trackStates_AtIP.*
       - GenFitTracks.TrackStates_AtIP.*
+      - _GenFitTracks_trackStates.* (underscore prefix sometimes appears)
 
     If none exist, scan leaves and pick something containing '<coll_name>' and ending in '.phi'.
     Returns prefix ending with '.' or None.
@@ -118,6 +124,10 @@ def resolve_ts_prefix(tree, coll_name):
         f"{coll_name}.TrackStates.",
         f"{coll_name}.trackStates_AtIP.",
         f"{coll_name}.TrackStates_AtIP.",
+        f"_{coll_name}_trackStates.",
+        f"_{coll_name}_TrackStates.",
+        f"_{coll_name}_trackStates_AtIP.",
+        f"_{coll_name}_TrackStates_AtIP.",
     ]
 
     for pref in candidates:
@@ -142,10 +152,66 @@ def resolve_ts_prefix(tree, coll_name):
     return None
 
 
+def _leaf_exists(tree, name):
+    return bool(_find_leaf(tree, name))
+
+
+def _collection_has_xyz(tree, coll_name):
+    return (_leaf_exists(tree, f"{coll_name}.position.x") and
+            _leaf_exists(tree, f"{coll_name}.position.y") and
+            _leaf_exists(tree, f"{coll_name}.position.z"))
+
+
+def _auto_detect_hits_collection(tree, preferred=None):
+    """
+    Try to find a reasonable GGTF hit collection to draw.
+    We look for collections that have '<name>.position.x/y/z'. Prefer those that also have '.type'.
+    """
+    if preferred and _collection_has_xyz(tree, preferred):
+        return preferred
+
+    leaves = tree.GetListOfLeaves()
+    if not leaves:
+        return None
+
+    # Collect base names for anything with ".position.x"
+    candidates = set()
+    for obj in leaves:
+        nm = obj.GetName()
+        if nm.endswith(".position.x"):
+            base = nm[:-len(".position.x")]
+            candidates.add(base)
+
+    if not candidates:
+        return None
+
+    # Score: prefer GGTF in name, prefer having .type, shorter names
+    scored = []
+    for base in sorted(candidates):
+        has_type = _leaf_exists(tree, f"{base}.type")
+        score = 0
+        if "GGTF" in base:
+            score -= 10
+        if "SenseWire" in base or "Wire" in base:
+            score -= 5
+        if has_type:
+            score -= 3
+        score += len(base) * 0.001
+        scored.append((score, base, has_type))
+
+    scored.sort(key=lambda t: t[0])
+    best = scored[0][1]
+    print("[info] Auto-detected hits collection:")
+    for i, (sc, base, has_type) in enumerate(scored[:10]):
+        print(f"   cand[{i}] {base} (has .type={has_type}) score={sc:.3g}")
+    print(f"[info] Using hits collection = '{best}'")
+    return best
+
+
 # ------------------------------------------------------------
-# Load GGTF_3DHits grouped by label using position.x leaf
+# Load labeled hits: position.{x,y,z} and optional label leaf ".type"
 # ------------------------------------------------------------
-def load_3d_hits(tree, ev_idx, coll_name="GGTF_3DHits"):
+def load_labeled_hits(tree, ev_idx, coll_name):
     """
     Return dict: label -> list of (x,y,z) for event ev_idx.
 
@@ -190,7 +256,7 @@ def load_3d_hits(tree, ev_idx, coll_name="GGTF_3DHits"):
 
 
 # ------------------------------------------------------------
-# Load DCHDigi2Collection positions (SenseWireHit positions in mm)
+# Load DCH digis positions (SenseWireHit positions in mm)
 # ------------------------------------------------------------
 def load_dch_digi_positions(tree, ev_idx, coll_name="DCHDigi2Collection"):
     """
@@ -224,7 +290,7 @@ def load_dch_digi_positions(tree, ev_idx, coll_name="DCHDigi2Collection"):
 # ------------------------------------------------------------
 # Load GenFit2 TrackStates per TRACK (using begin/end)
 # ------------------------------------------------------------
-def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
+def load_track_states(tree, ev_idx, coll_name="GenFitTracks", assume_q=1):
     """
     Return list of per-track state dicts for event ev_idx.
 
@@ -232,30 +298,27 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
     Preference:
       - if only 1 state: take it
       - else: take the state with smallest r^2 = x0^2 + y0^2 (AtIP-like)
-        (this matches your fitter: it exports an AtIP state and it's typically closest to origin)
 
     Fields expected in TrackState:
       - referencePoint.{x,y,z} (mm)
       - phi
       - tanLambda
-      - omega (q/pT [GeV^-1] per your fitter)
-      - time  (pT [GeV] per your fitter)
+      - omega (q/pT [GeV^-1])
+      - time  (optionally pT [GeV] if your fitter encodes it)
       - optional D0,Z0
 
-    We print sanity checks:
-      - pT(time) vs pT(1/|omega|)
+    Sanity prints:
+      - pT(time) vs pT(|q/omega|). If time is not pT anymore, ignore this.
     """
     prefix = resolve_ts_prefix(tree, coll_name)
     if not prefix:
         print(f"[warn] No valid TrackState prefix for '{coll_name}'; no tracks will be drawn.")
         return []
 
-    # begin/end leaves for association
     bname, ename = _resolve_begin_end_leaves(tree, coll_name)
     if not (bname and ename):
         print(f"[warn] Could not find '{coll_name}.trackStates_begin/end' (or equivalent).")
         print("       Falling back to interpreting TrackStates as a flat array (less reliable).")
-        # We'll still return something, but warn loudly.
     else:
         print(f"[info] Using Track->TrackState association via begin/end leaves:")
         print(f"       begin='{bname}', end='{ename}'")
@@ -263,7 +326,8 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
     def leaf(name):
         lf = _find_leaf(tree, name)
         if not lf:
-            print(f"[debug] TrackState leaf '{name}' not found")
+            # too spammy to print for everything; keep debug for key leaves only
+            pass
         return lf
 
     # TrackState leaves
@@ -283,7 +347,6 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
               f"No tracks will be drawn.")
         return []
 
-    # begin/end leaves (if present)
     beg_leaf = _find_leaf(tree, bname) if bname else None
     end_leaf = _find_leaf(tree, ename) if ename else None
 
@@ -292,7 +355,6 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
     n_states_total = int(phi_leaf.GetNdata())
     print(f"[info] {coll_name}: event={ev_idx} nTrackStates(total)={n_states_total}")
 
-    # Build a flat list of state records first (so we can index them by [stateIndex])
     flat_states = []
     for si in range(n_states_total):
         d0   = float(d0_leaf.GetValue(si))   if d0_leaf   else float("nan")
@@ -307,7 +369,6 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
             y0 = float(refy_leaf.GetValue(si))
             z0p = float(refz_leaf.GetValue(si))
         else:
-            # fallback (rough)
             if math.isfinite(d0) and math.isfinite(z0):
                 x0 = -d0 * math.sin(phi)
                 y0 =  d0 * math.cos(phi)
@@ -316,7 +377,7 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
                 x0 = y0 = z0p = 0.0
 
         r2 = x0*x0 + y0*y0
-        pT_from_omega = (1.0/abs(omg)) if (math.isfinite(omg) and abs(omg) > 0.0) else float("nan")
+        pt_from_omega = (abs(float(assume_q)) / abs(omg)) if (math.isfinite(omg) and abs(omg) > 0.0) else float("nan")
 
         flat_states.append({
             "state_index": si,
@@ -326,14 +387,13 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
             "omega": omg,
             "tanLambda": tl,
             "pT_time": pTt,
-            "pT_from_omega": pT_from_omega,
+            "pT_from_omega": pt_from_omega,
             "x0": x0,
             "y0": y0,
             "z0": z0p,
             "r2": r2,
         })
 
-    # If we can associate per track, do it
     per_track = []
 
     if beg_leaf and end_leaf:
@@ -353,17 +413,15 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
             if not states_this:
                 continue
 
-            # pick best AtIP-like state: smallest r^2
             best = min(states_this, key=lambda st: st["r2"])
 
-            best = dict(best)  # copy
+            best = dict(best)
             best["track_index"] = ti
             best["states_begin"] = b
             best["states_end"] = e
             best["n_states_in_track"] = (e - b)
             per_track.append(best)
 
-            # Debug print for each track
             pt_t = best["pT_time"]
             pt_o = best["pT_from_omega"]
             omg  = best["omega"]
@@ -371,17 +429,15 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
             if math.isfinite(pt_t) and math.isfinite(pt_o) and pt_t > 0 and pt_o > 0:
                 ratio = pt_t / pt_o
                 if ratio > 2.0 or ratio < 0.5:
-                    mismatch = f"  !!! mismatch pT(time)/pT(1/|omega|)={ratio:.3g}"
+                    mismatch = f"  !!! mismatch pT(time)/pT(|q/omega|)={ratio:.3g} (ignore if time not pT)"
             print(
                 f"[debug] Track[{ti}] states[{b}:{e}) pickState={best['state_index']} "
                 f"x0={best['x0']:.2f} y0={best['y0']:.2f} z0={best['z0']:.2f} mm "
                 f"phi={best['phi']:.3f} tanL={best['tanLambda']:.3f} "
-                f"pT(time)={pt_t:.3f} GeV  pT(1/|omega|)={pt_o:.3f} GeV  omega={omg:.4e}"
+                f"pT(time)={pt_t:.3f} GeV  pT(|q/omega|)={pt_o:.3f} GeV  omega={omg:.4e}"
                 f"{mismatch}"
             )
-
     else:
-        # Flat fallback: interpret each state as “a track” (not reliable)
         print("[warn] No begin/end association; treating each TrackState as standalone.")
         for st in flat_states:
             st = dict(st)
@@ -398,12 +454,12 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
             if math.isfinite(pt_t) and math.isfinite(pt_o) and pt_t > 0 and pt_o > 0:
                 ratio = pt_t / pt_o
                 if ratio > 2.0 or ratio < 0.5:
-                    mismatch = f"  !!! mismatch pT(time)/pT(1/|omega|)={ratio:.3g}"
+                    mismatch = f"  !!! mismatch pT(time)/pT(|q/omega|)={ratio:.3g} (ignore if time not pT)"
             print(
                 f"[debug] TrackState[{st['state_index']}] "
                 f"x0={st['x0']:.2f} y0={st['y0']:.2f} z0={st['z0']:.2f} mm "
                 f"phi={st['phi']:.3f} tanL={st['tanLambda']:.3f} "
-                f"pT(time)={pt_t:.3f} GeV  pT(1/|omega|)={pt_o:.3f} GeV  omega={omg:.4e}"
+                f"pT(time)={pt_t:.3f} GeV  pT(|q/omega|)={pt_o:.3f} GeV  omega={omg:.4e}"
                 f"{mismatch}"
             )
 
@@ -416,21 +472,15 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks"):
 def make_plots(tracks_by_label,
                digi_points,
                out_root,
-               title_prefix="GGTF_3DHits",
+               title_prefix="GGTF_SenseWireHits",
                track_states=None,
                track_style="helix",
                Bz=2.0,
                meta_info=None):
     """
-    tracks_by_label: dict[label] -> list[(x,y,z)] for GGTF_3DHits
+    tracks_by_label: dict[label] -> list[(x,y,z)] for GGTF SenseWireHits (or any hit coll with position.{x,y,z})
     digi_points: list[(x,y,z)] for DCHDigi2Collection (SenseWireHits)
-    out_root: path to ROOT file for output
-    track_states: list of per-track state dicts
-    track_style: "straight" or "helix"
-    Bz: magnetic field along z [T]
-    meta_info: dict of metadata strings to store as a TNamed
     """
-    # Flatten to find coordinate ranges
     all_points = []
     for pts in tracks_by_label.values():
         all_points.extend(pts)
@@ -448,7 +498,6 @@ def make_plots(tracks_by_label,
     ymin, ymax = min(ys), max(ys)
     zmin, zmax = min(zs), max(zs)
 
-    # Nice margins
     dx = max(1.0, 0.05 * (xmax - xmin if xmax > xmin else 1.0))
     dy = max(1.0, 0.05 * (ymax - ymin if ymax > ymin else 1.0))
     dz = max(1.0, 0.05 * (zmax - zmin if zmax > zmin else 1.0))
@@ -461,13 +510,12 @@ def make_plots(tracks_by_label,
     if not f_out or f_out.IsZombie():
         raise RuntimeError(f"Could not create output ROOT file: {out_root}")
 
-    # Metadata block
     if meta_info is not None:
         meta_str = "\n".join(f"{k}: {v}" for k, v in meta_info.items())
         meta = ROOT.TNamed("view_tracks_metadata", meta_str)
         meta.Write()
 
-    # 2D XY and RZ histograms (using GGTF hits only)
+    # 2D XY and RZ histograms (using hit points only)
     hit_points = []
     for pts in tracks_by_label.values():
         hit_points.extend(pts)
@@ -490,9 +538,9 @@ def make_plots(tracks_by_label,
     else:
         h_xy = None
         h_rz = None
-        print("[info] No GGTF_3DHits; XY/RZ histograms will be empty.")
+        print("[info] No hit points; XY/RZ histograms will be empty.")
 
-    # Colors
+    # Colors for labels
     colors = [
         ROOT.kRed + 1,
         ROOT.kBlue + 1,
@@ -507,7 +555,6 @@ def make_plots(tracks_by_label,
         ROOT.kPink + 1,
     ]
 
-    # Canvases
     c_xy = ROOT.TCanvas("c_xy", "XY view", 800, 800)
     c_rz = ROOT.TCanvas("c_rz", "RZ view", 800, 800)
     c_3d = ROOT.TCanvas("c_3d", "3D tracks", 800, 800)
@@ -534,7 +581,7 @@ def make_plots(tracks_by_label,
     markers = []
     track_lines = []
 
-    # Scatter markers per GGTF label
+    # Scatter markers per label
     for il, (lbl, pts) in enumerate(sorted(tracks_by_label.items(), key=lambda kv: kv[0])):
         if not pts:
             continue
@@ -549,7 +596,7 @@ def make_plots(tracks_by_label,
         pm.Draw("P SAME")
         markers.append(pm)
 
-    # Scatter markers for digis (orange)
+    # Digis overlay (orange)
     if digi_points:
         n_digi = len(digi_points)
         pm_digi = ROOT.TPolyMarker3D(n_digi)
@@ -560,16 +607,13 @@ def make_plots(tracks_by_label,
             pm_digi.SetPoint(i, x, y, z)
         pm_digi.Draw("P SAME")
         markers.append(pm_digi)
-        print(f"[info] Drew {n_digi} DCHDigi2Collection points in orange.")
+        print(f"[info] Drew {n_digi} digi points in orange.")
 
     # Draw GenFit track lines
     if track_states:
         print(f"[info] Drawing {len(track_states)} GenFit track line(s) in 3D view with style='{track_style}'.")
 
-        # Rough scale: use largest radial extent seen in all points
         rmax_hits = max(math.hypot(x, y) for (x, y, _) in all_points)
-
-        # Path length in mm along the track (s range)
         s_max = 1.2 * rmax_hits
         s_min = -s_max
         n_points_line = 200
@@ -588,7 +632,6 @@ def make_plots(tracks_by_label,
             pl.SetLineWidth(3)
 
             if track_style == "straight" or (not math.isfinite(omg)) or abs(Bz) == 0.0 or abs(omg) == 0.0:
-                # Straight-line approximation
                 ux = math.cos(phi)
                 uy = math.sin(phi)
                 uz = tl
@@ -604,35 +647,26 @@ def make_plots(tracks_by_label,
                     y = y0 + uy * s
                     z = z0 + uz * s
                     pl.SetPoint(i, x, y, z)
-
             else:
-                # Helix in uniform Bz
-                # Your fitter defines: omega = q/pT  [GeV^-1]
+                # omega = q/pT [GeV^-1]
                 # Radius in meters: R = pT / (0.3 |q| B) = 1 / (|omega| * 0.3 |B|)
                 R_m  = 1.0 / (abs(omg) * 0.3 * abs(Bz))
                 R_mm = R_m * 1000.0
 
-                # Physically consistent handedness: sign(q*B) = sign(omega*Bz)
+                # Handedness: sign(q*B) = sign(omega*Bz)
                 sgn = 1.0 if (omg * Bz) > 0.0 else -1.0
 
-                # Circle center in XY (from perigee point), tangent at perigee matches phi
                 xc = x0 - sgn * R_mm * math.sin(phi)
                 yc = y0 + sgn * R_mm * math.cos(phi)
 
-                # Angle of radial vector (center -> perigee)
                 alpha0 = math.atan2(y0 - yc, x0 - xc)
 
-                # Pitch from tanLambda = pz/pT
                 cos_theta = 1.0 / math.sqrt(1.0 + tl*tl)
                 sin_theta = tl * cos_theta
 
                 for i in range(n_points_line):
                     s = s_min + (s_max - s_min) * i / (n_points_line - 1)
-
-                    # projected path length in XY plane
                     s_xy = s * cos_theta
-
-                    # change in azimuth along circle
                     delta_alpha = sgn * s_xy / R_mm
                     alpha = alpha0 + delta_alpha
 
@@ -666,9 +700,9 @@ def make_plots(tracks_by_label,
 
 
 # ------------------------------------------------------------
-# Scan events to find one with GGTF_3DHits.position.x hits > 0
+# Scan events to find one with hits via <coll>.position.x
 # ------------------------------------------------------------
-def find_first_event_with_hits(tree, coll_name="GGTF_3DHits", max_print=20):
+def find_first_event_with_hits(tree, coll_name, max_print=20):
     x_leaf = _find_leaf(tree, f"{coll_name}.position.x")
     if not x_leaf:
         raise RuntimeError(
@@ -700,13 +734,17 @@ def find_first_event_with_hits(tree, coll_name="GGTF_3DHits", max_print=20):
 # ------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser(
-        description="View GGTF_3DHits + DCH digis + GenFit tracks for one event."
+        description="View GGTF SenseWireHits + DCH digis + GenFit tracks for one event."
     )
     ap.add_argument("--input", required=True, help="Input reco ROOT file (EDM4hep)")
+    ap.add_argument("--tree", default="events", help="TTree name (default: events)")
     ap.add_argument("--event", type=int, default=-1,
-                    help="Event index (0-based). If <0, auto-find first event with GGTF_3DHits.")
-    ap.add_argument("--collection", default="GGTF_3DHits",
-                    help="3D hits collection base name (default: GGTF_3DHits)")
+                    help="Event index (0-based). If <0, auto-find first event with hits.")
+    ap.add_argument("--hitsCollection", default="GGTF_SenseWireHits",
+                    help="Hit collection with position.{x,y,z} (default: GGTF_SenseWireHits). "
+                         "If not found, auto-detect a likely GGTF hit collection.")
+    ap.add_argument("--autoDetectHits", action="store_true",
+                    help="If set, auto-detect hits collection even if --hitsCollection is provided.")
     ap.add_argument("--digiCollection", default="DCHDigi2Collection",
                     help="DCH digi collection base name (default: DCHDigi2Collection). "
                          "If empty, digis will not be drawn.")
@@ -716,8 +754,10 @@ def main():
     ap.add_argument("--trackStyle", choices=["straight", "helix"], default="helix",
                     help="Visualization style for tracks: straight or helix (default: helix).")
     ap.add_argument("--Bz", type=float, default=2.0,
-                    help="B-field along z [T] for helix drawing (default: 2.0, "
+                    help="B-field along z [T] for helix drawing (default: 2.0; "
                          "should match GenFit2DCHFitter.Bz).")
+    ap.add_argument("--assumeQ", type=int, default=1,
+                    help="Charge sign to use for pT(|q/omega|) sanity checks (default: +1).")
     ap.add_argument("--outRoot", default="tracks_display.root",
                     help="Output ROOT file for histos + canvases")
     args = ap.parse_args()
@@ -726,12 +766,21 @@ def main():
     if not f or f.IsZombie():
         raise RuntimeError(f"Could not open input file: {args.input}")
 
-    tree = f.Get("events")
+    tree = f.Get(args.tree)
     if not tree:
-        raise RuntimeError(f"No TTree named 'events' found in file: {args.input}")
+        raise RuntimeError(f"No TTree named '{args.tree}' found in file: {args.input}")
 
     n_ev = tree.GetEntries()
-    print(f"[info] File: {args.input}, events: {n_ev}")
+    print(f"[info] File: {args.input}, tree='{args.tree}', events: {n_ev}")
+
+    # Decide hits collection name
+    hits_coll = args.hitsCollection
+    if args.autoDetectHits or (not _collection_has_xyz(tree, hits_coll)):
+        hits_coll = _auto_detect_hits_collection(tree, preferred=None if args.autoDetectHits else hits_coll)
+        if not hits_coll:
+            raise RuntimeError("Could not auto-detect any collection with '.position.x/y/z' in this file.")
+    else:
+        print(f"[info] Using user hits collection = '{hits_coll}'")
 
     # Decide which event index to use
     if args.event >= 0:
@@ -740,18 +789,18 @@ def main():
             raise RuntimeError(f"Requested event {ev_idx} out of range [0, {n_ev-1}]")
         print(f"[info] Using user-requested event {ev_idx}")
     else:
-        ev_idx = find_first_event_with_hits(tree, args.collection)
+        ev_idx = find_first_event_with_hits(tree, hits_coll)
         if ev_idx is None:
-            print("[fatal] No events with 3D hits; nothing to visualize.")
+            print("[fatal] No events with hits; nothing to visualize.")
             return
 
-    # Load GGTF hits for that event
-    tracks_by_label = load_3d_hits(tree, ev_idx, args.collection)
+    # Load hits for that event (labeled if .type exists)
+    tracks_by_label = load_labeled_hits(tree, ev_idx, hits_coll)
     print(f"[info] Found labels: {sorted(tracks_by_label.keys())}")
     for lbl, pts in sorted(tracks_by_label.items(), key=lambda kv: kv[0]):
         print(f"  label {lbl}: {len(pts)} hits")
 
-    # Load DCH digis
+    # Load digis
     digi_points = []
     if args.digiCollection:
         digi_points = load_dch_digi_positions(tree, ev_idx, args.digiCollection)
@@ -759,20 +808,21 @@ def main():
     # Load GenFit track states per track
     track_states = []
     if args.trackCollection:
-        track_states = load_track_states(tree, ev_idx, args.trackCollection)
+        track_states = load_track_states(tree, ev_idx, args.trackCollection, assume_q=args.assumeQ)
 
-    # Metadata
     meta_info = {
         "script": os.path.basename(__file__),
         "command_line": " ".join(sys.argv),
         "input_file": args.input,
+        "tree": args.tree,
         "output_file": args.outRoot,
         "event_index": ev_idx,
-        "hits_collection": args.collection,
+        "hits_collection": hits_coll,
         "digi_collection": args.digiCollection or "<none>",
         "track_collection": args.trackCollection or "<none>",
         "track_style": args.trackStyle,
         "Bz_T": args.Bz,
+        "assumeQ": args.assumeQ,
         "user": getpass.getuser(),
         "host": socket.gethostname(),
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -781,7 +831,7 @@ def main():
     make_plots(tracks_by_label,
                digi_points,
                args.outRoot,
-               title_prefix=f"{args.collection} (event {ev_idx})",
+               title_prefix=f"{hits_coll} (event {ev_idx})",
                track_states=track_states,
                track_style=args.trackStyle,
                Bz=args.Bz,
