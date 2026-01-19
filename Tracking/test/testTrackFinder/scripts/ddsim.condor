@@ -5,8 +5,8 @@ executable      = scripts/condor_ddsim.sh
 
 # Resources
 request_cpus    = 1
-request_memory  = 3 GB
-request_disk    = 2 GB
+request_memory  = 8 GB
+request_disk    = 3 GB
 
 # Environment and platform
 +JobFlavour     = "tomorrow"

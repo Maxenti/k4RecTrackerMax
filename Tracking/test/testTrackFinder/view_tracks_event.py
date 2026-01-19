@@ -756,7 +756,7 @@ def main():
     ap.add_argument("--Bz", type=float, default=2.0,
                     help="B-field along z [T] for helix drawing (default: 2.0; "
                          "should match GenFit2DCHFitter.Bz).")
-    ap.add_argument("--assumeQ", type=int, default=1,
+    ap.add_argument("--assumeQ", type=int, default=-1,
                     help="Charge sign to use for pT(|q/omega|) sanity checks (default: +1).")
     ap.add_argument("--outRoot", default="tracks_display.root",
                     help="Output ROOT file for histos + canvases")

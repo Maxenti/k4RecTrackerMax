@@ -1,55 +1,75 @@
 #!/usr/bin/env bash
+# reco_job.sh — HTCondor wrapper for ONE input file/job.
+# Goal: pass EXACTLY the same knobs and defaults as local_chain.sh (Jan 18 2026)
+# while still being Condor/EOS-safe (xrootd staging, idempotent output, pinned Key4hep nightly via arg).
+#
+# Wrapper args (from reco.condor):
+#   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8 extraargs  9 k4rel
+#
 set -euo pipefail
 
-# ----------------------------------------------------------------------
-# Use the SAME Key4hep release/nightly you built the runtime with
-# ----------------------------------------------------------------------
-
-# ---------------- Key4HEP env (pinned) ----------------
+# ---------------- Key4HEP env ----------------
 if [[ ! -r /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh ]]; then
   echo "[env][FATAL] /cvmfs/sw-nightlies.hsf.org not readable inside this job."
   exit 12
 fi
 K4SETUP="$(/bin/readlink -f /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh || echo /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh)"
 
-__orig_args=("$@")
-set +u; set -- ; source "$K4SETUP" -r 2025-09-21; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
-echo "[env] Using Key4hep release:" 
-command -v k4run >/dev/null || { echo "FATAL: k4run not in PATH"; exit 10; }
-
-# ---------------- Arguments: ONE FILE PER JOB ----------------
-INFILE="${1:?need INFILE}"
-OUTDIR="${2:?need OUTDIR}"
-COMPACT_XML="${3:?need COMPACT_XML}"
-FITTER="${4:-simple}"         # genfit2|simple|threepoint|none
-GF_USE_MAT="${5:-1}"           # 1/0
-STAGE="${6:-fit}"              # digi|ggtf|fit
-FIT_OUT="${7:-auto}"           # auto|<name>
-EXTRA_ARGS="${8-}"             # optional extra CLI flags
+# ---------------- Arguments ----------------
+INFILE="${1:?need INFILE}"            # /eos/... or root://...
+OUTDIR="${2:?need OUTDIR}"            # /eos/...
+COMPACT_XML="${3:?need COMPACT_XML}"  # /eos/... or root://... or /cvmfs...
+FITTER="${4:-genfit2}"                # genfit2|none
+GF_USE_MAT_ARG="${5:-0}"              # 0/1 (match local_chain default: 0)
+STAGE="${6:-fit}"                     # digi|ggtf|fit
+FIT_OUT="${7:-auto}"                  # auto|<name>
+K4REL="${8:-2026-01-11}"              # key4hep nightly tag
 
 echo "[args] INFILE=$INFILE"
 echo "[args] OUTDIR=$OUTDIR"
-echo "[args] COMPACT_XML=$COMPACT_XML  FITTER=$FITTER GF_USE_MAT=$GF_USE_MAT STAGE=$STAGE FIT_OUT=$FIT_OUT"
-[[ -n "${EXTRA_ARGS}" ]] && echo "[args] EXTRA_ARGS=${EXTRA_ARGS}"
+echo "[args] COMPACT_XML=$COMPACT_XML"
+echo "[args] FITTER=$FITTER GF_USE_MAT_ARG=$GF_USE_MAT_ARG STAGE=$STAGE FIT_OUT=$FIT_OUT"
+echo "[args] K4REL=$K4REL"
 
-[[ -s runtime.tgz    ]] || { echo "FATAL: runtime.tgz missing"; exit 4; }
-[[ -s "$COMPACT_XML" ]] || { echo "FATAL: compact missing: $COMPACT_XML"; exit 3; }
+# ---------------- Source pinned nightly inside job (idempotent) ----------------
+echo "[env] K4SETUP=$K4SETUP"
 
-# If the input is on EOS POSIX, switch to XRootD for reading.
-if [[ "$INFILE" == /eos/* ]]; then
-  INFILE_XRD="root://eosuser.cern.ch//${INFILE#/}"
+if command -v k4run >/dev/null 2>&1; then
+  echo "[env] k4run already in PATH; not re-sourcing Key4hep."
+  echo "[env] k4run=$(command -v k4run)"
 else
-  INFILE_XRD="$INFILE"
+  echo "[env] Sourcing Key4hep nightly $K4REL ..."
+  __orig_args=("$@")
+  set +u; set -- ; source "$K4SETUP" -r "$K4REL"; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
+  command -v k4run >/dev/null || { echo "[env][FATAL] k4run not in PATH after setup"; exit 10; }
+  echo "[env] k4run=$(command -v k4run)"
 fi
-echo "[io] will read input: $INFILE_XRD"
 
-# ---------------- Unpack runtime bundle ----------------
+echo "[env] ROOT version: $(root-config --version 2>/dev/null || true)"
+
+
+# ---------------- Helpers ----------------
+to_xrd() {
+  local p="$1"
+  if [[ "$p" == root://* ]]; then
+    echo "$p"
+  elif [[ "$p" == /eos/* ]]; then
+    echo "root://eosuser.cern.ch//${p}"
+  else
+    echo "$p"
+  fi
+}
+eos_path_from_xrd() { echo "$1" | sed -E 's#^root://eosuser\.cern\.ch##'; }
+
+# ---------------- Runtime bundle ----------------
+[[ -s runtime.tgz ]] || { echo "FATAL: runtime.tgz missing"; exit 4; }
 tar -xzf runtime.tgz
 RTPFX="$PWD/runtime"
 
-# --- Env for the bundled libs/plugins/python -----------------
+# Env for bundled libs/plugins/python
 export LD_LIBRARY_PATH="$RTPFX/lib64:$RTPFX/lib:${LD_LIBRARY_PATH:-}"
 export GAUDI_PLUGIN_PATH="$RTPFX/lib64:$RTPFX/lib:${GAUDI_PLUGIN_PATH:-}"
+export PYTHONPATH="$RTPFX/python:${PYTHONPATH:-}"
 
 # Build GAUDI_COMPONENT_PATH from catalogs (incl. confdb if present)
 COMP_BASE="$RTPFX/share"
@@ -58,40 +78,30 @@ if [[ -d "$COMP_BASE" ]]; then
   while IFS= read -r -d '' f; do
     d="$(dirname "$f")"
     [[ " ${COMP_DIRS[*]-} " == *" $d "* ]] || COMP_DIRS+=("$d")
-  done < <(find "$COMP_BASE" -type f \( -name '*.components*' -o -name 'components*.*' -o -name '*.confdb' \) -print0 || true)
+  done < <(find "$COMP_BASE" -type f \( -name '*.components*' -o -name 'components*.*' -o -name '*.confdb' \) -print0 2>/dev/null || true)
 fi
 export GAUDI_COMPONENT_PATH="$(IFS=:; echo "${COMP_DIRS[*]}"):${GAUDI_COMPONENT_PATH:-}"
 export GAUDI_COMPONENTS_PATH="$GAUDI_COMPONENT_PATH"
 export GAUDI_CONFIGURABLE_DB_PATH="$GAUDI_COMPONENT_PATH"
 export GAUDI_USE_CONFIGURATION_DB=1
-export PYTHONPATH="$RTPFX/python:${PYTHONPATH:-}"
 
-# Strongly hint Gaudi to load these plugins at startup (colon- or space-separated is ok)
-export GAUDI_PLUGINS="libTracking:libDCHdigi:libDDRec:libk4FWCorePlugins${GAUDI_PLUGINS:+:$GAUDI_PLUGINS}"
-
-# Helpful diagnostics
 echo "[env] GAUDI_PLUGIN_PATH=$GAUDI_PLUGIN_PATH"
 echo "[env] GAUDI_COMPONENT_PATH=$GAUDI_COMPONENT_PATH"
-echo "[env] GAUDI_PLUGINS=$GAUDI_PLUGINS"
 
+# ---------------- Stage COMPACT XML locally if on EOS/xrd ----------------
+COMPACT_LOCAL="$PWD/compact.xml"
+if [[ "$COMPACT_XML" == /eos/* || "$COMPACT_XML" == root://* ]]; then
+  echo "[stage] compact xrdcp -> $COMPACT_LOCAL"
+  xrdcp -f "$(to_xrd "$COMPACT_XML")" "$COMPACT_LOCAL"
+  COMPACT_USE="$COMPACT_LOCAL"
+else
+  [[ -s "$COMPACT_XML" ]] || { echo "FATAL: compact missing/unreadable: $COMPACT_XML"; exit 3; }
+  COMPACT_USE="$COMPACT_XML"
+fi
+export DD4hep_XMLPATH="$(dirname "$COMPACT_USE"):${DD4hep_XMLPATH:-}"
+echo "[env] Using compact: $COMPACT_USE"
 
-# DD4hep include path for the compact
-export DD4hep_XMLPATH="$(dirname "$COMPACT_XML"):${DD4hep_XMLPATH:-}"
-
-# --- Preload a few libs & sanity-check fitter is visible
-python3 - <<'PY'
-import os, ROOT, sys
-for lib in ("libTracking","libDCHdigi","libDDRec","libk4FWCorePlugins"):
-    rc = ROOT.gSystem.Load(lib)
-    print(f"[check] ROOT Load {lib}: rc={rc}")
-try:
-    from Configurables import GenFit2DCHFitter
-    print("[check] OK: GenFit2DCHFitter importable")
-except Exception as e:
-    print("[check][WARN] GenFit2DCHFitter not importable:", e)
-PY
-
-# ---------------- Model path resolution ----------------
+# ---------------- Model resolution (same as before) ----------------
 MODEL="${MODEL:-}"
 if [[ -z "${MODEL}" ]]; then
   if [[ -s "$RTPFX/models/model.onnx" ]]; then
@@ -104,143 +114,445 @@ fi
 [[ -s "$MODEL" ]] || { echo "FATAL: ONNX model not found in runtime"; exit 5; }
 echo "[env] Using ONNX model: $MODEL"
 
-# ---------------- Output naming ----------------
+# ---------------- I/O naming + idempotence ----------------
+INFILE_XRD="$(to_xrd "$INFILE")"
+
+# Preserve relative subdir under gun_samples if possible
 rel="${INFILE#/eos/user/c/cglenn/gun_samples/}"
-# If the input wasn't under /eos/user/c/cglenn/gun_samples, keep flat
 if [[ "$rel" == "$INFILE" ]]; then rel="$(basename "$INFILE")"; fi
 subdir="$(dirname "$rel")"
 base="$(basename "$rel")"
+
 OUT_LOCAL="$PWD/reco_${base}"
-OUT_EOS="${OUTDIR%/}/$subdir/reco_${base}"
-echo "[run] local_out=$OUT_LOCAL"
-echo "[run] eos_out  =$OUT_EOS"
+OUT_EOS_POSIX="${OUTDIR%/}/$subdir/reco_${base}"
+OUT_EOS_XRD="$(to_xrd "$OUT_EOS_POSIX")"
+OUT_EOS_PATH_ON_EOS="$(eos_path_from_xrd "$OUT_EOS_XRD")"
 
-# Ensure EOS parent exists (best-effort)
-if [[ "$OUT_EOS" == /eos/* ]]; then
-  command -v xrdfs >/dev/null 2>&1 && xrdfs eosuser.cern.ch mkdir -p "//${OUT_EOS#/}/../" >/dev/null 2>&1 || true
+echo "[io] input:  $INFILE_XRD"
+echo "[io] output: $OUT_EOS_XRD"
+echo "[io] local:  $OUT_LOCAL"
+
+# Skip if output already exists (idempotent)
+if command -v xrdfs >/dev/null 2>&1; then
+  if xrdfs eosuser.cern.ch stat "$OUT_EOS_PATH_ON_EOS" >/dev/null 2>&1; then
+    echo "[skip] Output already exists: $OUT_EOS_XRD"
+    exit 0
+  fi
 fi
-mkdir -p "$(dirname "$OUT_LOCAL")"
+# Ensure EOS parent exists
+if command -v xrdfs >/dev/null 2>&1; then
+  xrdfs eosuser.cern.ch mkdir -p "$(dirname "$OUT_EOS_PATH_ON_EOS")" >/dev/null 2>&1 || true
+fi
 
-# ===================== KNOBS =====================
-: "${GGTF_LOG:=INFO}"
-: "${PRODUCE_3DHITS:=1}"
-: "${MAX_HITS:=15000}"
+# ======================================================================
+#  KNOBS: MATCH local_chain.sh DEFAULTS (unless overridden via env)
+# ======================================================================
+
+# Pipeline controls
+: "${SKIP_DIGI:=0}"
+: "${FIT_OUT:=$FIT_OUT}"             # allow condor arg to win unless overridden
+: "${FITTER:=$FITTER}"               # condor arg is base default
+: "${STAGE:=$STAGE}"
+
+# Logging/runtime
+: "${GGTF_LOG:=DEBUG}"
+: "${FITTER_LOG:=DEBUG}"
 : "${TIMEOUT_K4RUN:=0}"
+: "${MAX_HITS:=0}"
 
-: "${TBETA:=0.08}"
-: "${TD:=0.18}"
+# GGTF clustering thresholds
+: "${TBETA:=0.6}"
+: "${TD:=0.3}"
 
-: "${ONNX_CHUNK:=2048}"
-: "${WIRE_GATE_MM:=16.0}"
-: "${MAX_3D_PER_EVT:=200000}"
-: "${MAX_3D_PER_TRK:=20000}"
+# ONNX slicing
+: "${ONNX_CHUNK:=4096}"
 
-: "${GF_POS_SCALE:=0.1}"
-: "${GF_LEN2M:=0.01}"
-: "${GF_HIT_SIGMA_XY:=1.5}"
-: "${GF_HIT_SIGMA_Z:=7.0}"
-: "${GF_SEED_POS_SIGMA:=800}"
-: "${GF_SEED_MOM_SIGMA:=40.0}"
-: "${GF_DEDUP_TOL:=0.80}"
-: "${GF_SEED_PT_MIN:=0.1}"
-: "${GF_SEED_PT_MAX:=300.0}"
-: "${GF_SEED_P_MIN:=0.3}"
+# Wire hygiene / safety
+: "${GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE:=1}"
+: "${GGTF_MAX_ABS_D_MM:=30.0}"
 
-: "${GF_MIN_GROUP:=2}"
-: "${GF_USE_FALLBACK:=1}"
-: "${GF_FALLBACK_EPS_CM:=6}"
-: "${GF_FALLBACK_MINPTS:=3}"
-: "${GF_RETRY:=1}"
-: "${GF_RETRY_MEAS_INFL:=12.0}"
-: "${GF_RETRY_SEED_POS:=7.0}"
-: "${GF_RETRY_SEED_MOM:=7.0}"
-: "${GF_MAX_MEAS_PER_GROUP:=0}"
+# Label-0 handling
+: "${GGTF_ZERO_MIN:=8}"
+: "${GGTF_WIRE_FRAC:=0.60}"
+: "${GGTF_PROMOTE_ZERO:=1}"
+: "${GGTF_SKIP_ZERO_SMALL:=1}"
+: "${GGTF_SKIP_ZERO_ALWAYS:=0}"
+
+# Truth-PDG wire gating
+: "${GGTF_TRUTH_GATE:=0}"
+: "${GGTF_KEEP_PDG:=13}"
+: "${GGTF_DROP_UNLINKED:=1}"
+: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"
+
+# GGTF tracks out collection name
+: "${GGTF_TRACKS_OUT:=CDCHTracks}"
+
+# GenFit2 knobs (match local_chain.sh)
+# NOTE: local_chain default GF_USE_MAT=0, but condor submit passed usemat. Respect condor arg unless env overrides.
+: "${GF_USE_MAT:=$GF_USE_MAT_ARG}"
+: "${GF_DISABLE_ELOSS:=1}"
+: "${GF_DISABLE_ALL_MAT:=0}"
+: "${GF_HARD_DISABLE_MAT_IF_NO_GEO:=1}"
 
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
-# Auto FIT_OUT
-if [[ "$FIT_OUT" == "auto" ]]; then
-  case "$FITTER" in
-    genfit2)    FIT_OUT="GenFitTracks" ;;
-    simple)     FIT_OUT="SimpleFitTracks" ;;
-    threepoint) FIT_OUT="ThreePointTracks" ;;
-    *)          FIT_OUT="Tracks" ;;
+: "${GF_REJECT_NEGATIVE_LABELS:=1}"
+: "${GF_SORT_HITS:=1}"
+: "${GF_DEDUP:=1}"
+: "${GF_DEDUP_TOL:=0.010}"   # mm
+
+: "${GF_MIN_HITS_PER_TRACK:=8}"
+: "${GF_MIN_MEASUREMENTS_TO_FIT:=6}"
+: "${GF_MIN_FITTED_POINTS_WITH_FI:=0}"
+: "${GF_MAX_CHI2_NDF:=10.0}"
+
+: "${GF_USE_KF_PREFIT:=1}"
+: "${GF_KF_MAX_ITERS:=16}"
+: "${GF_TRY_BOTH_MOM_DIRS:=1}"
+
+: "${GF_USE_DAF:=1}"
+: "${GF_DAF_MAX_ITERS:=12}"
+: "${GF_FALLBACK_TO_KF_IF_DAF_FAILS:=1}"
+
+# publish controls
+: "${GF_USE_BIASED_STATE_FOR_PUBLISH:=1}"
+: "${GF_PUBLISH_STATE_CENTRAL_FRAC:=0.30}"
+: "${GF_PUBLISH_PT_MAX_GEV:=300.0}"
+
+: "${GF_INVALID_PT_SENTINEL:=-1.0}"
+: "${GF_OMEGA_VAR_GOOD:=1e-4}"
+: "${GF_OMEGA_VAR_BAD:=1.0}"
+
+# Units / wire model
+: "${GF_POSITION_UNIT_SCALE:=0.1}"
+: "${GF_WIRE_HALF_LENGTH_MM:=2250.0}"
+: "${GF_MAX_DRIFT_MM:=7.0}"
+: "${GF_MAX_DRIFT_MM_FOR_HIT:=8.0}"
+: "${GF_MIN_DRIFT_ERR_MM:=0.10}"
+: "${GF_MAX_DRIFT_ERR_MM:=1.0}"
+: "${GF_WIRE_ANGLES_DEGREES:=0}"  # 0=radians
+
+# Observability gating
+: "${GF_SKIP_IF_OBS_TOO_LOW:=0}"
+: "${GF_MIN_HITS_FOR_OBS:=10}"
+: "${GF_OBS_SIGMA_EFF_MM:=0.025}"
+: "${GF_OBS_MIN_PHISPAN_RAD:=0.006}"
+: "${GF_OBS_MIN_CHORD_MM:=20.0}"
+: "${GF_OBS_MIN_SAGITTA_MM:=0.015}"
+: "${GF_OBS_SCORE_MIN:=1.0}"
+
+# Seed discipline
+: "${GF_SEED_ENDPOINT_K:=6}"
+: "${GF_SEED_TANGENT_K:=10}"
+: "${GF_SEED_POS_SIGMA_MM:=80.0}"
+: "${GF_SEED_MOM_SIGMA_GEV:=10.0}"
+: "${GF_USE_SAGITTA_SEED:=1}"
+: "${GF_MIN_SAGITTA_FOR_SEED_MM:=0.20}"
+: "${GF_SEED_PT_FALLBACK_GEV:=50.0}"
+: "${GF_SEED_PT_MIN_GEV:=0.20}"
+: "${GF_SEED_PT_MAX_GEV:=200.0}"
+: "${GF_SEED_P_MIN_GEV:=0.05}"
+
+# Pre-fit outlier veto
+: "${GF_PREFIT_OUTLIER_VETO:=0}"
+: "${GF_OUTLIER_MAX_DROP:=1}"
+: "${GF_OUTLIER_CIRCLE_RESIDUAL_MM:=0.8}"
+: "${GF_OUTLIER_CHORD_RESIDUAL_MM:=2.0}"
+: "${GF_OUTLIER_MIN_KEEP:=10}"
+
+# PD guards / stats / diagnostics
+: "${GF_MIN_COV_EIGENVALUE:=0}"
+: "${GF_STATS_TRUNC_CENTRAL_FRAC:=0.80}"
+: "${GF_DIAG_EVERY_N_TRACKS:=1}"
+
+# Digi settings (match local_chain.sh defaults)
+: "${DCH_DIGI_VERSION:=v02}"
+: "${DCH_DEADTIME_NS:=450.0}"
+: "${DCH_XY_MM:=0.10}"
+: "${DCH_Z_MM:=30.0}"
+: "${DCH_GAS_TYPE:=0}"
+: "${DCH_DRIFT_VEL_UM_NS:=-1.0}"
+# Drift signal velocity along wire (mm/ns): (2/3)*c
+: "${DCH_SIGNAL_VEL_MM_NS:=199.86163866666666}"
+
+: "${DCH_READOUT_START_NS:=1.0}"
+: "${DCH_READOUT_DUR_NS:=900.0}"
+
+# Keep memory tame (same spirit as local_chain)
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export TORCH_NUM_THREADS=1
+export MALLOC_ARENA_MAX=2
+export ORT_DISABLE_MEMORY_ARENA=1
+export ORT_ENABLE_MEM_PATTERN=0
+
+# ---------------- Choose FIT_OUT automatically when requested ----------------
+if [[ "${FIT_OUT}" == "auto" ]]; then
+  case "${FITTER}" in
+    genfit2) FIT_OUT="GenFitTracks" ;;
+    none|*)  FIT_OUT="Tracks" ;;
   esac
 fi
 
-# Material flag
-MAT_FLAG=()
-if [[ "$FITTER" == "genfit2" ]]; then
-  if [[ "$GF_USE_MAT" == "1" ]]; then MAT_FLAG+=( --gf-useMat ); else MAT_FLAG+=( --no-gf-useMat ); fi
-fi
-
-# Tame thread use
-export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 TORCH_NUM_THREADS=1
-export MALLOC_ARENA_MAX=2 ORT_DISABLE_MEMORY_ARENA=1 ORT_ENABLE_MEM_PATTERN=0
-
-# ---------------- Build k4run command ----------------
+# ---------------- Build python args EXACTLY like local_chain.sh ----------------
 K4_ARGS=(
   "$RTPFX/runDCHTestTrackFinder.py"
   --inputFile  "$INFILE_XRD"
   --outputFile "$OUT_LOCAL"
   --modelPath  "$MODEL"
-  --compactXML "$COMPACT_XML"
-  --dchName    DCH_v2
-  --dchSimHits DCHCollection
+  --compactXML "$COMPACT_USE"
+  --dchName    "DCH_v2"
+  --dchSimHits "DCHCollection"
   --ggtfLog    "$GGTF_LOG"
   --tbeta      "$TBETA"
   --td         "$TD"
+  --onnxChunk  "$ONNX_CHUNK"
   --fitter     "$FITTER"
+  --fitterLog  "$FITTER_LOG"
   --fitOut     "$FIT_OUT"
   --stage      "$STAGE"
-  --onnxChunk  "$ONNX_CHUNK"
-  --wireGateMM "$WIRE_GATE_MM"
-  --max3DHitsPerEvent "$MAX_3D_PER_EVT"
-  --max3DPerTrack     "$MAX_3D_PER_TRK"
-  --fitterLog  DEBUG
-)
-[[ "$PRODUCE_3DHITS" == "1" ]] && K4_ARGS+=( --produce3DHits )
-[[ "$MAX_HITS" -gt 0 ]]        && K4_ARGS+=( --maxHitsPerEvent "$MAX_HITS" )
+  --ggtfTracksOut "$GGTF_TRACKS_OUT"
+  --dchDigiVersion   "$DCH_DIGI_VERSION"
+  --dch-deadtime-ns  "$DCH_DEADTIME_NS"
+  --xyResolution_mm  "$DCH_XY_MM"
+  --zResolution_mm   "$DCH_Z_MM"
+  --dch-gas-type     "$DCH_GAS_TYPE"
+  --dch-drift-vel-um-ns   "$DCH_DRIFT_VEL_UM_NS"
+  --dch-signal-vel-mm-ns  "$DCH_SIGNAL_VEL_MM_NS"
+  --rw-start-ns      "$DCH_READOUT_START_NS"
+  --rw-duration-ns   "$DCH_READOUT_DUR_NS"
 
-# GenFit2 extras
-K4_ARGS+=(
-  --gf-posScale     "$GF_POS_SCALE"
-  --gf-len2m        "$GF_LEN2M"
-  --gf-hitSigmaXY   "$GF_HIT_SIGMA_XY"
-  --gf-hitSigmaZ    "$GF_HIT_SIGMA_Z"
-  --gf-seedPosSigma "$GF_SEED_POS_SIGMA"
-  --gf-seedMomSigma "$GF_SEED_MOM_SIGMA"
-  --gf-dedupTol     "$GF_DEDUP_TOL"
-  --gf-seedPTMin    "$GF_SEED_PT_MIN"
-  --gf-seedPTMax    "$GF_SEED_PT_MAX"
-  --gf-seedPMin     "$GF_SEED_P_MIN"
+
+  # ---- GenFit2DCHFitter core ----
   --gf-bz           "$GF_BZ"
   --gf-pdg          "$GF_PDG"
-  --gf-minGroup     "$GF_MIN_GROUP"
-  --gf-fallbackEpsCM "$GF_FALLBACK_EPS_CM"
-  --gf-fallbackMinPts "$GF_FALLBACK_MINPTS"
-  --gf-retryMeasInfl "$GF_RETRY_MEAS_INFL"
-  --gf-retrySeedPos  "$GF_RETRY_SEED_POS"
-  --gf-retrySeedMom  "$GF_RETRY_SEED_MOM"
-  --gf-maxMeasPerGroup "$GF_MAX_MEAS_PER_GROUP"
-)
-[[ "$GF_USE_FALLBACK" == "1" ]] && K4_ARGS+=( --gf-useFallback ) || K4_ARGS+=( --no-gf-useFallback )
-[[ "$GF_RETRY" == "1" ]]        && K4_ARGS+=( --gf-retry )        || K4_ARGS+=( --no-gf-retry )
 
-# Late override flags
-if [[ -n "${EXTRA_ARGS}" ]]; then
-  # shellcheck disable=SC2206
-  EXTRA_ARR=( $EXTRA_ARGS )
-  K4_ARGS+=( "${EXTRA_ARR[@]}" )
+  --gf-minHitsPerTrack        "$GF_MIN_HITS_PER_TRACK"
+  --gf-minMeasurementsToFit   "$GF_MIN_MEASUREMENTS_TO_FIT"
+  --gf-minFittedPointsWithFI  "$GF_MIN_FITTED_POINTS_WITH_FI"
+
+  --gf-dedupTolMM   "$GF_DEDUP_TOL"
+  --gf-kfMaxIters   "$GF_KF_MAX_ITERS"
+  --gf-dafMaxIters  "$GF_DAF_MAX_ITERS"
+
+  --gf-publishStateCentralFrac "$GF_PUBLISH_STATE_CENTRAL_FRAC"
+  --gf-publishPTMaxGeV         "$GF_PUBLISH_PT_MAX_GEV"
+  --gf-maxChi2Ndf              "$GF_MAX_CHI2_NDF"
+
+  --gf-invalidPTSentinel "$GF_INVALID_PT_SENTINEL"
+  --gf-omegaVarGood      "$GF_OMEGA_VAR_GOOD"
+  --gf-omegaVarBad       "$GF_OMEGA_VAR_BAD"
+
+  --gf-positionUnitScale "$GF_POSITION_UNIT_SCALE"
+  --gf-wireHalfLengthMM  "$GF_WIRE_HALF_LENGTH_MM"
+  --gf-maxDriftMM         "$GF_MAX_DRIFT_MM"
+  --gf-maxDriftMMForHit   "$GF_MAX_DRIFT_MM_FOR_HIT"
+  --gf-minDriftErrMM      "$GF_MIN_DRIFT_ERR_MM"
+  --gf-maxDriftErrMM      "$GF_MAX_DRIFT_ERR_MM"
+
+  --gf-minHitsForObs     "$GF_MIN_HITS_FOR_OBS"
+  --gf-obsSigmaEffMM     "$GF_OBS_SIGMA_EFF_MM"
+  --gf-obsMinPhiSpanRad  "$GF_OBS_MIN_PHISPAN_RAD"
+  --gf-obsMinChordMM     "$GF_OBS_MIN_CHORD_MM"
+  --gf-obsMinSagittaMM   "$GF_OBS_MIN_SAGITTA_MM"
+  --gf-obsMinScore       "$GF_OBS_SCORE_MIN"
+
+  --gf-seedEndpointK      "$GF_SEED_ENDPOINT_K"
+  --gf-seedTangentK       "$GF_SEED_TANGENT_K"
+  --gf-seedPosSigmaMM     "$GF_SEED_POS_SIGMA_MM"
+  --gf-seedMomSigmaGeV    "$GF_SEED_MOM_SIGMA_GEV"
+  --gf-seedPTFallbackGeV  "$GF_SEED_PT_FALLBACK_GEV"
+  --gf-seedPTMinGeV       "$GF_SEED_PT_MIN_GEV"
+  --gf-seedPTMaxGeV       "$GF_SEED_PT_MAX_GEV"
+  --gf-seedPMinGeV        "$GF_SEED_P_MIN_GEV"
+  --gf-minSagittaForSeedMM "$GF_MIN_SAGITTA_FOR_SEED_MM"
+
+  --gf-outlierMaxDrop          "$GF_OUTLIER_MAX_DROP"
+  --gf-outlierCircleResidualMM "$GF_OUTLIER_CIRCLE_RESIDUAL_MM"
+  --gf-outlierChordResidualMM  "$GF_OUTLIER_CHORD_RESIDUAL_MM"
+  --gf-outlierMinKeep          "$GF_OUTLIER_MIN_KEEP"
+
+  --gf-minCovEigenvalue        "$GF_MIN_COV_EIGENVALUE"
+  --gf-statsTruncCentralFrac   "$GF_STATS_TRUNC_CENTRAL_FRAC"
+  --gf-diagEveryNTracks        "$GF_DIAG_EVERY_N_TRACKS"
+)
+
+# --skipDigi
+if [[ "$SKIP_DIGI" == "1" ]]; then
+  K4_ARGS+=( --skipDigi )
 fi
 
-# ---------------- Run ----------------
+# Max hits cap only if >0
+[[ "$MAX_HITS" -gt 0 ]] && K4_ARGS+=( --maxHitsPerEvent "$MAX_HITS" )
+
+# Wire hygiene
+if [[ "$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE" == "1" ]]; then
+  K4_ARGS+=( --ggtf-dropWireIfAbsDTooLarge )
+else
+  K4_ARGS+=( --no-ggtf-dropWireIfAbsDToo_Large )  # safety: keep old typo away
+  K4_ARGS+=( --no-ggtf-dropWireIfAbsDTooLarge )
+fi
+K4_ARGS+=( --ggtf-maxAbsDMM "$GGTF_MAX_ABS_D_MM" )
+
+# Truth gating
+if [[ "$GGTF_TRUTH_GATE" == "1" ]]; then
+  K4_ARGS+=( --ggtf-filterInputWiresByTruthPdg )
+else
+  K4_ARGS+=( --no-ggtf-filterInputWiresByTruthPdg )
+fi
+K4_ARGS+=( --ggtf-keepTruthPdg "$GGTF_KEEP_PDG" )
+if [[ "$GGTF_DROP_UNLINKED" == "1" ]]; then
+  K4_ARGS+=( --ggtf-dropWireIfUnlinked )
+else
+  K4_ARGS+=( --no-ggtf-dropWireIfUnlinked )
+fi
+if [[ -n "${GGTF_WIRE_SIMLINK_COLL}" ]]; then
+  K4_ARGS+=( --ggtf-wireSimLinkColl "$GGTF_WIRE_SIMLINK_COLL" )
+fi
+
+# Label-0 handling
+K4_ARGS+=( --ggtf-zeroMinSizeKeep "$GGTF_ZERO_MIN" )
+K4_ARGS+=( --ggtf-minWireFracKeep "$GGTF_WIRE_FRAC" )
+[[ "$GGTF_PROMOTE_ZERO" -eq 1 ]] && K4_ARGS+=( --ggtf-promoteZeroIfGood ) || K4_ARGS+=( --no-ggtf-promoteZeroIfGood )
+[[ "$GGTF_SKIP_ZERO_SMALL" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroIfSmall ) || K4_ARGS+=( --no-ggtf-skipZeroIfSmall )
+[[ "$GGTF_SKIP_ZERO_ALWAYS" -eq 1 ]] && K4_ARGS+=( --ggtf-skipZeroAlways ) || K4_ARGS+=( --no-ggtf-skipZeroAlways )
+
+# GenFit2 switches
+if [[ "$GF_USE_MAT" == "1" ]]; then
+  K4_ARGS+=( --gf-useMat )
+else
+  K4_ARGS+=( --no-gf-useMat )
+fi
+if [[ "$GF_DISABLE_ELOSS" == "1" ]]; then
+  K4_ARGS+=( --gf-disableEloss )
+else
+  K4_ARGS+=( --no-gf-disableEloss )
+fi
+if [[ "$GF_DISABLE_ALL_MAT" == "1" ]]; then
+  K4_ARGS+=( --gf-disableAllMat )
+else
+  K4_ARGS+=( --no-gf-disableAllMat )
+fi
+if [[ "$GF_HARD_DISABLE_MAT_IF_NO_GEO" == "1" ]]; then
+  K4_ARGS+=( --gf-hardDisableMatIfNoGeo )
+else
+  K4_ARGS+=( --no-gf-hardDisableMatIfNoGeo )
+fi
+if [[ "$GF_REJECT_NEGATIVE_LABELS" == "1" ]]; then
+  K4_ARGS+=( --gf-rejectNegativeLabels )
+else
+  K4_ARGS+=( --no-gf-rejectNegativeLabels )
+fi
+if [[ "$GF_SORT_HITS" == "1" ]]; then
+  K4_ARGS+=( --gf-sortHits )
+else
+  K4_ARGS+=( --no-gf-sortHits )
+fi
+if [[ "$GF_DEDUP" == "1" ]]; then
+  K4_ARGS+=( --gf-dedup )
+else
+  K4_ARGS+=( --no-gf-dedup )
+fi
+if [[ "$GF_USE_KF_PREFIT" == "1" ]]; then
+  K4_ARGS+=( --gf-useKFPreFit )
+else
+  K4_ARGS+=( --no-gf-useKFPreFit )
+fi
+if [[ "$GF_TRY_BOTH_MOM_DIRS" == "1" ]]; then
+  K4_ARGS+=( --gf-tryBothMomDirs )
+else
+  K4_ARGS+=( --no-gf-tryBothMomDirs )
+fi
+if [[ "$GF_USE_DAF" == "1" ]]; then
+  K4_ARGS+=( --gf-useDAF )
+else
+  K4_ARGS+=( --no-gf-useDAF )
+fi
+if [[ "$GF_FALLBACK_TO_KF_IF_DAF_FAILS" == "1" ]]; then
+  K4_ARGS+=( --gf-fallbackToKFIfDAFFails )
+else
+  K4_ARGS+=( --no-gf-fallbackToKFIfDAFFails )
+fi
+
+# Observability skip toggle
+if [[ "$GF_SKIP_IF_OBS_TOO_LOW" == "1" ]]; then
+  K4_ARGS+=( --gf-skipIfObsTooLow )
+else
+  K4_ARGS+=( --no-gf-skipIfObsTooLow )
+fi
+
+# Sagitta seed toggle
+if [[ "$GF_USE_SAGITTA_SEED" == "1" ]]; then
+  K4_ARGS+=( --gf-useSagittaSeed )
+else
+  K4_ARGS+=( --no-gf-useSagittaSeed )
+fi
+
+# publish state choice
+if [[ "$GF_USE_BIASED_STATE_FOR_PUBLISH" == "1" ]]; then
+  K4_ARGS+=( --gf-useBiasedStateForPublish )
+else
+  K4_ARGS+=( --no-gf-useBiasedStateForPublish )
+fi
+
+# prefit outlier veto toggle
+if [[ "$GF_PREFIT_OUTLIER_VETO" == "1" ]]; then
+  K4_ARGS+=( --gf-prefitOutlierVeto )
+else
+  K4_ARGS+=( --no-gf-prefitOutlierVeto )
+fi
+
+# Angle units toggle (explicit)
+if [[ "$GF_WIRE_ANGLES_DEGREES" == "1" ]]; then
+  K4_ARGS+=( --gf-wireAnglesAreDegrees )
+else
+  K4_ARGS+=( --gf-wireAnglesAreRadians )
+fi
+
+# Late override flags from condor "extraargs"
+
 LOG="job.log"
 echo "[k4run] args: ${K4_ARGS[*]}" | tee "$LOG"
-( /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" ) 2>&1 | tee -a "$LOG"
 
-# ---------------- Verify output & stage to EOS ----------------
+run_cmd() {
+  if [[ "$TIMEOUT_K4RUN" -gt 0 ]]; then
+    timeout --signal=TERM --kill-after=30 "$TIMEOUT_K4RUN" "$@"
+  else
+    "$@"
+  fi
+}
+
+# ---------------- Run ----------------
+( run_cmd /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" ) 2>&1 | tee -a "$LOG"
+K4_RC=${PIPESTATUS[0]}
+
+# If k4run failed but output is usable, override rc to 0 (same philosophy as local_chain)
+check_edm_root() {
+  python3 - "$1" <<'PY'
+import sys, ROOT
+f = ROOT.TFile.Open(sys.argv[1])
+ok = bool(f and not f.IsZombie())
+nev = 0
+if ok:
+    t = f.Get("events")
+    nev = int(t.GetEntries()) if t else 0
+if f:
+    f.Close()
+print("[verify] %s OK=%s NEV=%d" % (sys.argv[1], ok, nev))
+sys.exit(0 if ok and nev>0 else 1)
+PY
+}
+if [[ $K4_RC -ne 0 ]]; then
+  if check_edm_root "$OUT_LOCAL"; then
+    echo "[note] k4run rc=$K4_RC but output looks fine; overriding to 0."
+    K4_RC=0
+  fi
+fi
+
+# Verify required collection exists (match your older reco_job behavior)
 python3 - <<PY "$OUT_LOCAL" "$FIT_OUT"
 import sys, ROOT
 out = sys.argv[1]; coll = sys.argv[2]
@@ -258,14 +570,8 @@ f.Close()
 sys.exit(0 if present else 4)
 PY
 
-# If OUTDIR is on EOS, copy via XRootD; else move locally.
-if [[ "$OUT_EOS" == /eos/* ]]; then
-  echo "[stage] xrdcp -> $OUT_EOS"
-  dest_url="root://eosuser.cern.ch//${OUT_EOS#/}"
-  xrdcp -f "$OUT_LOCAL" "$dest_url"
-  echo "[ok] wrote $dest_url"
-else
-  mkdir -p "$(dirname "$OUT_EOS")"
-  mv -f "$OUT_LOCAL" "$OUT_EOS"
-  echo "[ok] wrote $OUT_EOS"
-fi
+echo "[stage] xrdcp -> $OUT_EOS_XRD"
+xrdcp -f "$OUT_LOCAL" "$OUT_EOS_XRD"
+echo "[ok] wrote $OUT_EOS_XRD"
+
+exit $K4_RC

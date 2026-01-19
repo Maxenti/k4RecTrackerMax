@@ -1,16 +1,37 @@
 #!/bin/bash
 # local_chain.sh — run locally (digi → ggtf → fit) + stamp provenance metadata
-# Updated for: DCHdigi_v02 + GGTF_tracking labeled SenseWireHits + GenFit2DCHFitter
+# Updated for: runDCHTestTrackFinder.py (Jan 18 2026) + GenFit2DCHFitter (Jan 11 2026 nightly)
+#
+# This version:
+#   - Removes unused knobs / CLI flags that no longer exist in runDCHTestTrackFinder.py:
+#       * GF_BEST_STATE_Z_WEIGHT / GF_BEST_STATE_IDX_WEIGHT (removed)
+#       * GF_SIMLINK_* seeding knobs (removed)
+#   - Adds new knobs exposed by runDCHTestTrackFinder.py:
+#       * publish-state: GF_PUBLISH_STATE_CENTRAL_FRAC
+#       * seed tangent:  GF_SEED_TANGENT_K
+#       * prefit outlier veto: GF_PREFIT_OUTLIER_VETO + GF_OUTLIER_* knobs
+#       * PD guards / stats / diag: GF_MIN_COV_EIGENVALUE, GF_STATS_TRUNC_CENTRAL_FRAC, GF_DIAG_EVERY_N_TRACKS
+#   - Aligns defaults with the updated python script.
+#
+# Usage:
+#   ./local_chain.sh [INPUT] [OUTPUT] [MODEL_SPEC] [COMPACT_XML] [DCH_SIMHITS] [DCH_NAME]
+#
 set -euo pipefail
 
 ########## defaults  ##########
-DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_16_2026/eta_+0.50/gun_eta+0.50_pt53.183.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_16_2026/eta_+0.50/reco_eta+0.50_pt53.183_23_32.root"
+DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_16_2026/eta_+0.00/gun_eta+0.00_pt1.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_18_2026/eta_+0.00/reco_eta+0.00_pt1.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
 DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
 DEFAULT_DCH_NAME="DCH_v2"
 ###########################################
+
+
+
+
+
+
 
 # CLI overrides (optional positional args)
 INPUT="${1:-$DEFAULT_INPUT}"
@@ -21,7 +42,8 @@ DCH_SIMHITS="${5:-$DEFAULT_DCH_SIMHITS}"
 DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 
 # ----------------- pipeline controls -----------------
-: "${STAGE:=fit}"              # digi|ggtf|fit
+: "${STAGE:=fit}"              # digi|ggtf|fit  (cumulative in runDCHTestTrackFinder.py)
+: "${SKIP_DIGI:=0}"            # 1 => pass --skipDigi (input already digitized)
 : "${FITTER:=genfit2}"         # genfit2|none
 : "${FIT_OUT:=auto}"
 
@@ -40,49 +62,111 @@ DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
 # Runtime / ONNX slicing
 : "${ONNX_CHUNK:=4096}"        # hits per ONNX slice
 
-# ----------------- NEW: GGTF SenseWireHits output controls -----------------
-: "${GGTF_PRODUCE_SENSEWIREHITS:=1}"      # 1 => emit GGTF_SenseWireHits (for fitter)
-: "${GGTF_PRODUCE_ALL_SENSEWIREHITS:=0}"  # 1 => emit GGTF_AllSenseWireHits debug stream
-: "${GGTF_ALL_SENSEWIREHITS_TYPE:=-777}"  # type value for debug all-stream
-
-# ----------------- NEW: wire hygiene / safety -----------------
+# ----------------- wire hygiene / safety -----------------
 : "${GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE:=1}"  # drop insane drift distances
 : "${GGTF_MAX_ABS_D_MM:=30.0}"               # |distanceToWire| above this is dropped (if enabled)
 
 # ----------------- label-0 handling -----------------
 : "${GGTF_ZERO_MIN:=8}"
-: "${GGTF_WIRE_FRAC:=0.80}"
+: "${GGTF_WIRE_FRAC:=0.60}"
 : "${GGTF_PROMOTE_ZERO:=1}"
 : "${GGTF_SKIP_ZERO_SMALL:=1}"
 : "${GGTF_SKIP_ZERO_ALWAYS:=0}"
 
 # ----------------- GGTF truth-PDG wire gating -----------------
-# Safer default OFF unless explicitly debugging truth-gated behavior
-: "${GGTF_TRUTH_GATE:=0}"     # 1=on, 0=off
+: "${GGTF_TRUTH_GATE:=0}"     # 1=on, 0=off (default off unless you’re debugging)
 : "${GGTF_KEEP_PDG:=13}"
 : "${GGTF_DROP_UNLINKED:=1}"
-# Safer default: empty => let python auto-guess by digi version
-: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"
+: "${GGTF_WIRE_SIMLINK_COLL:=DCHDigi2SimLinkCollection}"   # optional override; leave empty to let python guess
 
-# ----------------- GenFit2 knobs -----------------
-: "${GF_USE_MAT:=0}"           # 0/1  (if 1, compact XML must exist)
+# ----------------- GGTF output collection name -----------------
+: "${GGTF_TRACKS_OUT:=CDCHTracks}"
+
+# ----------------- GenFit2 knobs (match UPDATED runDCHTestTrackFinder.py) -----------------
+: "${GF_USE_MAT:=0}"                  # 0/1  (if 1, compact XML must exist)
+: "${GF_DISABLE_ELOSS:=1}"            # default in python: True
+: "${GF_DISABLE_ALL_MAT:=0}"
+: "${GF_HARD_DISABLE_MAT_IF_NO_GEO:=1}"
+
 : "${GF_BZ:=2.0}"
 : "${GF_PDG:=13}"
 
-: "${GF_SORT_HITS:=1}"         # 1 => --gf-sortHits, 0 => --no-gf-sortHits
-: "${GF_DEDUP:=1}"             # 1 => --gf-dedup,    0 => --no-gf-dedup
-: "${GF_DEDUP_TOL:=0.10}"      # mm
+: "${GF_REJECT_NEGATIVE_LABELS:=1}"   # default in python: True
 
-: "${GF_MIN_GROUP:=6}"
-: "${GF_MAX_MEAS_PER_GROUP:=0}"
+: "${GF_SORT_HITS:=1}"
+: "${GF_DEDUP:=1}"
+: "${GF_DEDUP_TOL:=0.010}"             # mm
 
-# Optional z-outlier filter (off by default)
-: "${GF_FILTER_Z_OUTLIERS:=0}"
-: "${GF_Z_OUTLIER_ABS_MM:=80.0}"
-: "${GF_Z_OUTLIER_NSIGMA:=3.5}"
-: "${GF_Z_OUTLIER_MIN_FRAC_KEEP:=0.5}"
+: "${GF_MIN_HITS_PER_TRACK:=8}"
+: "${GF_MIN_MEASUREMENTS_TO_FIT:=6}"
+: "${GF_MIN_FITTED_POINTS_WITH_FI:=0}"
+: "${GF_MAX_CHI2_NDF:=10.0}"
 
-# ----------------- Digi_v02 settings -----------------
+: "${GF_USE_KF_PREFIT:=1}"
+: "${GF_KF_MAX_ITERS:=16}"
+
+: "${GF_TRY_BOTH_MOM_DIRS:=1}"
+
+: "${GF_USE_DAF:=1}"
+: "${GF_DAF_MAX_ITERS:=12}"
+: "${GF_FALLBACK_TO_KF_IF_DAF_FAILS:=1}"
+
+# publish controls
+: "${GF_USE_BIASED_STATE_FOR_PUBLISH:=1}"
+: "${GF_PUBLISH_STATE_CENTRAL_FRAC:=0.30}"
+: "${GF_PUBLISH_PT_MAX_GEV:=300.0}"
+
+: "${GF_INVALID_PT_SENTINEL:=-1.0}"
+: "${GF_OMEGA_VAR_GOOD:=1e-4}"
+: "${GF_OMEGA_VAR_BAD:=1.0}"
+
+# Units / wire model
+: "${GF_POSITION_UNIT_SCALE:=0.1}"     # mm->cm for GenFit internal
+: "${GF_WIRE_HALF_LENGTH_MM:=2250.0}"  # synthetic endpoints half-length
+: "${GF_MAX_DRIFT_MM:=7.0}"
+: "${GF_MAX_DRIFT_MM_FOR_HIT:=8.0}"
+: "${GF_MIN_DRIFT_ERR_MM:=0.10}"
+: "${GF_MAX_DRIFT_ERR_MM:=1.0}"
+
+# Angles
+: "${GF_WIRE_ANGLES_DEGREES:=0}"      # 1 => --gf-wireAnglesAreDegrees, else radians explicitly
+
+# ----------------- observability gating knobs -----------------
+: "${GF_SKIP_IF_OBS_TOO_LOW:=0}"   # 1 => --gf-skipIfObsTooLow, 0 => --no-gf-skipIfObsTooLow
+: "${GF_MIN_HITS_FOR_OBS:=10}"
+: "${GF_OBS_SIGMA_EFF_MM:=0.025}"
+: "${GF_OBS_MIN_PHISPAN_RAD:=0.006}"
+: "${GF_OBS_MIN_CHORD_MM:=20.0}"
+: "${GF_OBS_MIN_SAGITTA_MM:=0.015}"
+: "${GF_OBS_SCORE_MIN:=1.0}"
+
+# ----------------- seed discipline knobs -----------------
+: "${GF_SEED_ENDPOINT_K:=6}"
+: "${GF_SEED_TANGENT_K:=10}"
+: "${GF_SEED_POS_SIGMA_MM:=80.0}"
+: "${GF_SEED_MOM_SIGMA_GEV:=10.0}"
+
+: "${GF_USE_SAGITTA_SEED:=1}"
+: "${GF_MIN_SAGITTA_FOR_SEED_MM:=0.20}"
+
+: "${GF_SEED_PT_FALLBACK_GEV:=50.0}"
+: "${GF_SEED_PT_MIN_GEV:=0.20}"
+: "${GF_SEED_PT_MAX_GEV:=200.0}"
+: "${GF_SEED_P_MIN_GEV:=0.05}"
+
+# ----------------- pre-fit outlier veto knobs -----------------
+: "${GF_PREFIT_OUTLIER_VETO:=0}"
+: "${GF_OUTLIER_MAX_DROP:=1}"
+: "${GF_OUTLIER_CIRCLE_RESIDUAL_MM:=0.8}"
+: "${GF_OUTLIER_CHORD_RESIDUAL_MM:=2.0}"
+: "${GF_OUTLIER_MIN_KEEP:=10}"
+
+# ----------------- PD guards / stats / diagnostics -----------------
+: "${GF_MIN_COV_EIGENVALUE:=0}"
+: "${GF_STATS_TRUNC_CENTRAL_FRAC:=0.80}"
+: "${GF_DIAG_EVERY_N_TRACKS:=1}"
+
+# ----------------- Digi settings -----------------
 : "${DCH_DIGI_VERSION:=v02}"       # v01|v02
 : "${DCH_DEADTIME_NS:=450.0}"
 : "${DCH_XY_MM:=0.10}"
@@ -99,8 +183,8 @@ PY
 # ----------------- provenance stamping -----------------
 : "${STAMPER:=./scripts/stamp_pipeline_metadata.py}"
 : "${STAMP_KEY:=pipeline_metadata_json}"
-: "${JOBTAG:=}"                 # optional
-: "${STAMP_CONFIGS:=1}"         # 1=record configs as configs, 0=skip
+: "${JOBTAG:=}"
+: "${STAMP_CONFIGS:=1}"
 
 # ----------------- choose FIT_OUT automatically when requested -----------------
 if [[ "${FIT_OUT}" == "auto" ]]; then
@@ -114,12 +198,28 @@ echo "[cfg] INPUT=$INPUT"
 echo "[cfg] OUTPUT=$OUTPUT"
 echo "[cfg] MODEL_SPEC=$MODEL_SPEC"
 echo "[cfg] COMPACT_XML=$COMPACT_XML  DCH_SIMHITS=$DCH_SIMHITS  DCH_NAME=$DCH_NAME"
-echo "[cfg] STAGE=$STAGE FITTER=$FITTER FIT_OUT=$FIT_OUT"
+echo "[cfg] STAGE=$STAGE SKIP_DIGI=$SKIP_DIGI FITTER=$FITTER FIT_OUT=$FIT_OUT GGTF_TRACKS_OUT=$GGTF_TRACKS_OUT"
 echo "[cfg] GGTF_LOG=$GGTF_LOG FITTER_LOG=$FITTER_LOG MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
 echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK"
-echo "[cfg] GGTF_PRODUCE_SENSEWIREHITS=$GGTF_PRODUCE_SENSEWIREHITS GGTF_PRODUCE_ALL_SENSEWIREHITS=$GGTF_PRODUCE_ALL_SENSEWIREHITS"
 echo "[cfg] GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE=$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE GGTF_MAX_ABS_D_MM=$GGTF_MAX_ABS_D_MM"
-echo "[cfg] GF_USE_MAT=$GF_USE_MAT GF_SORT_HITS=$GF_SORT_HITS GF_DEDUP=$GF_DEDUP GF_DEDUP_TOL=$GF_DEDUP_TOL GF_MIN_GROUP=$GF_MIN_GROUP"
+echo "[cfg] GF_USE_MAT=$GF_USE_MAT GF_DISABLE_ELOSS=$GF_DISABLE_ELOSS GF_DISABLE_ALL_MAT=$GF_DISABLE_ALL_MAT GF_HARD_DISABLE_MAT_IF_NO_GEO=$GF_HARD_DISABLE_MAT_IF_NO_GEO"
+echo "[cfg] GF_REJECT_NEGATIVE_LABELS=$GF_REJECT_NEGATIVE_LABELS GF_SORT_HITS=$GF_SORT_HITS GF_DEDUP=$GF_DEDUP GF_DEDUP_TOL=$GF_DEDUP_TOL"
+echo "[cfg] GF_MIN_HITS_PER_TRACK=$GF_MIN_HITS_PER_TRACK GF_MIN_MEASUREMENTS_TO_FIT=$GF_MIN_MEASUREMENTS_TO_FIT GF_MIN_FITTED_POINTS_WITH_FI=$GF_MIN_FITTED_POINTS_WITH_FI"
+echo "[cfg] GF_USE_KF_PREFIT=$GF_USE_KF_PREFIT GF_KF_MAX_ITERS=$GF_KF_MAX_ITERS GF_USE_DAF=$GF_USE_DAF GF_DAF_MAX_ITERS=$GF_DAF_MAX_ITERS GF_TRY_BOTH_MOM_DIRS=$GF_TRY_BOTH_MOM_DIRS GF_FALLBACK_TO_KF_IF_DAF_FAILS=$GF_FALLBACK_TO_KF_IF_DAF_FAILS"
+echo "[cfg] GF_PUBLISH_STATE_CENTRAL_FRAC=$GF_PUBLISH_STATE_CENTRAL_FRAC GF_PUBLISH_PT_MAX_GEV=$GF_PUBLISH_PT_MAX_GEV GF_MAX_CHI2_NDF=$GF_MAX_CHI2_NDF"
+echo "[cfg] GF_INVALID_PT_SENTINEL=$GF_INVALID_PT_SENTINEL GF_OMEGA_VAR_GOOD=$GF_OMEGA_VAR_GOOD GF_OMEGA_VAR_BAD=$GF_OMEGA_VAR_BAD"
+echo "[cfg] GF_POSITION_UNIT_SCALE=$GF_POSITION_UNIT_SCALE GF_WIRE_HALF_LENGTH_MM=$GF_WIRE_HALF_LENGTH_MM GF_MAX_DRIFT_MM=$GF_MAX_DRIFT_MM GF_MAX_DRIFT_MM_FOR_HIT=$GF_MAX_DRIFT_MM_FOR_HIT"
+echo "[cfg] GF_MIN_DRIFT_ERR_MM=$GF_MIN_DRIFT_ERR_MM GF_MAX_DRIFT_ERR_MM=$GF_MAX_DRIFT_ERR_MM"
+echo "[cfg] GF_WIRE_ANGLES_DEGREES=$GF_WIRE_ANGLES_DEGREES"
+echo "[cfg] GF_SKIP_IF_OBS_TOO_LOW=$GF_SKIP_IF_OBS_TOO_LOW GF_MIN_HITS_FOR_OBS=$GF_MIN_HITS_FOR_OBS GF_OBS_SIGMA_EFF_MM=$GF_OBS_SIGMA_EFF_MM"
+echo "[cfg] GF_OBS_MIN_PHISPAN_RAD=$GF_OBS_MIN_PHISPAN_RAD GF_OBS_MIN_CHORD_MM=$GF_OBS_MIN_CHORD_MM GF_OBS_MIN_SAGITTA_MM=$GF_OBS_MIN_SAGITTA_MM GF_OBS_SCORE_MIN=$GF_OBS_SCORE_MIN"
+echo "[cfg] GF_SEED_ENDPOINT_K=$GF_SEED_ENDPOINT_K GF_SEED_TANGENT_K=$GF_SEED_TANGENT_K GF_SEED_POS_SIGMA_MM=$GF_SEED_POS_SIGMA_MM GF_SEED_MOM_SIGMA_GEV=$GF_SEED_MOM_SIGMA_GEV"
+echo "[cfg] GF_USE_SAGITTA_SEED=$GF_USE_SAGITTA_SEED GF_MIN_SAGITTA_FOR_SEED_MM=$GF_MIN_SAGITTA_FOR_SEED_MM"
+echo "[cfg] GF_SEED_PT_FALLBACK_GEV=$GF_SEED_PT_FALLBACK_GEV GF_SEED_PT_MIN_GEV=$GF_SEED_PT_MIN_GEV GF_SEED_PT_MAX_GEV=$GF_SEED_PT_MAX_GEV GF_SEED_P_MIN_GEV=$GF_SEED_P_MIN_GEV"
+echo "[cfg] GF_PREFIT_OUTLIER_VETO=$GF_PREFIT_OUTLIER_VETO GF_OUTLIER_MAX_DROP=$GF_OUTLIER_MAX_DROP GF_OUTLIER_CIRCLE_RESIDUAL_MM=$GF_OUTLIER_CIRCLE_RESIDUAL_MM"
+echo "[cfg] GF_OUTLIER_CHORD_RESIDUAL_MM=$GF_OUTLIER_CHORD_RESIDUAL_MM GF_OUTLIER_MIN_KEEP=$GF_OUTLIER_MIN_KEEP"
+echo "[cfg] GF_MIN_COV_EIGENVALUE=$GF_MIN_COV_EIGENVALUE GF_STATS_TRUNC_CENTRAL_FRAC=$GF_STATS_TRUNC_CENTRAL_FRAC GF_DIAG_EVERY_N_TRACKS=$GF_DIAG_EVERY_N_TRACKS"
+echo "[cfg] GGTF_TRUTH_GATE=$GGTF_TRUTH_GATE KEEP_PDG=$GGTF_KEEP_PDG DROP_UNLINKED=$GGTF_DROP_UNLINKED WIRE_SIMLINK_COLL=${GGTF_WIRE_SIMLINK_COLL:-<auto>}"
 
 # --- keep memory tame ---
 export OMP_NUM_THREADS=1
@@ -160,7 +260,7 @@ build_stamp_extras () {
       | LC_ALL=C sort \
       | awk '
           /^(DCH_|GGTF_|GF_)/ {print; next}
-          /^(STAGE|FITTER|FIT_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK)$/ {print; next}
+          /^(STAGE|SKIP_DIGI|FITTER|FIT_OUT|GGTF_TRACKS_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK)$/ {print; next}
         '
   )
 
@@ -207,6 +307,7 @@ K4_ARGS=(
   --fitterLog  "$FITTER_LOG"
   --fitOut     "$FIT_OUT"
   --stage      "$STAGE"
+  --ggtfTracksOut "$GGTF_TRACKS_OUT"
   --dchDigiVersion   "$DCH_DIGI_VERSION"
   --dch-deadtime-ns  "$DCH_DEADTIME_NS"
   --xyResolution_mm  "$DCH_XY_MM"
@@ -216,29 +317,68 @@ K4_ARGS=(
   --dch-signal-vel-mm-ns  "$DCH_SIGNAL_VEL_MM_NS"
   --rw-start-ns      "$DCH_READOUT_START_NS"
   --rw-duration-ns   "$DCH_READOUT_DUR_NS"
+
+  # ---- GenFit2DCHFitter core ----
   --gf-bz           "$GF_BZ"
   --gf-pdg          "$GF_PDG"
-  --gf-dedupTol     "$GF_DEDUP_TOL"
-  --gf-minGroup     "$GF_MIN_GROUP"
-  --gf-maxMeasPerGroup "$GF_MAX_MEAS_PER_GROUP"
+
+  --gf-minHitsPerTrack        "$GF_MIN_HITS_PER_TRACK"
+  --gf-minMeasurementsToFit   "$GF_MIN_MEASUREMENTS_TO_FIT"
+  --gf-minFittedPointsWithFI  "$GF_MIN_FITTED_POINTS_WITH_FI"
+
+  --gf-dedupTolMM   "$GF_DEDUP_TOL"
+  --gf-kfMaxIters   "$GF_KF_MAX_ITERS"
+  --gf-dafMaxIters  "$GF_DAF_MAX_ITERS"
+
+  --gf-publishStateCentralFrac "$GF_PUBLISH_STATE_CENTRAL_FRAC"
+  --gf-publishPTMaxGeV         "$GF_PUBLISH_PT_MAX_GEV"
+  --gf-maxChi2Ndf              "$GF_MAX_CHI2_NDF"
+
+  --gf-invalidPTSentinel "$GF_INVALID_PT_SENTINEL"
+  --gf-omegaVarGood      "$GF_OMEGA_VAR_GOOD"
+  --gf-omegaVarBad       "$GF_OMEGA_VAR_BAD"
+
+  --gf-positionUnitScale "$GF_POSITION_UNIT_SCALE"
+  --gf-wireHalfLengthMM  "$GF_WIRE_HALF_LENGTH_MM"
+  --gf-maxDriftMM         "$GF_MAX_DRIFT_MM"
+  --gf-maxDriftMMForHit   "$GF_MAX_DRIFT_MM_FOR_HIT"
+  --gf-minDriftErrMM      "$GF_MIN_DRIFT_ERR_MM"
+  --gf-maxDriftErrMM      "$GF_MAX_DRIFT_ERR_MM"
+
+  --gf-minHitsForObs     "$GF_MIN_HITS_FOR_OBS"
+  --gf-obsSigmaEffMM     "$GF_OBS_SIGMA_EFF_MM"
+  --gf-obsMinPhiSpanRad  "$GF_OBS_MIN_PHISPAN_RAD"
+  --gf-obsMinChordMM     "$GF_OBS_MIN_CHORD_MM"
+  --gf-obsMinSagittaMM   "$GF_OBS_MIN_SAGITTA_MM"
+  --gf-obsMinScore       "$GF_OBS_SCORE_MIN"
+
+  --gf-seedEndpointK      "$GF_SEED_ENDPOINT_K"
+  --gf-seedTangentK       "$GF_SEED_TANGENT_K"
+  --gf-seedPosSigmaMM     "$GF_SEED_POS_SIGMA_MM"
+  --gf-seedMomSigmaGeV    "$GF_SEED_MOM_SIGMA_GEV"
+  --gf-seedPTFallbackGeV  "$GF_SEED_PT_FALLBACK_GEV"
+  --gf-seedPTMinGeV       "$GF_SEED_PT_MIN_GEV"
+  --gf-seedPTMaxGeV       "$GF_SEED_PT_MAX_GEV"
+  --gf-seedPMinGeV        "$GF_SEED_P_MIN_GEV"
+  --gf-minSagittaForSeedMM "$GF_MIN_SAGITTA_FOR_SEED_MM"
+
+  --gf-outlierMaxDrop          "$GF_OUTLIER_MAX_DROP"
+  --gf-outlierCircleResidualMM "$GF_OUTLIER_CIRCLE_RESIDUAL_MM"
+  --gf-outlierChordResidualMM  "$GF_OUTLIER_CHORD_RESIDUAL_MM"
+  --gf-outlierMinKeep          "$GF_OUTLIER_MIN_KEEP"
+
+  --gf-minCovEigenvalue        "$GF_MIN_COV_EIGENVALUE"
+  --gf-statsTruncCentralFrac   "$GF_STATS_TRUNC_CENTRAL_FRAC"
+  --gf-diagEveryNTracks        "$GF_DIAG_EVERY_N_TRACKS"
 )
+
+# --skipDigi
+if [[ "$SKIP_DIGI" == "1" ]]; then
+  K4_ARGS+=( --skipDigi )
+fi
 
 # Max hits cap only if >0
 [[ "$MAX_HITS" -gt 0 ]] && K4_ARGS+=( --maxHitsPerEvent "$MAX_HITS" )
-
-# GGTF output toggles
-if [[ "$GGTF_PRODUCE_SENSEWIREHITS" == "1" ]]; then
-  K4_ARGS+=( --ggtf-produceSenseWireHits )
-else
-  K4_ARGS+=( --no-ggtf-produceSenseWireHits )
-fi
-
-if [[ "$GGTF_PRODUCE_ALL_SENSEWIREHITS" == "1" ]]; then
-  K4_ARGS+=( --ggtf-produceAllSenseWireHits )
-else
-  K4_ARGS+=( --no-ggtf-produceAllSenseWireHits )
-fi
-K4_ARGS+=( --ggtf-allSenseWireHitsTypeValue "$GGTF_ALL_SENSEWIREHITS_TYPE" )
 
 # Wire hygiene
 if [[ "$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE" == "1" ]]; then
@@ -260,7 +400,7 @@ if [[ "$GGTF_DROP_UNLINKED" == "1" ]]; then
 else
   K4_ARGS+=( --no-ggtf-dropWireIfUnlinked )
 fi
-if [[ -n "$GGTF_WIRE_SIMLINK_COLL" ]]; then
+if [[ -n "${GGTF_WIRE_SIMLINK_COLL}" ]]; then
   K4_ARGS+=( --ggtf-wireSimLinkColl "$GGTF_WIRE_SIMLINK_COLL" )
 fi
 
@@ -278,6 +418,30 @@ else
   K4_ARGS+=( --no-gf-useMat )
 fi
 
+if [[ "$GF_DISABLE_ELOSS" == "1" ]]; then
+  K4_ARGS+=( --gf-disableEloss )
+else
+  K4_ARGS+=( --no-gf-disableEloss )
+fi
+
+if [[ "$GF_DISABLE_ALL_MAT" == "1" ]]; then
+  K4_ARGS+=( --gf-disableAllMat )
+else
+  K4_ARGS+=( --no-gf-disableAllMat )
+fi
+
+if [[ "$GF_HARD_DISABLE_MAT_IF_NO_GEO" == "1" ]]; then
+  K4_ARGS+=( --gf-hardDisableMatIfNoGeo )
+else
+  K4_ARGS+=( --no-gf-hardDisableMatIfNoGeo )
+fi
+
+if [[ "$GF_REJECT_NEGATIVE_LABELS" == "1" ]]; then
+  K4_ARGS+=( --gf-rejectNegativeLabels )
+else
+  K4_ARGS+=( --no-gf-rejectNegativeLabels )
+fi
+
 if [[ "$GF_SORT_HITS" == "1" ]]; then
   K4_ARGS+=( --gf-sortHits )
 else
@@ -290,15 +454,64 @@ else
   K4_ARGS+=( --no-gf-dedup )
 fi
 
-# Optional z-outlier filter
-if [[ "$GF_FILTER_Z_OUTLIERS" == "1" ]]; then
-  K4_ARGS+=( --gf-filterZOutliers )
+if [[ "$GF_USE_KF_PREFIT" == "1" ]]; then
+  K4_ARGS+=( --gf-useKFPreFit )
 else
-  K4_ARGS+=( --no-gf-filterZOutliers )
+  K4_ARGS+=( --no-gf-useKFPreFit )
 fi
-K4_ARGS+=( --gf-zOutlierAbsMM "$GF_Z_OUTLIER_ABS_MM" )
-K4_ARGS+=( --gf-zOutlierNSigma "$GF_Z_OUTLIER_NSIGMA" )
-K4_ARGS+=( --gf-zOutlierMinFracKeep "$GF_Z_OUTLIER_MIN_FRAC_KEEP" )
+
+if [[ "$GF_TRY_BOTH_MOM_DIRS" == "1" ]]; then
+  K4_ARGS+=( --gf-tryBothMomDirs )
+else
+  K4_ARGS+=( --no-gf-tryBothMomDirs )
+fi
+
+if [[ "$GF_USE_DAF" == "1" ]]; then
+  K4_ARGS+=( --gf-useDAF )
+else
+  K4_ARGS+=( --no-gf-useDAF )
+fi
+
+if [[ "$GF_FALLBACK_TO_KF_IF_DAF_FAILS" == "1" ]]; then
+  K4_ARGS+=( --gf-fallbackToKFIfDAFFails )
+else
+  K4_ARGS+=( --no-gf-fallbackToKFIfDAFFails )
+fi
+
+# Observability skip toggle
+if [[ "$GF_SKIP_IF_OBS_TOO_LOW" == "1" ]]; then
+  K4_ARGS+=( --gf-skipIfObsTooLow )
+else
+  K4_ARGS+=( --no-gf-skipIfObsTooLow )
+fi
+
+# Sagitta seed toggle
+if [[ "$GF_USE_SAGITTA_SEED" == "1" ]]; then
+  K4_ARGS+=( --gf-useSagittaSeed )
+else
+  K4_ARGS+=( --no-gf-useSagittaSeed )
+fi
+
+# publish state choice
+if [[ "$GF_USE_BIASED_STATE_FOR_PUBLISH" == "1" ]]; then
+  K4_ARGS+=( --gf-useBiasedStateForPublish )
+else
+  K4_ARGS+=( --no-gf-useBiasedStateForPublish )
+fi
+
+# prefit outlier veto toggle
+if [[ "$GF_PREFIT_OUTLIER_VETO" == "1" ]]; then
+  K4_ARGS+=( --gf-prefitOutlierVeto )
+else
+  K4_ARGS+=( --no-gf-prefitOutlierVeto )
+fi
+
+# Angle units toggle (explicit)
+if [[ "$GF_WIRE_ANGLES_DEGREES" == "1" ]]; then
+  K4_ARGS+=( --gf-wireAnglesAreDegrees )
+else
+  K4_ARGS+=( --gf-wireAnglesAreRadians )
+fi
 
 echo "[k4run] args: ${K4_ARGS[*]}" | tee -a k4run.log
 
@@ -373,7 +586,7 @@ if ok:
     nev = int(t.GetEntries()) if t else 0
 if f:
     f.Close()
-print(f"[verify] %s OK=%s NEV=%d" % (sys.argv[1], ok, nev))
+print("[verify] %s OK=%s NEV=%d" % (sys.argv[1], ok, nev))
 sys.exit(0 if ok and nev>0 else 1)
 PY
 }

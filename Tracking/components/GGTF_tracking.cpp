@@ -1,19 +1,24 @@
 //======================================================================
-// GGTF_tracking.cpp  (tracks + optional labeled SenseWireHits output)  [ROBUST / PHYSICS-SAFE]
+// GGTF_tracking.cpp  (tracks + standalone wire-hit output)  [ROBUST / PHYSICS-SAFE]
+//
 //   - Designed for DCH-only workflows (no planar hits required)
 //   - Runs ONNX embedding + clustering to build extension::TrackCollection (unchanged behavior)
-//   - Outputs per-track *labeled* SenseWireHits (wire+drift info) for the fitter to consume
-//       * OutputSenseWireHits default: "GGTF_SenseWireHits"
-//       * Each output SenseWireHit has .type = cluster label (same as Track.type)
-//   - Optional debug output: ALL used wire inputs copied to a separate SenseWireHit collection
-//       * OutputAllSenseWireHits default: "GGTF_AllSenseWireHits"
-//       * Each debug hit has .type = AllSenseWireHitsTypeValue (default -777)
-//   - Keeps robust guards: truth PDG gating, absurd |d| dropping, missing collections, etc.
+//
+//   UPDATED OUTPUT MODEL (for your diagnostic script):
+//     - Writes a standalone output SenseWireHit collection (default name set in steering):
+//         OutputWireHitsGGTF  -> e.g. "GGTF_SenseWireHits"
+//     - Tracks store their trackerHits relation pointing to the *OUTPUT* wire hits,
+//       so the ROOT file contains:
+//         GenFitTracks (or CDCHTracks) -> trackerHits_begin/end -> GGTF_SenseWireHits.position.{x,y,z}
+//
+//   Keeps robustness guards:
+//     - truth PDG gating (optional)
+//     - absurd |d| dropping (optional)
+//     - missing collections handling
 //
 // Notes:
-//   - We do NOT output 3D spacepoints anymore. The fitter should build WireMeasurementNew directly
-//     from the (wire position, phi, stereo, drift distance+error, along-wire error) stored in SenseWireHit.
-//   - Track-building (ONNX + clustering) still uses flattened inputs (including a derived midpoint Mmid).
+//   - We do NOT output 3D spacepoints here.
+//   - Track-building still uses flattened inputs with derived midpoint Mmid for the embedding.
 //======================================================================
 
 #include <algorithm>
@@ -60,7 +65,6 @@
 #include "extension/TrackCollection.h"
 
 // --- MC truth link: SenseWireHit -> SimTrackerHit
-// Adjust include/type if your build uses a different name.
 #include "extension/SenseWireHitSimTrackerHitLinkCollection.h"
 
 // DD4hep (optional)
@@ -114,31 +118,6 @@ inline TVector3 safe_unit(const TVector3& v, const TVector3& fallback) {
   return (1.0 / std::sqrt(m2)) * v;
 }
 
-// Copy a SenseWireHit (best effort; includes common fields used by digitizer + fitter)
-inline void copy_sensewirehit(const extension::SenseWireHit& in, extension::MutableSenseWireHit& out) {
-  // Core scalar fields
-  try { out.setCellID(in.getCellID()); } catch (...) {}
-  try { out.setTime(in.getTime()); } catch (...) {}
-  try { out.setEDep(in.getEDep()); } catch (...) {}
-  try { out.setEDepError(in.getEDepError()); } catch (...) {}
-  try { out.setQuality(in.getQuality()); } catch (...) {}
-
-  // Geometry / measurement fields
-  try { out.setWireStereoAngle(in.getWireStereoAngle()); } catch (...) {}
-  try { out.setWireAzimuthalAngle(in.getWireAzimuthalAngle()); } catch (...) {}
-  try { out.setPosition(in.getPosition()); } catch (...) {}
-  try { out.setPositionAlongWireError(in.getPositionAlongWireError()); } catch (...) {}
-  try { out.setDistanceToWire(in.getDistanceToWire()); } catch (...) {}
-  try { out.setDistanceToWireError(in.getDistanceToWireError()); } catch (...) {}
-
-  // If your EDM extension has electron clusters stored
-  try {
-    for (auto e : in.getNElectrons()) out.addToNElectrons(e);
-  } catch (...) {
-    // ignore if not present in this build
-  }
-}
-
 }  // namespace
 
 /**
@@ -150,14 +129,17 @@ inline void copy_sensewirehit(const extension::SenseWireHit& in, extension::Muta
  *   - vector<SenseWireHitSimTrackerHitLinkCollection*>   (MC-truth link)        [may be empty]
  *
  * Outputs:
- *   - extension::TrackCollection              (as upstream)
- *   - extension::SenseWireHitCollection       ("GGTF_SenseWireHits") per-track labeled wires (type=cluster label)
- *   - extension::SenseWireHitCollection       ("GGTF_AllSenseWireHits") debug-only (optional; type=AllSenseWireHitsTypeValue)
+ *   - extension::TrackCollection              (tracks)
+ *   - extension::SenseWireHitCollection       (standalone wire hits used by GGTF)
+ *
+ * Track contents:
+ *   - Track.type = cluster label
+ *   - Track.trackerHits includes:
+ *       * planar hits (if provided)
+ *       * OUTPUT wire hits from OutputWireHitsGGTF collection (persisted)
  */
 struct GGTF_tracking final
-    : k4FWCore::MultiTransformer<std::tuple<extension::TrackCollection,
-                                           extension::SenseWireHitCollection,
-                                           extension::SenseWireHitCollection>(
+    : k4FWCore::MultiTransformer<std::tuple<extension::TrackCollection, extension::SenseWireHitCollection>(
           const std::vector<const edm4hep::TrackerHitPlaneCollection*>&,
           const std::vector<const extension::SenseWireHitCollection*>&,
           const std::vector<const extension::SenseWireHitSimTrackerHitLinkCollection*>&)> {
@@ -172,8 +154,7 @@ struct GGTF_tracking final
              KeyValues("InputWireHitCollections", std::vector<std::string>{"InputWireHitCollections"}),
              KeyValues("InputWireSimLinkCollections", std::vector<std::string>{"InputWireSimLinkCollections"})},
             {KeyValues("OutputTracksGGTF", std::vector<std::string>{"OutputTracksGGTF"}),
-             KeyValues("OutputSenseWireHits", std::vector<std::string>{"GGTF_SenseWireHits"}),
-             KeyValues("OutputAllSenseWireHits", std::vector<std::string>{"GGTF_AllSenseWireHits"})}),
+             KeyValues("OutputWireHitsGGTF", std::vector<std::string>{"OutputWireHitsGGTF"})}),
         m_cfgMeta("GGTF_trackingConfig", Gaudi::DataHandle::Writer) {
     m_geoSvc = serviceLocator()->service(m_geoSvcName);
   }
@@ -185,16 +166,6 @@ struct GGTF_tracking final
 
   Gaudi::Property<int> m_maxHitsPerEvent{this, "MaxHitsPerEvent", 0, "Cap input hits per event (0=off)"};
   Gaudi::Property<int> m_onnxChunk{this, "OnnxChunk", 4096, "Chunk size for ONNX inference"};
-
-  // Output wires for fitter
-  Gaudi::Property<bool> m_produceSenseWireHits{this, "ProduceSenseWireHits", true,
-                                               "Emit per-track labeled SenseWireHits (GGTF_SenseWireHits)"};
-
-  // Debug all-input wires (separate collection)
-  Gaudi::Property<bool> m_produceAllSenseWireHits{this, "ProduceAllSenseWireHits", false,
-                                                  "If true, create GGTF_AllSenseWireHits for ALL used wire inputs (debug)."};
-  Gaudi::Property<int> m_allSenseWireHitsTypeValue{this, "AllSenseWireHitsTypeValue", -777,
-                                                   "Type value for GGTF_AllSenseWireHits hits (debug-only)."};
 
   // Wire handling robustness
   Gaudi::Property<bool>   m_dropWireIfAbsDTooLarge{this, "DropWireIfAbsDTooLarge", true,
@@ -271,9 +242,6 @@ struct GGTF_tracking final
     auto [rss, hwm] = readRSSkB();
     info() << "GGTF_tracking init | model=" << m_modelPath.value()
            << " | Tbeta=" << m_tbeta.value() << " | Td=" << m_td.value()
-           << " | ProduceSenseWireHits=" << (m_produceSenseWireHits.value() ? "true" : "false")
-           << " | ProduceAllSenseWireHits=" << (m_produceAllSenseWireHits.value() ? "true" : "false")
-           << " | AllSenseWireHitsTypeValue=" << m_allSenseWireHitsTypeValue.value()
            << " | MaxAbsDMM=" << m_maxAbsDMM.value()
            << " | DropWireIfAbsDTooLarge=" << (m_dropWireIfAbsDTooLarge.value() ? "true" : "false")
            << " | OnnxChunk=" << m_onnxChunk.value()
@@ -302,9 +270,6 @@ struct GGTF_tracking final
       cfg << ",\"ModelPath\":\"" << m_modelPath.value() << "\"";
       cfg << ",\"Tbeta\":" << m_tbeta.value();
       cfg << ",\"Td\":" << m_td.value();
-      cfg << ",\"ProduceSenseWireHits\":" << (m_produceSenseWireHits.value() ? "true" : "false");
-      cfg << ",\"ProduceAllSenseWireHits\":" << (m_produceAllSenseWireHits.value() ? "true" : "false");
-      cfg << ",\"AllSenseWireHitsTypeValue\":" << m_allSenseWireHitsTypeValue.value();
       cfg << ",\"DropWireIfAbsDTooLarge\":" << (m_dropWireIfAbsDTooLarge.value() ? "true" : "false");
       cfg << ",\"MaxAbsDMM\":" << m_maxAbsDMM.value();
       cfg << ",\"OnnxChunk\":" << m_onnxChunk.value();
@@ -318,6 +283,7 @@ struct GGTF_tracking final
       cfg << ",\"FilterInputWiresByTruthPdg\":" << (m_filterInputWiresByTruthPdg.value() ? "true" : "false");
       cfg << ",\"KeepTruthPdg\":" << m_keepTruthPdg.value();
       cfg << ",\"DropWireIfUnlinked\":" << (m_dropWireIfUnlinked.value() ? "true" : "false");
+      cfg << ",\"option\":\"tracks_plus_outputWireHits_linked\"";
       cfg << ",\"buildDate\":\"" << __DATE__ << "\"";
       cfg << ",\"buildTime\":\"" << __TIME__ << "\"";
       cfg << "}";
@@ -334,7 +300,7 @@ struct GGTF_tracking final
   }
 
   // ---------- main ----------
-  std::tuple<extension::TrackCollection, extension::SenseWireHitCollection, extension::SenseWireHitCollection>
+  std::tuple<extension::TrackCollection, extension::SenseWireHitCollection>
   operator()(const std::vector<const edm4hep::TrackerHitPlaneCollection*>& inputPlanarHitCollections,
              const std::vector<const extension::SenseWireHitCollection*>& inputWireHitCollections,
              const std::vector<const extension::SenseWireHitSimTrackerHitLinkCollection*>& inputWireSimLinkCollections) const override {
@@ -342,9 +308,8 @@ struct GGTF_tracking final
     ++m_evt;
     StepTimer t_all;
 
-    extension::TrackCollection         outputTracks;
-    extension::SenseWireHitCollection  outputWires;     // per-track labeled wires for fitter
-    extension::SenseWireHitCollection  outputAllWires;  // debug all-input wires (optional)
+    extension::TrackCollection outputTracks;
+    extension::SenseWireHitCollection outputWireHits;  // persisted hits for diagnostics
 
     auto logMem = [&](const char* tag) {
       auto [rss, hwm] = readRSSkB();
@@ -409,13 +374,19 @@ struct GGTF_tracking final
     }
 
     std::vector<float>   gInputs;                 // (N,7)
-    std::vector<int64_t> tagType, tagA, tagB;     // type: 0=planar, 1=wire; A=collection index, B=hit index
+    std::vector<int64_t> tagType, tagA, tagB;
+    // tagType: 0=planar, 1=wire
+    // planar: tagA = planar collection index, tagB = hit index within that collection
+    // wire:   tagA = OUTPUT index into outputWireHits, tagB = -1
     gInputs.reserve(std::max<int64_t>(nEst * 7, 128));
     tagType.reserve(std::max<int64_t>(nEst, 128));
     tagA.reserve(tagType.capacity());
     tagB.reserve(tagType.capacity());
 
     int64_t droppedTruth = 0, droppedAbsD = 0;
+
+    // Map input wire ObjectID -> outputWireHits index (avoid duplicate copies)
+    std::unordered_map<uint64_t, int> inWireOid_to_outIdx;
 
     auto push_planar = [&](int ic, int ih, const edm4hep::TrackerHitPlane& h) {
       const auto p = h.getPosition();
@@ -426,6 +397,9 @@ struct GGTF_tracking final
     };
 
     auto push_wire = [&](int ic, int ih, const extension::SenseWireHit& h) {
+      (void)ic;
+      (void)ih;
+
       // Truth gate
       if (!keep_wire_truth(h)) {
         ++droppedTruth;
@@ -436,7 +410,7 @@ struct GGTF_tracking final
       const double d    = double(h.getDistanceToWire());
       const double absd = std::abs(d);
 
-      // Optional drop on absurd |d| (avoid forcing/clamping)
+      // Optional drop on absurd |d|
       if (m_dropWireIfAbsDTooLarge.value() && (absd > m_maxAbsDMM.value())) {
         ++droppedAbsD;
         return;
@@ -458,12 +432,34 @@ struct GGTF_tracking final
       yprime = safe_unit(yprime, TVector3(0, 1, 0));
       xprime = safe_unit(yprime.Cross(dir), TVector3(1, 0, 0));
 
-      // Build a derived midpoint Mmid for ONNX embedding using +/-d along xprime around the wire point.
+      // Derived midpoint Mmid for embedding (using +/-d along xprime around the wire point)
       const TVector3 wpos(wp.x, wp.y, wp.z);
       const TVector3 L = wpos + xprime * (-d);
       const TVector3 R = wpos + xprime * (+d);
       const TVector3 Mmid = 0.5 * (L + R);
       if (!finite_vec3(Mmid)) return;
+
+      // ---- copy this SenseWireHit into OUTPUT collection (persisted) ----
+      int outIdx = -1;
+      {
+        const uint64_t key = oid_key(h.getObjectID());
+        auto it = inWireOid_to_outIdx.find(key);
+        if (it != inWireOid_to_outIdx.end()) {
+          outIdx = it->second;
+        } else {
+          auto oh = outputWireHits.create();
+
+          // These setter names are the natural counterparts to your getters.
+          // If your build complains, open extension/SenseWireHit.h and adjust names.
+          oh.setPosition(h.getPosition());
+          oh.setDistanceToWire(h.getDistanceToWire());
+          oh.setWireAzimuthalAngle(h.getWireAzimuthalAngle());
+          oh.setWireStereoAngle(h.getWireStereoAngle());
+
+          outIdx = int(outputWireHits.size()) - 1;
+          inWireOid_to_outIdx.emplace(key, outIdx);
+        }
+      }
 
       // ONNX input: [x,y,z, isPlanar(0), wireDirVec(x,y,z)]
       const TVector3 dvec = (R - L);
@@ -471,9 +467,10 @@ struct GGTF_tracking final
                      {float(Mmid.X()), float(Mmid.Y()), float(Mmid.Z()),
                       0.f,
                       float(dvec.X()), float(dvec.Y()), float(dvec.Z())});
+
       tagType.push_back(1);
-      tagA.push_back(ic);
-      tagB.push_back(ih);
+      tagA.push_back(outIdx);  // output index into outputWireHits
+      tagB.push_back(-1);
     };
 
     {
@@ -491,7 +488,7 @@ struct GGTF_tracking final
         if (m_maxHitsPerEvent > 0 && (int)tagType.size() >= m_maxHitsPerEvent) break;
       }
 
-      // Wires (main case)
+      // Wires
       ic = 0;
       for (auto c : inputWireHitCollections) {
         if (!c) { ++ic; continue; }
@@ -506,42 +503,15 @@ struct GGTF_tracking final
       info() << "[evt " << m_evt << "] flatten: planar=" << nPlanar << " wire=" << nWire
              << " -> used=" << tagType.size()
              << " (droppedTruth=" << droppedTruth << ", droppedAbsD=" << droppedAbsD << ")"
+             << " | outputWireHits=" << outputWireHits.size()
              << " in " << t_flat.ms() << " ms" << endmsg;
     }
 
     const int64_t nHits = (int64_t)tagType.size();
     if (nHits == 0) {
-      return std::make_tuple(std::move(outputTracks), std::move(outputWires), std::move(outputAllWires));
+      return std::make_tuple(std::move(outputTracks), std::move(outputWireHits));
     }
     logMem("after-flatten");
-
-    // -------- optional debug: ALL used wire inputs -> outputAllWires --------
-    if (m_produceAllSenseWireHits.value()) {
-      StepTimer t_dbg;
-      int made = 0;
-      const int typeValue = m_allSenseWireHitsTypeValue.value();
-
-      for (int64_t flatIdx = 0; flatIdx < nHits; ++flatIdx) {
-        if (tagType[flatIdx] != 1) continue; // wires only
-        const int64_t ia = tagA[flatIdx];
-        const int64_t ib = tagB[flatIdx];
-
-        if (ia < 0 || ia >= (int64_t)inputWireHitCollections.size()) continue;
-        const auto* coll = inputWireHitCollections[ia];
-        if (!coll) continue;
-        if (ib < 0 || ib >= (int64_t)coll->size()) continue;
-
-        const auto& hw = (*coll)[int(ib)];
-        auto out = outputAllWires.create();
-        copy_sensewirehit(hw, out);
-        out.setType(typeValue);
-        ++made;
-      }
-
-      info() << "[evt " << m_evt << "] ProduceAllSenseWireHits: created=" << made
-             << " (collection=GGTF_AllSenseWireHits, type=" << typeValue << ")"
-             << " in " << t_dbg.ms() << " ms" << endmsg;
-    }
 
     // -------- ONNX (chunked) --------
     std::vector<float> embed;
@@ -617,16 +587,14 @@ struct GGTF_tracking final
     invIdx = torch::Tensor();
     logMem("after-bucket");
 
-    // -------- assemble tracks + per-track labeled SenseWireHits --------
-    auto add_hit_to_track = [&](extension::MutableTrack& trk,
-                                int64_t flatIdx,
-                                int labelValue) {
+    // -------- assemble tracks (attach planar hits + OUTPUT wire hits) --------
+    auto add_hit_to_track = [&](extension::MutableTrack& trk, int64_t flatIdx) {
       const int64_t t  = tagType[flatIdx];
       const int64_t ia = tagA[flatIdx];
       const int64_t ib = tagB[flatIdx];
 
       if (t == 0) {
-        // planar (likely none) - keep attaching to Track for completeness
+        // planar
         if (ia < 0 || ia >= (int64_t)inputPlanarHitCollections.size()) return;
         const auto* coll = inputPlanarHitCollections[ia];
         if (!coll) return;
@@ -636,22 +604,10 @@ struct GGTF_tracking final
         return;
       }
 
-      // wire
-      if (ia < 0 || ia >= (int64_t)inputWireHitCollections.size()) return;
-      const auto* coll = inputWireHitCollections[ia];
-      if (!coll) return;
-      if (ib < 0 || ib >= (int64_t)coll->size()) return;
-
-      const auto& hw = (*coll)[int(ib)];
-
-      // Output labeled wire hit (for fitter), if enabled
-      if (m_produceSenseWireHits.value()) {
-        auto out = outputWires.create();
-        copy_sensewirehit(hw, out);
-        out.setType(labelValue); // IMPORTANT: cluster label for grouping in fitter
-      }
-
-      // Always attach original wire hit to track (as upstream expects)
+      // wire (tagA is OUTPUT index into outputWireHits)
+      const int64_t outIdx = ia;
+      if (outIdx < 0 || outIdx >= (int64_t)outputWireHits.size()) return;
+      const auto& hw = outputWireHits[int(outIdx)];
       trk.addToTrackerHits(hw);
     };
 
@@ -666,7 +622,7 @@ struct GGTF_tracking final
         const int labelValue = uniques_cpu[li].item<int>();
         const auto& vec = groups[li];
 
-        // label-0 guards as before
+        // label-0 guards (unchanged)
         if (labelValue == 0) {
           if (m_skipZeroAlways.value()) continue;
 
@@ -685,18 +641,19 @@ struct GGTF_tracking final
         auto trk = outputTracks.create();
         trk.setType(labelValue);
 
-        for (int64_t k : vec) add_hit_to_track(trk, k, labelValue);
+        for (int64_t k : vec) add_hit_to_track(trk, k);
         ++nTracks;
       }
 
       info() << "[evt " << m_evt << "] build: tracks=" << nTracks
-             << " | outSenseWireHits=" << (int)outputWires.size()
+             << " | outputWireHits=" << outputWireHits.size()
+             << " (tracks reference persisted OutputWireHitsGGTF via trackerHits relation)"
              << " in " << t_build.ms() << " ms" << endmsg;
     }
 
     logMem("after-build");
     info() << "[evt " << m_evt << "] TOTAL " << t_all.ms() << " ms" << endmsg;
-    return std::make_tuple(std::move(outputTracks), std::move(outputWires), std::move(outputAllWires));
+    return std::make_tuple(std::move(outputTracks), std::move(outputWireHits));
   }
 
   StatusCode finalize() override {

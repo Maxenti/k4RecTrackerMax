@@ -17,7 +17,7 @@ set -euo pipefail
 
 # ---- EDIT THESE ----
 COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
-OUT_DIR="/eos/user/c/cglenn/gun_samples/1_16_2026"
+OUT_DIR="/eos/user/c/cglenn/gun_samples/1_18_2026"
 GRID_JSON="params_ddsim.jsonl"
 TRANSFER_COMPACT="${TRANSFER_COMPACT:-0}"   # 0: use EOS path on worker, 1: ship the XML file with each job
 # --------------------
@@ -42,9 +42,9 @@ echo
 echo "[prep] Generating grid -> $GRID_JSON"
 python3 scripts/mk_ddsim_grid.py \
   --out "$GRID_JSON" \
-  --pt-min 1 --pt-max 200 --pt-n 5 \
-  --etas "0, 0.1, 0.5, 1.0, 1.5, 2.0" \
-  --nev 100 --particle mu- --theta-smear 0.0
+  --pt-min 0.5 --pt-max 50 --pt-n 15 \
+  --etas "0, 0.1, 0.5, 1.0, 1.5, 2.0, 2.5" \
+  --nev 5000 --particle mu- --theta-smear 0.0
 echo "[prep] Wrote $(wc -l < "$GRID_JSON") lines to $GRID_JSON"
 echo
 

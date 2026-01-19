@@ -1,41 +1,58 @@
-# reco.debug.condor — single debug job on a known-good file
+# reco.condor — one job per input ROOT file
 
 universe        = vanilla
-executable      = scripts/reco_job.sh
+executable      = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/reco_job.sh
 transfer_executable = True
-
 
 # Resources / runtime window
 request_cpus    = 1
-request_memory  = 3.5 GB
-request_disk    = 2 GB
+request_memory  = 8 GB
+request_disk    = 3 GB
 +JobFlavour     = "workday"
 
 # --- I/O under HTCondor ---
-# We ship the runtime bundle and optional chain file; output is written to EOS by the job itself.
-transfer_input_files    = runtime.tgz, local_chain.sh
+# Only ship what the job actually needs
+transfer_input_files    = runtime.tgz
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
 
 # Logging (make sure logs/ exists before condor_submit)
-output  = logs/debug.$(ClusterId).$(ProcId).out
-error   = logs/debug.$(ClusterId).$(ProcId).err
-log     = logs/debug.$(ClusterId).$(ProcId).log
+output  = logs/reco.$(ClusterId).$(ProcId).out
+error   = logs/reco.$(ClusterId).$(ProcId).err
+log     = logs/reco.$(ClusterId).$(ProcId).log
 
-# --- User knobs ---------------------------------------------------
-outdir     = /eos/user/c/cglenn/reco_samples2/1_14_2026
+getenv = True
+stream_output = True
+stream_error  = True
+
+# --- Defaults (can be overridden by condor_submit -append "...") ---
+queuefile  = scripts/filelist.txt
+
+outdir     = /eos/user/c/cglenn/reco_samples2/1_19_2026
 compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
 
-# Tracking / fitting knobs
-fitter   = simple
-usemat   = 1
-stage    = fit
-fitout   = auto
-extraargs =
+fitter    = genfit2
+usemat    = 1
+stage     = fit
+fitout    = auto
+
+
+
+# Key4hep nightly used INSIDE the job (must match runtime build ABI expectations)
+k4rel = 2026-01-11
 
 # Wrapper args:
-#   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8 extraargs
-arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(extraargs)
+#   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8... extraargs tokens ...  last: k4rel
+#
+# CRITICAL: do NOT quote $(extraargs) so it can expand to multiple argv tokens safely.
+# Wrapper args:
+# Pass extra flags via env; quote the value so spaces are preserved
+# environment = "EXTRA_ARGS=\"$(extraargs)\""
 
-# Submit one job per line; scripts/filelist.txt should contain either /eos/... or root://... paths
-queue infile from scripts/filelist.txt
+
+# Arguments: fixed-position only
+arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(k4rel)
+
+
+
+queue infile from $(queuefile)

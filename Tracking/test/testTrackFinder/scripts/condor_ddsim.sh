@@ -7,7 +7,7 @@ K4SETUP=/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 
 # Source only if not already set; clear "$@" while sourcing
 if [[ -z "${KEY4HEP_STACK:-}" && -z "${K4ENV:-}" ]]; then
-  __orig_args=("$@"); set +u; set --; source "$K4SETUP" -r 2025-09-21; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
+  __orig_args=("$@"); set +u; set --; source "$K4SETUP" -r 2026-01-11; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
 else
   echo "[env] Key4HEP already set, not sourcing again."
 fi

@@ -2,18 +2,30 @@
 set -euo pipefail
 
 # Base directory on EOS where the gun sample subdirs live
-BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_14_2026}"
+BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_18_2026}"
 
 # Output file (in CWD unless you pass a second arg)
 OUT_FILE="${2:-filelist.txt}"
 
 # The eta values you want to include
-ETAS=(0 0.1 0.5 1.0 1.5 2.0)
+ETAS=(0 0.1 0.5 1.0 1.5 2.0 2.5)
+
+to_xrd() {
+  local p="$1"
+  if [[ "$p" == root://* ]]; then
+    echo "$p"
+  elif [[ "$p" == /eos/* ]]; then
+    # convert POSIX EOS path to xrootd URL
+    echo "root://eosuser.cern.ch//${p}"
+  else
+    echo "$p"
+  fi
+}
 
 TMP="$(mktemp)"
 trap 'rm -f "$TMP"' EXIT
 
-> "$TMP"  # ensure empty
+> "$TMP"
 
 for eta in "${ETAS[@]}"; do
   tag=$(printf "%+.2f" "$eta")           # e.g. +0.00
@@ -31,13 +43,11 @@ for eta in "${ETAS[@]}"; do
   fi
 
   echo "[scan] eta=$eta  dir=$dir"
-  # NUL-delimited find; print each path on its own line via printf
   while IFS= read -r -d '' f; do
-    printf '%s\n' "$f"
+    printf '%s\n' "$(to_xrd "$f")"
   done < <(find "$dir" -maxdepth 1 -type f -name '*.root' -print0) >> "$TMP"
 done
 
-# Sort & de-dup; remove any accidental blank lines
-grep -v '^$' "$TMP" | sort -u > "$OUT_FILE"
+sed -e 's/[[:space:]]*$//' "$TMP" | grep -v '^$' | sort -u > "$OUT_FILE"
 
 echo "[done] Wrote $(wc -l < "$OUT_FILE") paths to $OUT_FILE"

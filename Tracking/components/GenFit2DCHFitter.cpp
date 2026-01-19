@@ -1,9 +1,9 @@
 // ======================================================================
 // GenFit2DCHFitter.cpp  -- DCH fit of GGTF tracks using GenFit2 WireMeasurementNew
 //
-// Purpose (NEW, matches your new GGTF_tracking.cpp intent):
+// Purpose (Option A, matches your GGTF_tracking.cpp intent):
 //   - Consume GGTF track candidates that already contain the *SenseWireHits*
-//     (NOT spacepoints / NOT GGTF_3DHits).
+//     attached to each extension::Track via trackerHits relation.
 //   - Build GenFit measurements as *WireMeasurementNew* using:
 //        * drift distance (+ error)
 //        * wire direction from (stereoAngle, azimuthalAngle)
@@ -13,33 +13,34 @@
 //   - Export ONE authoritative TrackState(AtIP) per output track.
 //     Convention kept: TrackState.omega = q/pT [GeV^-1]; TrackState.time = pT [GeV].
 //
-// Key robustness updates added in this revision:
-//   (F1) HARD disable GenFit MaterialEffects when UseMaterialEffects=false OR geometry missing.
-//        This prevents the common fatal exception:
-//          "MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!"
-//   (F2) Add verbose diagnostics on hit extraction:
-//        - total trackerHits on input track
-//        - how many are SenseWireHit
-//        - first-hit introspection (typeName if available)
-//   (F3) Guard: require at least 2 usable measurement hits were actually inserted into GenFit track.
-//        (Previously you could pass MinHitsPerTrack but still insert 0 meas if fields were NaN.)
-//   (F4) More stable/defensive seed direction normalization and finite checks.
-//   (F5) Use detId = constant (DetId) by default, not GGTF label, to avoid weird/negative detId.
-//        (You still can keep label for debugging via property if you want.)
-//   (F6) Optional radians/degree conversion toggle for wire angles (WireAnglesAreDegrees).
-//        Default assumes radians (as in your current pipeline comments), but you can flip it.
-//   (F7) Optional "accept non-SenseWireHit" fallback mode that logs and skips (no silent empties).
-//        (We still do not fabricate measurements from unknown hit types; we just make the failure obvious.)
-//   (F8) Additional summary counters for: tracks with 0 meas inserted, nan/inf fields, etc.
+// Implemented robustness upgrades (NO TRUTH / NO SimLinks):
+//   1) Publish-state choice fixed:
+//        - Deterministic selection near the track "middle", avoiding edge pathologies.
+//        - Does NOT hunt for a minimum of an arbitrary score over all points.
+//   2) Seed direction improved using local tangents:
+//        - PCA line direction from first Ktan hits and last Ktan hits.
+//        - Combine tangents, sign-aligned with chord direction.
+//   3) Sagitta seed made robust:
+//        - Pre-fit outlier pruning (below) applied BEFORE observability/sagitta.
+//        - Seed pT from sagitta uses robust sagitta (after pruning) and clamps hard.
+//   4) Pre-fit geometric outlier veto (geometry-only):
+//        - Deterministic iterative circle fit in XY (Kåsa) removing up to N worst hits,
+//          based on radial residual threshold.
+//        - Straight-track fallback: remove worst chord-perpendicular outlier if needed.
+//   5) Tightened accept/reject based on quality (physics-clean):
+//        - Require min FI points and chi2/ndf < MaxChi2Ndf.
+//        - Never cut on reconstructed pT vs expected.
+//   6) Robust "resolution metrics" reporting (summary-level, no truth needed):
+//        - End-of-event robust stats over published pT values: median, MAD, and
+//          truncated RMS (central fraction). Logged and optionally stashed in metadata.
 //
-// Notes / assumptions:
-//   - SenseWireHit fields used (as in your GGTF code):
-//       getPosition(), getDistanceToWire(), getDistanceToWireError(),
-//       getWireAzimuthalAngle(), getWireStereoAngle(), getPositionAlongWireError() (optional)
-//   - IMPORTANT: extension::Track::trackerHits holds extension::TrackerHit (type-erased interface).
-//     We MUST downcast via isA<extension::SenseWireHit>() and as<extension::SenseWireHit>().
-//   - Wire endpoints: we do not (yet) pull true wire endpoints from DD4hep geometry.
-//     Instead we use a configurable half-length (WireHalfLengthMM).
+// Notes on W vs CF comparisons:
+//   - If you want W vs CF to show up in pT resolution, GenFit must actually apply
+//     material effects. This file supports TGeo material effects when gGeoManager exists.
+//   - You do NOT need SimLinks for this comparison; you need geometry/materials.
+//
+// Tested-for-ABI intent: Key4HEP nightly 2026-01-11 + local GenFit2 built
+// against the same nightly.
 //
 // ======================================================================
 
@@ -53,6 +54,7 @@
 #include <sstream>
 #include <ctime>
 #include <numeric>
+#include <cstdint>
 
 // Gaudi
 #include "Gaudi/Algorithm.h"
@@ -66,7 +68,7 @@
 // EDM4hep / extension
 #include "edm4hep/TrackState.h"
 #include "extension/TrackCollection.h"
-#include "extension/TrackerHit.h"          // <- type-erased interface for Track::trackerHits
+#include "extension/TrackerHit.h"
 #include "extension/SenseWireHit.h"
 
 // ROOT / TGeo
@@ -76,6 +78,7 @@
 #include "TMatrixD.h"
 #include "TMatrixDSymEigen.h"
 #include "TDecompChol.h"
+#include "TDecompSVD.h"
 #include "TGeoManager.h"
 
 // GenFit2
@@ -91,7 +94,8 @@
 
 // Fitters / infos
 #include "KalmanFitterRefTrack.h"
-#include "KalmanFitterInfo.h"
+#include "FitStatus.h"
+#include "AbsFitterInfo.h"     // CRITICAL for DAF-safe state extraction
 #include "DAF.h"
 
 // Measurements
@@ -122,7 +126,6 @@ inline void makeDiagonalFloor(TMatrixDSym& C, double eps) {
   for (int i = 0; i < C.GetNrows(); ++i) C(i, i) = std::max(C(i, i), eps);
 }
 
-// Simple PD guard via Cholesky, inflating diagonals if needed
 inline void ensurePD_chol(TMatrixDSym& C, double floorDiag, double inflateFactor, int maxIters) {
   makeDiagonalFloor(C, floorDiag);
   for (int it = 0; it < maxIters; ++it) {
@@ -133,7 +136,6 @@ inline void ensurePD_chol(TMatrixDSym& C, double floorDiag, double inflateFactor
   for (int i = 0; i < C.GetNrows(); ++i) C(i, i) += floorDiag;
 }
 
-// Stronger PD guard: eigenvalue clamp (symmetric)
 inline void ensurePD_eigenClamp(TMatrixDSym& C, double minEig) {
   // symmetrize
   for (int i = 0; i < C.GetNrows(); ++i) {
@@ -144,7 +146,6 @@ inline void ensurePD_eigenClamp(TMatrixDSym& C, double minEig) {
     }
   }
 
-  // If diagonals are NaN/inf, bail to diagonal floor
   for (int i = 0; i < C.GetNrows(); ++i) {
     if (!std::isfinite(C(i, i))) {
       C.Zero();
@@ -187,83 +188,473 @@ static int chargeFromPDG(int pdg) {
   return (pdg >= 0 ? +1 : -1);
 }
 
-// Extract best fitted state near IP (robust selection).
-static bool selectBestFittedState(const genfit::Track& gftrk,
-                                  double publishPTMaxGeV,
-                                  double zWeight,
-                                  double idxWeight,
-                                  genfit::MeasuredStateOnPlane& outState,
-                                  float& outPT,
-                                  size_t& outIdx) {
-  genfit::AbsTrackRep* rep = gftrk.getCardinalRep();
-  if (!rep) return false;
+// degrees->radians helper
+constexpr double kDegToRad = M_PI / 180.0;
 
-  struct Cand {
-    double score = 0.0;
-    double r2 = 0.0;
-    double absz = 0.0;
-    double pt = 0.0;
-    size_t idx = 0;
-    genfit::MeasuredStateOnPlane st;
+// ---------- PCA ordering helpers ----------
+
+static TVector3 principalAxisFromPositionsMM(const std::vector<extension::SenseWireHit>& hw,
+                                             size_t i0 = 0,
+                                             size_t i1 = std::numeric_limits<size_t>::max()) {
+  if (hw.size() < 3) return TVector3(0, 0, 1);
+  i1 = std::min(i1, hw.size());
+  if (i1 <= i0 + 2) return TVector3(0, 0, 1);
+
+  double mx = 0, my = 0, mz = 0;
+  int n = 0;
+  for (size_t i = i0; i < i1; ++i) {
+    const auto p = hw[i].getPosition();
+    if (!finite3(p.x, p.y, p.z)) continue;
+    mx += p.x; my += p.y; mz += p.z; ++n;
+  }
+  if (n < 3) return TVector3(0, 0, 1);
+  mx /= n; my /= n; mz /= n;
+
+  TMatrixDSym C(3); C.Zero();
+  for (size_t i = i0; i < i1; ++i) {
+    const auto p = hw[i].getPosition();
+    if (!finite3(p.x, p.y, p.z)) continue;
+    const double x = p.x - mx;
+    const double y = p.y - my;
+    const double z = p.z - mz;
+    C(0,0) += x*x; C(0,1) += x*y; C(0,2) += x*z;
+    C(1,1) += y*y; C(1,2) += y*z;
+    C(2,2) += z*z;
+  }
+  C(1,0) = C(0,1);
+  C(2,0) = C(0,2);
+  C(2,1) = C(1,2);
+
+  TMatrixDSymEigen eig(C);
+  const TVectorD eval = eig.GetEigenValues();
+  const TMatrixD evec = eig.GetEigenVectors(); // columns
+
+  int imax = 0;
+  if (eval(1) > eval(imax)) imax = 1;
+  if (eval(2) > eval(imax)) imax = 2;
+
+  TVector3 axis(evec(0, imax), evec(1, imax), evec(2, imax));
+  if (!std::isfinite(axis.Mag2()) || axis.Mag2() < 1e-12) return TVector3(0, 0, 1);
+  axis *= (1.0 / axis.Mag());
+
+  // deterministic sign preference
+  if (axis.Z() < 0) axis *= -1.0;
+  else if (std::abs(axis.Z()) < 1e-6 && axis.Y() < 0) axis *= -1.0;
+  else if (std::abs(axis.Z()) < 1e-6 && std::abs(axis.Y()) < 1e-6 && axis.X() < 0) axis *= -1.0;
+
+  return axis;
+}
+
+static void sortWireHitsAlongPCA(std::vector<extension::SenseWireHit>& hw) {
+  if (hw.size() < 2) return;
+
+  double mx = 0, my = 0, mz = 0;
+  int n = 0;
+  for (const auto& h : hw) {
+    const auto p = h.getPosition();
+    if (!finite3(p.x, p.y, p.z)) continue;
+    mx += p.x; my += p.y; mz += p.z; ++n;
+  }
+  if (n == 0) return;
+  mx /= n; my /= n; mz /= n;
+
+  const TVector3 axis = principalAxisFromPositionsMM(hw);
+
+  std::stable_sort(hw.begin(), hw.end(), [&](const auto& a, const auto& b) {
+    const auto pa = a.getPosition();
+    const auto pb = b.getPosition();
+    const TVector3 va(pa.x - mx, pa.y - my, pa.z - mz);
+    const TVector3 vb(pb.x - mx, pb.y - my, pb.z - mz);
+    const double sa = va.Dot(axis);
+    const double sb = vb.Dot(axis);
+    if (sa != sb) return sa < sb;
+
+    // deterministic tie-breakers
+    const double ra = std::hypot(pa.x, pa.y);
+    const double rb = std::hypot(pb.x, pb.y);
+    if (ra != rb) return ra < rb;
+    if (pa.z != pb.z) return pa.z < pb.z;
+    const double phia = std::atan2(pa.y, pa.x);
+    const double phib = std::atan2(pb.y, pb.x);
+    return phia < phib;
+  });
+}
+
+// ---------- simple XY observability metrics ----------
+
+struct ObsMetrics {
+  double phiSpanRad = 0.0;
+  double chordMM = 0.0;
+  double sagittaMM = 0.0;
+  double obsScore = 0.0;
+  bool   ok = false;
+};
+
+static double unwrapDeltaPhi(double dphi) {
+  while (dphi >  M_PI) dphi -= 2.0*M_PI;
+  while (dphi < -M_PI) dphi += 2.0*M_PI;
+  return dphi;
+}
+
+static ObsMetrics computeObsMetricsXY(const std::vector<extension::SenseWireHit>& hw,
+                                     double sigmaEffMM,
+                                     unsigned minHitsForObs) {
+  ObsMetrics m;
+  if (hw.size() < std::max<size_t>(3, minHitsForObs)) return m;
+
+  std::vector<double> phi;
+  phi.reserve(hw.size());
+
+  std::vector<TVector3> pxy;
+  pxy.reserve(hw.size());
+
+  for (const auto& h : hw) {
+    const auto p = h.getPosition();
+    if (!finite3(p.x, p.y, p.z)) continue;
+    phi.push_back(std::atan2(p.y, p.x));
+    pxy.emplace_back(p.x, p.y, 0.0);
+  }
+
+  if (phi.size() < std::max<size_t>(3, minHitsForObs)) return m;
+
+  // unwrap phi along the sequence
+  double phiMin = phi[0];
+  double phiMax = phi[0];
+  double accum = phi[0];
+  double prev = phi[0];
+
+  for (size_t i = 1; i < phi.size(); ++i) {
+    const double d = unwrapDeltaPhi(phi[i] - prev);
+    accum += d;
+    phiMin = std::min(phiMin, accum);
+    phiMax = std::max(phiMax, accum);
+    prev = prev + d;
+  }
+  m.phiSpanRad = std::abs(phiMax - phiMin);
+
+  // chord in XY between endpoints
+  const TVector3 A = pxy.front();
+  const TVector3 B = pxy.back();
+  const TVector3 AB = B - A;
+  m.chordMM = std::hypot(AB.X(), AB.Y());
+
+  // sagitta: max perpendicular distance to chord line in XY
+  double smax = 0.0;
+  const double denom = std::max(1e-12, m.chordMM);
+  for (size_t i = 1; i + 1 < pxy.size(); ++i) {
+    const TVector3 P = pxy[i];
+    const double crossZ =
+      std::abs((P.X()-A.X())*(B.Y()-A.Y()) - (P.Y()-A.Y())*(B.X()-A.X()));
+    const double dperp = crossZ / denom;
+    if (std::isfinite(dperp)) smax = std::max(smax, dperp);
+  }
+  m.sagittaMM = smax;
+
+  const double sig = (std::isfinite(sigmaEffMM) && sigmaEffMM > 0.0) ? sigmaEffMM : 1.0;
+  m.obsScore = smax / sig;
+
+  m.ok = std::isfinite(m.phiSpanRad) && std::isfinite(m.chordMM) && std::isfinite(m.sagittaMM);
+  return m;
+}
+
+// Count TrackPoints with any FitterInfo for cardinal rep.
+static unsigned countFIPoints(genfit::Track& trk) {
+  genfit::AbsTrackRep* rep = trk.getCardinalRep();
+  if (!rep) return 0;
+  const size_t nPts = trk.getNumPoints();
+  unsigned n = 0;
+  for (size_t i = 0; i < nPts; ++i) {
+    const auto* tp = trk.getPoint(i);
+    if (tp && tp->hasFitterInfo(rep)) ++n;
+  }
+  return n;
+}
+
+// Robust stats: median, MAD (median absolute deviation), truncated RMS.
+struct RobustStats {
+  double median = std::numeric_limits<double>::quiet_NaN();
+  double mad = std::numeric_limits<double>::quiet_NaN();          // unscaled
+  double madSigma = std::numeric_limits<double>::quiet_NaN();     // ~1.4826 * MAD for normal
+  double trRms = std::numeric_limits<double>::quiet_NaN();        // truncated RMS (central fraction)
+  size_t n = 0;
+};
+
+static double medianInPlace(std::vector<double>& v) {
+  if (v.empty()) return std::numeric_limits<double>::quiet_NaN();
+  const size_t n = v.size();
+  const size_t mid = n / 2;
+  std::nth_element(v.begin(), v.begin() + mid, v.end());
+  double m = v[mid];
+  if (n % 2 == 0) {
+    std::nth_element(v.begin(), v.begin() + (mid - 1), v.end());
+    m = 0.5 * (m + v[mid - 1]);
+  }
+  return m;
+}
+
+static RobustStats robustStats(const std::vector<double>& xin, double truncCentralFrac = 0.95) {
+  RobustStats s;
+  std::vector<double> x;
+  x.reserve(xin.size());
+  for (double v : xin) if (std::isfinite(v)) x.push_back(v);
+  s.n = x.size();
+  if (x.empty()) return s;
+
+  s.median = medianInPlace(x);
+
+  // MAD
+  std::vector<double> absdev;
+  absdev.reserve(x.size());
+  for (double v : x) absdev.push_back(std::abs(v - s.median));
+  s.mad = medianInPlace(absdev);
+  s.madSigma = 1.4826 * s.mad;
+
+  // truncated RMS around median: keep central frac by |x-median|
+  if (truncCentralFrac > 0.0 && truncCentralFrac <= 1.0) {
+    std::vector<double> dist;
+    dist.reserve(x.size());
+    for (double v : x) dist.push_back(std::abs(v - s.median));
+    // threshold at quantile truncCentralFrac
+    const size_t keepN = std::max<size_t>(1, size_t(std::floor(truncCentralFrac * double(dist.size()))));
+    std::nth_element(dist.begin(), dist.begin() + (keepN - 1), dist.end());
+    const double thr = dist[keepN - 1];
+
+    double sum2 = 0.0;
+    size_t nk = 0;
+    for (double v : x) {
+      const double d = std::abs(v - s.median);
+      if (d <= thr) {
+        const double dv = v - s.median;
+        sum2 += dv * dv;
+        ++nk;
+      }
+    }
+    if (nk > 0) s.trRms = std::sqrt(sum2 / double(nk));
+  }
+
+  return s;
+}
+
+// ----------------------------------------------------------------------
+// Pre-fit geometry-only outlier pruning in XY.
+// ----------------------------------------------------------------------
+
+struct CircleFitXY {
+  bool ok = false;
+  double xc = 0, yc = 0, R = 0;
+};
+
+static CircleFitXY fitCircleKasaXY(const std::vector<extension::SenseWireHit>& hw) {
+  CircleFitXY res;
+  if (hw.size() < 3) return res;
+
+  // Build normal equations for [A,B,C]:
+  // A x + B y + C = -(x^2 + y^2)
+  double Sxx=0,Sxy=0,Sx=0,Syy=0,Sy=0,S1=0;
+  double Tx=0,Ty=0,T1=0;
+
+  size_t n=0;
+  for (const auto& h : hw) {
+    const auto p = h.getPosition();
+    if (!finite3(p.x,p.y,p.z)) continue;
+    const double x = p.x;
+    const double y = p.y;
+    const double z = -(x*x + y*y);
+    Sxx += x*x;
+    Sxy += x*y;
+    Sx  += x;
+    Syy += y*y;
+    Sy  += y;
+    S1  += 1.0;
+
+    Tx  += x*z;
+    Ty  += y*z;
+    T1  += z;
+    ++n;
+  }
+  if (n < 3) return res;
+
+  TMatrixD M(3,3);
+  M(0,0)=Sxx; M(0,1)=Sxy; M(0,2)=Sx;
+  M(1,0)=Sxy; M(1,1)=Syy; M(1,2)=Sy;
+  M(2,0)=Sx;  M(2,1)=Sy;  M(2,2)=S1;
+
+  TVectorD b(3);
+  b(0)=Tx; b(1)=Ty; b(2)=T1;
+
+  // Solve M * u = b
+  double det = M.Determinant();
+  if (!std::isfinite(det) || std::abs(det) < 1e-12) return res;
+
+  TDecompSVD svd(M);
+  Bool_t ok = svd.Solve(b);
+  if (!ok) return res;
+
+  const double A = b(0);
+  const double B = b(1);
+  const double C = b(2);
+
+  const double xc = -A/2.0;
+  const double yc = -B/2.0;
+  const double rad2 = (A*A + B*B)/4.0 - C;
+  if (!std::isfinite(rad2) || rad2 <= 0.0) return res;
+
+  res.ok = true;
+  res.xc = xc;
+  res.yc = yc;
+  res.R  = std::sqrt(rad2);
+  return res;
+}
+
+static double chordPerpDistMM(const TVector3& A, const TVector3& B, const TVector3& P) {
+  const double dx = B.X() - A.X();
+  const double dy = B.Y() - A.Y();
+  const double denom = std::max(1e-12, std::hypot(dx,dy));
+  const double cross = std::abs((P.X()-A.X())*dy - (P.Y()-A.Y())*dx);
+  return cross / denom;
+}
+
+static unsigned pruneOutliersXY(std::vector<extension::SenseWireHit>& hw,
+                               unsigned maxDrop,
+                               double circleResMM,
+                               double chordResMM,
+                               unsigned minKeep = 8) {
+  if (maxDrop == 0 || hw.size() <= minKeep) return 0;
+  unsigned dropped = 0;
+
+  auto eraseIndex = [&](size_t idx) {
+    hw.erase(hw.begin() + idx);
   };
 
+  // --- circle-fit based pruning ---
+  for (unsigned it = 0; it < maxDrop; ++it) {
+    if (hw.size() <= minKeep) break;
+    CircleFitXY cf = fitCircleKasaXY(hw);
+    if (!cf.ok) break;
+
+    double worst = -1.0;
+    size_t worstIdx = 0;
+    for (size_t i = 0; i < hw.size(); ++i) {
+      const auto p = hw[i].getPosition();
+      if (!finite3(p.x,p.y,p.z)) continue;
+      const double r = std::hypot(p.x - cf.xc, p.y - cf.yc);
+      const double resi = std::abs(r - cf.R);
+      if (!std::isfinite(resi)) continue;
+      if (resi > worst) { worst = resi; worstIdx = i; }
+    }
+
+    if (!(worst > circleResMM)) break;
+    eraseIndex(worstIdx);
+    ++dropped;
+  }
+
+  // If we already dropped something, stop here (most cases).
+  if (dropped > 0) return dropped;
+
+  // --- fallback: chord-perp pruning for near-straight / ill-conditioned circle ---
+  for (unsigned it = 0; it < maxDrop; ++it) {
+    if (hw.size() <= minKeep) break;
+    const auto pA = hw.front().getPosition();
+    const auto pB = hw.back().getPosition();
+    if (!finite3(pA.x,pA.y,pA.z) || !finite3(pB.x,pB.y,pB.z)) break;
+
+    const TVector3 A(pA.x,pA.y,0.0);
+    const TVector3 B(pB.x,pB.y,0.0);
+
+    double worst = -1.0;
+    size_t worstIdx = 0;
+    for (size_t i = 1; i + 1 < hw.size(); ++i) {
+      const auto p = hw[i].getPosition();
+      if (!finite3(p.x,p.y,p.z)) continue;
+      const TVector3 P(p.x,p.y,0.0);
+      const double d = chordPerpDistMM(A,B,P);
+      if (!std::isfinite(d)) continue;
+      if (d > worst) { worst = d; worstIdx = i; }
+    }
+
+    if (!(worst > chordResMM)) break;
+    eraseIndex(worstIdx);
+    ++dropped;
+  }
+
+  return dropped;
+}
+
+// ----------------------------------------------------------------------
+// Publish-state selection (DAF-safe, robust):
+// ----------------------------------------------------------------------
+static bool selectPublishStateCentral(const genfit::Track& gftrk,
+                                     bool useBiasedState,
+                                     double centralFrac,        // e.g. 0.6 => keep middle 60%
+                                     genfit::MeasuredStateOnPlane& outState,
+                                     size_t& outIdx) {
+  genfit::AbsTrackRep* rep = gftrk.getCardinalRep();
+  if (!rep) return false;
   const size_t nPts = gftrk.getNumPoints();
   if (nPts == 0) return false;
-  const double midIdx = 0.5 * double(nPts - 1);
+
+  centralFrac = std::clamp(centralFrac, 0.0, 1.0);
+  const double mid = 0.5 * double(nPts - 1);
+  const double halfWin = 0.5 * centralFrac * double(nPts);
+  const double lo = std::max(0.0, mid - halfWin);
+  const double hi = std::min(double(nPts - 1), mid + halfWin);
 
   bool have = false;
-  Cand best;
+  double bestKey1 = 0.0; // |i-mid|
+  double bestKey2 = 0.0; // r
+  size_t bestI = 0;
+  genfit::MeasuredStateOnPlane bestSt;
 
   for (size_t i = 0; i < nPts; ++i) {
+    if (double(i) < lo || double(i) > hi) continue;
     const genfit::TrackPoint* tp = gftrk.getPoint(i);
     if (!tp || !tp->hasFitterInfo(rep)) continue;
 
-    auto* fi = dynamic_cast<const genfit::KalmanFitterInfo*>(tp->getFitterInfo(rep));
+    const genfit::AbsFitterInfo* fi = tp->getFitterInfo(rep);
     if (!fi) continue;
 
     try {
-      genfit::MeasuredStateOnPlane st = fi->getFittedState();
-      TVector3 pos = st.getPos();
-      TVector3 mom = st.getMom();
+      const genfit::MeasuredStateOnPlane& stRef = fi->getFittedState(useBiasedState);
+      genfit::MeasuredStateOnPlane st = stRef;
 
-      const double pt = std::hypot(mom.X(), mom.Y());
-      if (!std::isfinite(pt) || pt <= 0.0) continue;
+      const TVector3 pos = st.getPos();
+      const double r = std::hypot(pos.X(), pos.Y());
+      if (!std::isfinite(r)) continue;
 
-      if (std::isfinite(publishPTMaxGeV) && publishPTMaxGeV > 0.0) {
-        if (pt > 10.0 * publishPTMaxGeV) continue; // strong sanity reject
-      }
+      const double key1 = std::abs(double(i) - mid);
+      const double key2 = r;
 
-      const double r2 = pos.Perp2();
-      const double az = std::abs(pos.Z());
-      if (!std::isfinite(r2) || !std::isfinite(az)) continue;
-
-      const double di = double(i) - midIdx;
-      const double score = r2 + zWeight * (az * az) + idxWeight * (di * di);
-
-      Cand c;
-      c.score = score;
-      c.r2 = r2;
-      c.absz = az;
-      c.pt = pt;
-      c.idx = i;
-      c.st = st;
-
-      if (!have || c.score < best.score) {
-        best = c;
+      if (!have || key1 < bestKey1 || (key1 == bestKey1 && key2 < bestKey2)) {
         have = true;
+        bestKey1 = key1;
+        bestKey2 = key2;
+        bestI = i;
+        bestSt = st;
       }
-    } catch (...) {}
+    } catch (...) {
+      continue;
+    }
   }
 
-  if (!have) return false;
+  if (!have) {
+    // As last resort, fall back to ANY point with fitter info (still deterministic).
+    for (size_t i = 0; i < nPts; ++i) {
+      const genfit::TrackPoint* tp = gftrk.getPoint(i);
+      if (!tp || !tp->hasFitterInfo(rep)) continue;
+      const genfit::AbsFitterInfo* fi = tp->getFitterInfo(rep);
+      if (!fi) continue;
+      try {
+        const genfit::MeasuredStateOnPlane& stRef = fi->getFittedState(useBiasedState);
+        outState = stRef;
+        outIdx = i;
+        return true;
+      } catch (...) {}
+    }
+    return false;
+  }
 
-  outState = best.st;
-  outIdx = best.idx;
-
-  TVector3 mom = outState.getMom();
-  outPT = float(std::hypot(mom.X(), mom.Y()));
-  if (!std::isfinite(outPT) || outPT <= 0.f) return false;
-
+  outState = bestSt;
+  outIdx = bestI;
   return true;
 }
 
@@ -277,10 +668,10 @@ static void addAtIPState(extension::MutableTrack& trk,
                          float invalidPTSentinel,
                          float omegaVar,
                          float obsScore,
-                         float pTOverrideOrNeg = -1.f) {
+                         float extra0 = -1.f,
+                         float extra1 = -1.f) {
   using TP = edm4hep::TrackParams;
 
-  // internal cm -> mm for EDM4hep referencePoint
   const double inv_ps = (posScale_cm_per_mm > 0 ? 1.0 / posScale_cm_per_mm : 10.0);
   const double x = pos_internal_cm.X() * inv_ps;
   const double y = pos_internal_cm.Y() * inv_ps;
@@ -305,33 +696,23 @@ static void addAtIPState(extension::MutableTrack& trk,
   ts.location       = edm4hep::TrackState::AtIP;
   ts.referencePoint = { float(x), float(y), float(z) };
   ts.phi            = float(phi);
-  ts.omega          = float(omegaSigned);  // q/pT [GeV^-1]
+  ts.omega          = float(omegaSigned);
   ts.tanLambda      = float(tanL);
   ts.D0             = float(d0);
   ts.Z0             = float(z0);
 
-  if (ptValid) {
-    const float outPT = (pTOverrideOrNeg > 0.f ? pTOverrideOrNeg : float(pT));
-    ts.time = outPT;
-  } else {
-    ts.time = invalidPTSentinel;
-  }
+  if (ptValid) ts.time = float(pT);
+  else         ts.time = invalidPTSentinel;
 
-  // Minimal covariance placeholders (downstream code can ignore these)
-  ts.setCovMatrix(1.0f,     TP::d0,    TP::d0);
-  ts.setCovMatrix(1e-3f,    TP::phi,   TP::phi);
-  ts.setCovMatrix(omegaVar, TP::omega, TP::omega);
-  ts.setCovMatrix(1.0f,     TP::z0,    TP::z0);
-
-  // stash obsScore in tanLambda variance (non-physics metadata slot)
-  float obs = (std::isfinite(obsScore) ? obsScore : -1.0f);
-  ts.setCovMatrix(obs, TP::tanLambda, TP::tanLambda);
+  // Minimal covariance placeholders.
+  ts.setCovMatrix(std::isfinite(extra0) ? extra0 : 1.0f, TP::d0,       TP::d0);
+  ts.setCovMatrix(1e-3f,                                TP::phi,      TP::phi);
+  ts.setCovMatrix(omegaVar,                             TP::omega,    TP::omega);
+  ts.setCovMatrix(std::isfinite(extra1) ? extra1 : 1.0f, TP::z0,      TP::z0);
+  ts.setCovMatrix(std::isfinite(obsScore) ? obsScore : -1.0f, TP::tanLambda, TP::tanLambda);
 
   trk.addToTrackStates(ts);
 }
-
-// degrees->radians helper
-constexpr double kDegToRad = M_PI / 180.0;
 
 } // end anonymous namespace
 
@@ -346,11 +727,18 @@ struct GenFit2DCHFitter final
 
   GenFit2DCHFitter(const std::string& name, ISvcLocator* svcLoc)
     : Transformer(name, svcLoc,
-        std::tuple<KeyValues>{ KeyValues{"inputTracks",
-                                         std::vector<std::string>{"CDCHTracks"}} },
-        std::tuple<KeyValues>{ KeyValues{"outputTracks",
-                                         std::vector<std::string>{"GenFitTracks"}} }),
-      m_cfgMeta("GenFit2DCHFitterConfig", Gaudi::DataHandle::Writer) {}
+        std::tuple<KeyValues>{
+          KeyValues{"inputTracks", std::vector<std::string>{"OutputTracksGGTF"}}
+        },
+        std::tuple<KeyValues>{
+          KeyValues{"outputTracks", std::vector<std::string>{"GenFitTracks"}}
+        }),
+      // k4FWCore MetaDataHandle (Jan 11 2026 ABI): ctor is (descriptor, mode)
+      m_cfgMeta("cfgMeta", Gaudi::DataHandle::Writer),
+      m_evtMeta("evtMeta", Gaudi::DataHandle::Writer) {
+
+    // nothing else
+  }
 
   // ----------------- Properties -----------------
 
@@ -361,24 +749,29 @@ struct GenFit2DCHFitter final
   };
 
   Gaudi::Property<unsigned> m_minHitsPerTrack{
-    this,"MinHitsPerTrack", 8u, "Minimum SenseWireHits per GGTF track to attempt fit."
+    this,"MinHitsPerTrack", 8u,
+    "Minimum SenseWireHits per GGTF track to attempt fit (after pruning/dedup)."
   };
 
-  // NEW: require at least N measurements actually inserted into GenFit track
   Gaudi::Property<unsigned> m_minMeasurementsToFit{
     this, "MinMeasurementsToFit", 6u,
-    "Minimum WireMeasurementNew actually inserted into GenFit track to attempt fit (guards NaNs)."
+    "Minimum WireMeasurementNew inserted into GenFit track to attempt fit."
   };
 
-  // Determinism / stability: sort and (optionally) dedup wire-hits (uses wire-point positions)
+  Gaudi::Property<unsigned> m_minFittedPointsWithFI{
+    this, "MinFittedPointsWithFI", 10u,
+    "Minimum number of TrackPoints with FitterInfo before accepting/publishing."
+  };
+
+  // Sorting / stability
   Gaudi::Property<bool> m_sortHits{
     this,"SortHits", true,
-    "Sort SenseWireHits deterministically by (r,z,phi) using their on-wire position."
+    "Sort SenseWireHits along PCA axis computed from on-wire positions."
   };
 
   Gaudi::Property<bool> m_dedupHits{
     this,"DeduplicateHits", true,
-    "Drop nearly-identical on-wire positions (helps if upstream duplicated hits)."
+    "Drop nearly-identical on-wire positions."
   };
 
   Gaudi::Property<double> m_dedupTolMM{
@@ -386,136 +779,271 @@ struct GenFit2DCHFitter final
     "Dedup tolerance on on-wire XYZ distance (mm)."
   };
 
-  // Fit engine: DAF is recommended for L/R ambiguity
+  // ----------------- Pre-fit outlier veto (geometry only) -----------------
+  Gaudi::Property<bool> m_prefitOutlierVeto{
+    this, "PreFitOutlierVeto", true,
+    "Deterministic pre-fit outlier veto (circle-fit in XY + chord fallback)."
+  };
+
+  Gaudi::Property<unsigned> m_outlierMaxDrop{
+    this, "OutlierMaxDrop", 2u,
+    "Max number of hits to drop in pre-fit outlier veto."
+  };
+
+  Gaudi::Property<double> m_outlierCircleResMM{
+    this, "OutlierCircleResidualMM", 8.0,
+    "Drop worst hit if |r-R| exceeds this in circle-fit pruning (mm)."
+  };
+
+  Gaudi::Property<double> m_outlierChordResMM{
+    this, "OutlierChordResidualMM", 20.0,
+    "Fallback drop worst hit if chord-perp distance exceeds this (mm)."
+  };
+
+  Gaudi::Property<unsigned> m_outlierMinKeep{
+    this, "OutlierMinKeep", 10u,
+    "Never prune below this number of hits."
+  };
+
+  // Seed endpoints averaging (after sorting/pruning)
+  Gaudi::Property<unsigned> m_seedEndpointK{
+    this, "SeedEndpointK", 6u,
+    "Mean of first/last K hits (after sorting/pruning) used as seed endpoints."
+  };
+
+  // Seed direction via local tangents (PCA on windows)
+  Gaudi::Property<unsigned> m_seedTangentK{
+    this, "SeedTangentK", 10u,
+    "Window size for tangent estimation at each end (PCA direction over first/last K hits)."
+  };
+
+  // Fit strategy: KF prefit then DAF
+  Gaudi::Property<bool> m_useKFPreFit{
+    this, "UseKFPreFit", true,
+    "If true: run KalmanFitterRefTrack first as a prefit, then run DAF (if enabled)."
+  };
+
   Gaudi::Property<bool> m_useDAF{
-    this,"UseDAF", true, "Use GenFit DAF (recommended for wire left/right ambiguity)."
+    this,"UseDAF", true,
+    "If true: run DAF after prefit (recommended for wire left/right ambiguity)."
+  };
+
+  Gaudi::Property<bool> m_fallbackToKFIfDAFFails{
+    this, "FallbackToKFIfDAFFails", true,
+    "If true and UseDAF=true: if DAF throws/fails, keep KF result (if good)."
+  };
+
+  Gaudi::Property<unsigned> m_kfMaxIterations{
+    this,"KFMaxIters", 12u, "KF max iterations."
   };
 
   Gaudi::Property<unsigned> m_dafMaxIterations{
-    this,"DAFMaxIterations", 8u, "DAF max iterations."
+    this,"DAFMaxIters", 8u, "DAF max iterations."
   };
 
-  // Robustness: try +/- momentum
   Gaudi::Property<bool> m_tryBothMomDirs{
     this, "TryBothMomentumDirections", true,
-    "Try mom0 and -mom0; keep best fit"
+    "Try mom0 and -mom0; keep best fit."
   };
 
+  // Field / hypothesis
   Gaudi::Property<double> m_Bz {this, "Bz", 2.0, "Bz field [T]"};
-  Gaudi::Property<int>    m_pdg{this, "PDG", 13,  "PDG hypothesis (charge sign comes from this)."};
+  Gaudi::Property<int>    m_pdg{this, "PDG", 13,  "PDG hypothesis."};
+
+  // Publishing: biased/unbiased states from AbsFitterInfo
+  Gaudi::Property<bool> m_useBiasedStateForPublish{
+    this, "UseBiasedStateForPublish", true,
+    "Use AbsFitterInfo::getFittedState(biased=true) for publishing. If false, use unbiased."
+  };
+
+  // Publish-state selection (fixed)
+  Gaudi::Property<double> m_publishStateCentralFrac{
+    this, "PublishStateCentralFrac", 0.60,
+    "Fraction of track points (by index) to consider around the middle for publish-state selection."
+  };
 
   // Material effects
   Gaudi::Property<bool> m_useMatEff{this, "UseMaterialEffects", true,
                                     "Use TGeoMaterialInterface for GenFit MaterialEffects"};
-
   Gaudi::Property<bool> m_disableEloss{this, "DisableEnergyLoss", true,
-                                       "Disable Bethe-Bloch/Brems energy loss (keep MS) when material effects are enabled"};
-
+                                       "Disable energy loss (keep MS) when material effects enabled"};
   Gaudi::Property<bool> m_disableAllMat{this, "DisableAllMaterialEffects", false,
-                                        "Disable all GenFit material effects (stronger than DisableEnergyLoss)"};
-
-  // NEW: enforce MaterialEffects OFF when missing geo or when user disables
+                                        "Disable all GenFit material effects"};
   Gaudi::Property<bool> m_hardDisableMatIfNoGeo{
     this, "HardDisableMaterialIfNoGeo", true,
-    "If true: when gGeoManager is null, force MaterialEffects::setNoEffects(true) to avoid GenFit exceptions."
+    "If true and gGeoManager is null: force MaterialEffects::setNoEffects(true)."
   };
 
   // Units / scales
   Gaudi::Property<double> m_posScale{this, "PositionUnitScale", 0.1,
                                      "Multiply positions (0.1: mm->cm) for GenFit internal units."};
 
-  Gaudi::Property<double> m_internalLenToM{this, "InternalLengthToMeters", 0.01,
-                                          "Length to meters (0.01: cm->m) for pT~0.3BR."};
-
-  // Wire endpoint synthesis (until we pull real endpoints from geometry)
+  // Wire endpoint synthesis
   Gaudi::Property<double> m_wireHalfLengthMM{
-    this,"WireHalfLengthMM", 1250.0,
-    "Half wire length used to synthesize endpoints when building WireMeasurementNew (mm)."
+    this,"WireHalfLengthMM", 2250.0,
+    "Half wire length used to synthesize endpoints (mm)."
   };
 
-  // DCH drift model inputs from digi
+  // DCH drift model inputs
   Gaudi::Property<double> m_maxDriftMM{
     this,"MaxDriftMM", 30.0,
-    "Max drift distance (mm) for WireMeasurementNew weighting (setMaxDistance)."
+    "Max drift distance (mm) used for WireMeasurementNew setMaxDistance."
+  };
+
+  Gaudi::Property<double> m_maxDriftMMForHit{
+    this,"MaxDriftMMForHit", 35.0,
+    "Hard hit-level cut: drop hits with |drift| > this (mm). (Should be >= MaxDriftMM)."
   };
 
   Gaudi::Property<double> m_minDriftErrMM{
-    this,"MinDriftErrMM", 0.05,
+    this,"MinDriftErrMM", 0.10,
     "Floor for drift distance error (mm)."
   };
 
-  // Seed / robustness
+  Gaudi::Property<double> m_maxDriftErrMM{
+    this,"MaxDriftErrMM", 5.0,
+    "Ceiling for drift distance error (mm). Hits above are clamped (not dropped)."
+  };
+
+  // PD guards (for seed covariance)
+  Gaudi::Property<double> m_minCovEigenvalue{
+    this,"MinCovEigenvalue", 1e-8,
+    "Minimum eigenvalue for PD-guarding covariance matrices."
+  };
+
+  // Seed discipline
   Gaudi::Property<double> m_seedPosSigmaMM  {this, "SeedPosSigmaMM", 80.0, "Seed pos sigma [mm]"};
   Gaudi::Property<double> m_seedMomSigmaGeV {this, "SeedMomSigmaGeV", 5.0,  "Seed mom sigma [GeV]"};
-  Gaudi::Property<double> m_seedPTMinGeV    {this, "SeedPTMinGeV",    0.20, "Min pT [GeV]"};
-  Gaudi::Property<double> m_seedPTMaxGeV    {this, "SeedPTMaxGeV",   200.0, "Max pT [GeV]"};
-  Gaudi::Property<double> m_seedPMinGeV     {this, "SeedPMinGeV",     0.05, "Min |p| [GeV] (numerical floor)"};
 
-  // PD guards
-  Gaudi::Property<double> m_minCovEigenvalue{this,"MinCovEigenvalue", 1e-8,
-    "Minimum eigenvalue (internal length units^2) used when PD-guarding covariance matrices."};
+  Gaudi::Property<double> m_seedPTFallbackGeV{
+    this, "SeedPTFallbackGeV", 50.0,
+    "Fallback seed pT when curvature is unobservable (GeV)."
+  };
 
-  // Publishing gates
-  Gaudi::Property<double> m_publishPTMaxGeV{this,"PublishPTMaxGeV", 300.0,
-    "Hard maximum pT to publish in TrackState.time; above this, publish invalid sentinel."};
+  Gaudi::Property<double> m_seedPTMinGeV    {this, "SeedPTMinGeV", 0.20, "Min seed pT [GeV]"};
+  Gaudi::Property<double> m_seedPTMaxGeV    {this, "SeedPTMaxGeV", 200.0, "Max seed pT [GeV]"};
+  Gaudi::Property<double> m_seedPMinGeV     {this, "SeedPMinGeV",  0.05, "Min |p| [GeV] floor"};
 
-  Gaudi::Property<float> m_invalidPTSentinel {this, "InvalidPTSentinel", -1.0f,
-                                              "TrackState.time when pT is not published"};
+  // Observability / straightness gating
+  Gaudi::Property<unsigned> m_minHitsForObs{
+    this, "MinHitsForObs", 10u,
+    "Minimum hits to compute observability metrics (phiSpan/chord/sagitta)."
+  };
 
-  Gaudi::Property<float> m_omegaVarGood {this, "OmegaVarGood", 1e-4f,
-                                         "(GeV^-1)^2 covariance for omega when pT valid"};
-  Gaudi::Property<float> m_omegaVarBad  {this, "OmegaVarBad",  1.0f,
-                                         "(GeV^-1)^2 covariance for omega when pT invalid"};
+  Gaudi::Property<double> m_obsSigmaEffMM{
+    this, "ObsSigmaEffMM", 0.25,
+    "Effective transverse sigma (mm) used to convert sagitta->dimensionless obsScore."
+  };
 
-  // Best fitted state selection weights
-  Gaudi::Property<double> m_bestStateZWeight{this,"BestStateZWeight", 0.0,
-    "Weight for choosing best fitted state: adds z^2 term (internal units) to r^2."};
+  Gaudi::Property<double> m_obsMinPhiSpanRad{
+    this, "ObsMinPhiSpanRad", 0.06,
+    "Require phi-span >= this for curvature observability (rad)."
+  };
 
-  Gaudi::Property<double> m_bestStateIdxWeight{this,"BestStateIdxWeight", 1e-3,
-    "Weight for choosing best fitted state: adds (idx-mid)^2 to discourage edge-pathologies."};
+  Gaudi::Property<double> m_obsMinChordMM{
+    this, "ObsMinChordMM", 200.0,
+    "Require chord length >= this for observability (mm)."
+  };
 
-  // Optional job tag
-  Gaudi::Property<std::string> m_jobTag{this, "JobTag", "",
-                                        "Optional job tag string recorded in metadata"};
+  Gaudi::Property<double> m_obsMinSagittaMM{
+    this, "ObsMinSagittaMM", 0.15,
+    "Require sagitta >= this for observability (mm)."
+  };
 
-  // NEW: detId policy
+  Gaudi::Property<double> m_obsMinScore{
+    this, "ObsMinScore", 1.0,
+    "Require obsScore = sagitta/sigmaEff >= this for publishing pT (dimensionless)."
+  };
+
+  Gaudi::Property<bool> m_skipIfObsTooLow{
+    this, "SkipIfObsTooLow", false,
+    "If true: drop tracks that fail observability cuts. If false: keep track but publish invalid pT."
+  };
+
+  // Sagitta-based seed
+  Gaudi::Property<bool> m_useSagittaSeed{
+    this, "UseSagittaSeed", true,
+    "If true: compute a sagitta-based pT seed when sagitta is measurable."
+  };
+
+  Gaudi::Property<double> m_minSagittaForSeedMM{
+    this, "MinSagittaForSeedMM", 0.20,
+    "Only use sagitta-based pT seed if sagitta >= this (mm)."
+  };
+
+  // Fit-quality / acceptance
+  Gaudi::Property<double> m_maxChi2Ndf{
+    this, "MaxChi2Ndf", 20.0,
+    "Hard cut on chi2/ndf for accepting/publishing a track."
+  };
+
+  Gaudi::Property<double> m_publishPTMaxGeV{
+    this,"PublishPTMaxGeV", 300.0,
+    "Hard maximum pT to publish in TrackState.time. Above: invalid."
+  };
+
+  Gaudi::Property<float> m_invalidPTSentinel{
+    this, "InvalidPTSentinel", -1.0f,
+    "TrackState.time when pT is not published."
+  };
+
+  Gaudi::Property<float> m_omegaVarGood{
+    this, "OmegaVarGood", 1e-4f,
+    "(GeV^-1)^2 covariance for omega when pT valid."
+  };
+
+  Gaudi::Property<float> m_omegaVarBad{
+    this, "OmegaVarBad", 1.0f,
+    "(GeV^-1)^2 covariance for omega when pT invalid."
+  };
+
+  // Robust stats reporting
+  Gaudi::Property<double> m_statsTruncCentralFrac{
+    this, "StatsTruncCentralFrac", 0.95,
+    "Central fraction for truncated RMS over published pT values (robust metric)."
+  };
+
+  // detId policy
   Gaudi::Property<int> m_detId{
     this, "DetId", 0,
-    "detId passed to WireMeasurementNew (recommended constant; do NOT use GGTF label)."
+    "detId passed to WireMeasurementNew (recommended constant)."
   };
 
   Gaudi::Property<bool> m_useLabelAsDetId{
     this, "UseLabelAsDetId", false,
-    "If true: use GGTF track label as detId (not recommended; can break if labels are weird)."
+    "If true: use GGTF input track label as detId (not recommended)."
   };
 
-  // NEW: angle convention
+  // angle convention
   Gaudi::Property<bool> m_wireAnglesAreDegrees{
     this, "WireAnglesAreDegrees", false,
-    "If true: interpret SenseWireHit azimuth/stereo angles in degrees and convert to radians."
+    "If true: interpret SenseWireHit angles in degrees and convert to radians."
   };
 
-  // NEW: diagnostics
+  // Optional job tag
+  Gaudi::Property<std::string> m_jobTag{
+    this, "JobTag", "",
+    "Optional job tag string recorded in metadata."
+  };
+
+  // diagnostics
   Gaudi::Property<unsigned> m_diagEveryNTracks{
     this, "DiagEveryNTracks", 1u,
-    "Print DEBUG diagnostics every N tracks (only when OutputLevel<=DEBUG). 1 prints for all tracks in DEBUG."
+    "Print DEBUG diagnostics every N tracks when OutputLevel<=DEBUG."
   };
+
+  // ----------------- lifecycle -----------------
 
   StatusCode initialize() override {
     // GenFit uses kGauss internally. 1 Tesla = 10 kGauss.
     genfit::FieldManager::getInstance()->init(
       new genfit::ConstField(0., 0., 10.0*m_Bz.value()));
 
-    // ----- MaterialEffects HARD policy (F1) -----
-    // The MaterialEffects singleton can still be consulted internally even if you "don't use" it.
-    // If it is not initialized with a valid interface, GenFit throws:
-    //   "MaterialEffects hasn't been initialized with a correct AbsMaterialInterface pointer!"
-    //
-    // So we ALWAYS set a definitive global state.
+    // ----- MaterialEffects HARD policy -----
     auto* me = genfit::MaterialEffects::getInstance();
 
-    bool wantMat = bool(m_useMatEff.value());
-    bool haveGeo = (gGeoManager != nullptr);
+    const bool wantMat = bool(m_useMatEff.value());
+    const bool haveGeo = (gGeoManager != nullptr);
 
     if (!wantMat || m_disableAllMat.value()) {
       me->setNoEffects(true);
@@ -523,13 +1051,11 @@ struct GenFit2DCHFitter final
     } else if (!haveGeo) {
       if (m_hardDisableMatIfNoGeo.value()) {
         me->setNoEffects(true);
-        warning() << "UseMaterialEffects=true but gGeoManager is null; HARD disabling MaterialEffects to avoid GenFit exceptions."
-                  << endmsg;
+        warning() << "UseMaterialEffects=true but gGeoManager is null; HARD disabling MaterialEffects." << endmsg;
       } else {
-        warning() << "UseMaterialEffects=true but gGeoManager is null; MaterialEffects may throw at runtime." << endmsg;
+        warning() << "UseMaterialEffects=true but gGeoManager is null; MaterialEffects may throw." << endmsg;
       }
     } else {
-      // haveGeo and wantMat: try init interface
       try {
         me->init(new genfit::TGeoMaterialInterface());
         me->setNoEffects(false);
@@ -540,38 +1066,43 @@ struct GenFit2DCHFitter final
           me->setNoiseBetheBloch(false);
           me->setEnergyLossBrems(false);
           me->setNoiseBrems(false);
-          info() << "MaterialEffects: disabled energy loss (BetheBloch+Brems), kept MS [DisableEnergyLoss=true]" << endmsg;
+          info() << "MaterialEffects: disabled energy loss, kept MS [DisableEnergyLoss=true]" << endmsg;
         }
       } catch (const std::exception& e) {
-        // If init fails, HARD-disable to prevent exceptions during fitting.
         me->setNoEffects(true);
         warning() << "Failed to init/configure MaterialEffects(TGeo): " << e.what()
-                  << " — HARD disabling MaterialEffects to prevent GenFit exceptions." << endmsg;
+                  << " — HARD disabling MaterialEffects." << endmsg;
       } catch (...) {
         me->setNoEffects(true);
-        warning() << "Failed to init/configure MaterialEffects(TGeo) (unknown) — HARD disabling MaterialEffects." << endmsg;
+        warning() << "Failed to init/configure MaterialEffects(TGeo) (unknown) — HARD disabling." << endmsg;
       }
     }
 
-    // Create fitter(s)
+    // Create fitters
     m_kalman = std::make_unique<genfit::KalmanFitterRefTrack>();
-    m_kalman->setMaxIterations(12);
+    m_kalman->setMaxIterations(int(std::max(1u, m_kfMaxIterations.value())));
 
     m_daf = std::make_unique<genfit::DAF>();
     m_daf->setMaxIterations(int(std::max(1u, m_dafMaxIterations.value())));
 
     info() << "GenFit2DCHFitter init | Bz=" << m_Bz.value()
            << " | PDG=" << m_pdg.value()
+           << " | UseKFPreFit=" << (m_useKFPreFit.value() ? "true":"false")
            << " | UseDAF=" << (m_useDAF.value() ? "true":"false")
+           << " | KFMaxIters=" << m_kfMaxIterations.value()
+           << " | DAFMaxIters=" << m_dafMaxIterations.value()
+           << " | TryBothMomDirs=" << (m_tryBothMomDirs.value() ? "true":"false")
+           << " | UseBiasedStateForPublish=" << (m_useBiasedStateForPublish.value() ? "true":"false")
+           << " | PublishStateCentralFrac=" << m_publishStateCentralFrac.value()
            << " | WireHalfLengthMM=" << m_wireHalfLengthMM.value()
            << " | MaxDriftMM=" << m_maxDriftMM.value()
            << " | PublishPTMaxGeV=" << m_publishPTMaxGeV.value()
-           << " | WireAnglesAreDegrees=" << (m_wireAnglesAreDegrees.value() ? "true":"false")
-           << " | DetId=" << m_detId.value()
-           << " | UseLabelAsDetId=" << (m_useLabelAsDetId.value() ? "true":"false")
+           << " | ObsMinScore=" << m_obsMinScore.value()
+           << " | SkipIfObsTooLow=" << (m_skipIfObsTooLow.value() ? "true":"false")
+           << " | PreFitOutlierVeto=" << (m_prefitOutlierVeto.value() ? "true":"false")
            << endmsg;
 
-    // Write metadata
+    // Write static config metadata
     try {
       std::ostringstream os;
       std::time_t now = std::time(nullptr);
@@ -584,24 +1115,52 @@ struct GenFit2DCHFitter final
       os << ",\"JobTag\":\"" << m_jobTag.value() << "\"";
       os << ",\"Bz_T\":" << m_Bz.value();
       os << ",\"PDG\":" << m_pdg.value();
+      os << ",\"UseKFPreFit\":" << (m_useKFPreFit.value() ? "true":"false");
       os << ",\"UseDAF\":" << (m_useDAF.value() ? "true":"false");
-      os << ",\"DAFMaxIterations\":" << m_dafMaxIterations.value();
+      os << ",\"FallbackToKFIfDAFFails\":" << (m_fallbackToKFIfDAFFails.value() ? "true":"false");
+      os << ",\"KFMaxIters\":" << m_kfMaxIterations.value();
+      os << ",\"DAFMaxIters\":" << m_dafMaxIterations.value();
+      os << ",\"UseBiasedStateForPublish\":" << (m_useBiasedStateForPublish.value() ? "true":"false");
+      os << ",\"PublishStateCentralFrac\":" << m_publishStateCentralFrac.value();
       os << ",\"WireHalfLengthMM\":" << m_wireHalfLengthMM.value();
       os << ",\"MaxDriftMM\":" << m_maxDriftMM.value();
+      os << ",\"MaxDriftMMForHit\":" << m_maxDriftMMForHit.value();
+      os << ",\"MinDriftErrMM\":" << m_minDriftErrMM.value();
+      os << ",\"MaxDriftErrMM\":" << m_maxDriftErrMM.value();
       os << ",\"PositionUnitScale\":" << m_posScale.value();
-      os << ",\"PublishPTMaxGeV\":" << m_publishPTMaxGeV.value();
       os << ",\"SortHits\":" << (m_sortHits.value() ? "true":"false");
       os << ",\"DeduplicateHits\":" << (m_dedupHits.value() ? "true":"false");
       os << ",\"DedupTolMM\":" << m_dedupTolMM.value();
-      os << ",\"WireAnglesAreDegrees\":" << (m_wireAnglesAreDegrees.value() ? "true":"false");
+      os << ",\"PreFitOutlierVeto\":" << (m_prefitOutlierVeto.value() ? "true":"false");
+      os << ",\"OutlierMaxDrop\":" << m_outlierMaxDrop.value();
+      os << ",\"OutlierCircleResidualMM\":" << m_outlierCircleResMM.value();
+      os << ",\"OutlierChordResidualMM\":" << m_outlierChordResMM.value();
+      os << ",\"OutlierMinKeep\":" << m_outlierMinKeep.value();
+      os << ",\"SeedEndpointK\":" << m_seedEndpointK.value();
+      os << ",\"SeedTangentK\":" << m_seedTangentK.value();
+      os << ",\"UseSagittaSeed\":" << (m_useSagittaSeed.value() ? "true":"false");
+      os << ",\"MinSagittaForSeedMM\":" << m_minSagittaForSeedMM.value();
+      os << ",\"SeedPTFallbackGeV\":" << m_seedPTFallbackGeV.value();
+      os << ",\"SeedPTMinGeV\":" << m_seedPTMinGeV.value();
+      os << ",\"SeedPTMaxGeV\":" << m_seedPTMaxGeV.value();
+      os << ",\"MinFittedPointsWithFI\":" << m_minFittedPointsWithFI.value();
+      os << ",\"MaxChi2Ndf\":" << m_maxChi2Ndf.value();
+      os << ",\"PublishPTMaxGeV\":" << m_publishPTMaxGeV.value();
+      os << ",\"ObsMinPhiSpanRad\":" << m_obsMinPhiSpanRad.value();
+      os << ",\"ObsMinChordMM\":" << m_obsMinChordMM.value();
+      os << ",\"ObsMinSagittaMM\":" << m_obsMinSagittaMM.value();
+      os << ",\"ObsMinScore\":" << m_obsMinScore.value();
+      os << ",\"SkipIfObsTooLow\":" << (m_skipIfObsTooLow.value() ? "true":"false");
+      os << ",\"StatsTruncCentralFrac\":" << m_statsTruncCentralFrac.value();
       os << ",\"DetId\":" << m_detId.value();
       os << ",\"UseLabelAsDetId\":" << (m_useLabelAsDetId.value() ? "true":"false");
+      os << ",\"WireAnglesAreDegrees\":" << (m_wireAnglesAreDegrees.value() ? "true":"false");
       os << ",\"buildDate\":\"" << __DATE__ << "\"";
       os << ",\"buildTime\":\"" << __TIME__ << "\"";
       os << "}";
 
       m_cfgMeta.put(os.str());
-      info() << "Wrote GenFit2DCHFitter configuration metadata (key='GenFit2DCHFitterConfig')" << endmsg;
+      info() << "Wrote GenFit2DCHFitter configuration metadata (key='cfgMeta')" << endmsg;
     } catch (...) {
       warning() << "Failed to write GenFit2DCHFitter metadata" << endmsg;
     }
@@ -609,7 +1168,10 @@ struct GenFit2DCHFitter final
     return StatusCode::SUCCESS;
   }
 
-  // Seed covariance in internal units (cm^2, GeV^2)
+  StatusCode finalize() override { return StatusCode::SUCCESS; }
+
+  // ----------------- internal helpers -----------------
+
   TMatrixDSym makeSeedCov(double posInfl=1.0, double momInfl=1.0) const {
     TMatrixDSym C(6);
     C.Zero();
@@ -618,39 +1180,11 @@ struct GenFit2DCHFitter final
     for (int i = 0; i < 3; ++i) C(i, i) = sP * sP;
     for (int i = 3; i < 6; ++i) C(i, i) = sM * sM;
     ensurePD_chol(C, 1e-6, 4.0, 6);
+    ensurePD_eigenClamp(C, std::max(1e-12, m_minCovEigenvalue.value()));
     return C;
   }
 
-  // Run chosen fitter
-  const genfit::FitStatus* run_fit(genfit::Track& trk, const char* tag, int label) const {
-    try {
-      if (m_useDAF.value()) m_daf->processTrack(&trk);
-      else                 m_kalman->processTrack(&trk);
-    } catch (const genfit::Exception& e) {
-      warning() << "GenFit exception during processTrack (label=" << label << ", " << tag << "): " << e.what() << endmsg;
-      return nullptr;
-    } catch (const std::exception& e) {
-      warning() << "Std exception during processTrack (label=" << label << ", " << tag << "): " << e.what() << endmsg;
-      return nullptr;
-    } catch (...) {
-      warning() << "Unknown exception during processTrack (label=" << label << ", " << tag << ")" << endmsg;
-      return nullptr;
-    }
-    genfit::AbsTrackRep* rep = trk.getCardinalRep();
-    return rep ? trk.getFitStatus(rep) : nullptr;
-  }
-
-  bool has_any_FI(genfit::Track& trk) const {
-    genfit::AbsTrackRep* rep = trk.getCardinalRep();
-    if (!rep) return false;
-    const size_t nPts = trk.getNumPoints();
-    for (size_t i = 0; i < nPts; ++i) {
-      auto* tp = trk.getPoint(i);
-      if (tp && tp->hasFitterInfo(rep)) return true;
-    }
-    return false;
-  }
-
+  // Fit-status helpers
   double chi2ndf(const genfit::FitStatus* fs) const {
     if (!fs) return std::numeric_limits<double>::infinity();
     const double ndf = std::max(1.0, double(fs->getNdf()));
@@ -658,25 +1192,80 @@ struct GenFit2DCHFitter final
   }
 
   bool isGoodFS(const genfit::FitStatus* fs) const {
-    return fs && fs->isFitted() && fs->isFitConverged() && std::isfinite(fs->getChi2());
+    if (!fs) return false;
+    if (!fs->isFitted()) return false;
+    if (!std::isfinite(fs->getChi2())) return false;
+    if (fs->getNdf() <= 0) return false;
+    return true;
   }
 
-  // Deterministic sorting key from on-wire position (in mm)
-  static void sortWireHitsDeterministic(std::vector<extension::SenseWireHit>& hw) {
-    std::stable_sort(hw.begin(), hw.end(), [](const auto& a, const auto& b) {
-      const auto pa = a.getPosition();
-      const auto pb = b.getPosition();
-      const double ra = std::hypot(pa.x, pa.y);
-      const double rb = std::hypot(pb.x, pb.y);
-      if (ra != rb) return ra < rb;
-      if (pa.z != pb.z) return pa.z < pb.z;
-      const double phia = std::atan2(pa.y, pa.x);
-      const double phib = std::atan2(pb.y, pb.x);
-      return phia < phib;
-    });
+  const genfit::FitStatus* run_fit_kf_then_daf(genfit::Track& trk, const char* tag, int label,
+                                               bool& outUsedDAF) const {
+    outUsedDAF = false;
+
+    genfit::AbsTrackRep* rep0 = trk.getCardinalRep();
+    if (!rep0) return nullptr;
+
+    const genfit::FitStatus* fsKF = nullptr;
+
+    // KF prefit
+    if (m_useKFPreFit.value()) {
+      try {
+        m_kalman->processTrack(&trk);
+      } catch (const genfit::Exception& e) {
+        warning() << "GenFit KF exception (label=" << label << ", " << tag << "): " << e.what() << endmsg;
+      } catch (const std::exception& e) {
+        warning() << "KF std exception (label=" << label << ", " << tag << "): " << e.what() << endmsg;
+      } catch (...) {
+        warning() << "KF unknown exception (label=" << label << ", " << tag << ")" << endmsg;
+      }
+      rep0 = trk.getCardinalRep();
+      fsKF = rep0 ? trk.getFitStatus(rep0) : nullptr;
+    }
+
+    // DAF refine
+    if (m_useDAF.value()) {
+      try {
+        m_daf->processTrack(&trk);
+        outUsedDAF = true;
+      } catch (const genfit::Exception& e) {
+        warning() << "GenFit DAF exception (label=" << label << ", " << tag << "): " << e.what() << endmsg;
+        outUsedDAF = false;
+        if (!m_fallbackToKFIfDAFFails.value()) return nullptr;
+        rep0 = trk.getCardinalRep();
+        const genfit::FitStatus* fs = rep0 ? trk.getFitStatus(rep0) : nullptr;
+        if (isGoodFS(fs)) return fs;
+        if (isGoodFS(fsKF)) return fsKF;
+        return nullptr;
+      } catch (const std::exception& e) {
+        warning() << "DAF std exception (label=" << label << ", " << tag << "): " << e.what() << endmsg;
+        outUsedDAF = false;
+        if (!m_fallbackToKFIfDAFFails.value()) return nullptr;
+        rep0 = trk.getCardinalRep();
+        const genfit::FitStatus* fs = rep0 ? trk.getFitStatus(rep0) : nullptr;
+        if (isGoodFS(fs)) return fs;
+        if (isGoodFS(fsKF)) return fsKF;
+        return nullptr;
+      } catch (...) {
+        warning() << "DAF unknown exception (label=" << label << ", " << tag << ")" << endmsg;
+        outUsedDAF = false;
+        if (!m_fallbackToKFIfDAFFails.value()) return nullptr;
+        rep0 = trk.getCardinalRep();
+        const genfit::FitStatus* fs = rep0 ? trk.getFitStatus(rep0) : nullptr;
+        if (isGoodFS(fs)) return fs;
+        if (isGoodFS(fsKF)) return fsKF;
+        return nullptr;
+      }
+    }
+
+    rep0 = trk.getCardinalRep();
+    const genfit::FitStatus* fs = rep0 ? trk.getFitStatus(rep0) : nullptr;
+    if (isGoodFS(fs)) return fs;
+    if (isGoodFS(fsKF)) return fsKF;
+    return fs;
   }
 
-  // Dedup using on-wire position (in mm)
+  // Dedup using on-wire position (in mm); requires sorted order first.
   static void dedupWireHits(std::vector<extension::SenseWireHit>& hw, double tolMM) {
     if (hw.empty()) return;
     const double tol2 = tolMM * tolMM;
@@ -684,12 +1273,11 @@ struct GenFit2DCHFitter final
     std::vector<extension::SenseWireHit> out;
     out.reserve(hw.size());
 
-    auto prev = hw.front();
-    out.push_back(prev);
+    auto prevp = hw.front().getPosition();
+    out.push_back(hw.front());
 
-    auto prevp = prev.getPosition();
     for (size_t i = 1; i < hw.size(); ++i) {
-      auto pi = hw[i].getPosition();
+      const auto pi = hw[i].getPosition();
       const double dx = pi.x - prevp.x;
       const double dy = pi.y - prevp.y;
       const double dz = pi.z - prevp.z;
@@ -701,87 +1289,117 @@ struct GenFit2DCHFitter final
     hw.swap(out);
   }
 
-  // Build a GenFit track from SenseWireHits; return #measurements inserted.
   unsigned buildTrackFromWireHits(genfit::Track& outTrack,
                                   const std::vector<extension::SenseWireHit>& hw,
                                   int detIdForAllHits,
                                   double posScale_cm_per_mm,
-                                  bool wireAnglesAreDegrees) const {
+                                  bool wireAnglesAreDegrees,
+                                  unsigned& nHitDropped) const {
     const double halfL_cm  = m_wireHalfLengthMM.value() * posScale_cm_per_mm; // mm -> cm
     const double maxD_cm   = m_maxDriftMM.value()       * posScale_cm_per_mm;
     const double minErr_cm = m_minDriftErrMM.value()    * posScale_cm_per_mm;
 
     unsigned nInserted = 0;
+    nHitDropped = 0;
     int hitId = 0;
 
     for (const auto& h : hw) {
       const auto p = h.getPosition();
-      if (!finite3(p.x, p.y, p.z)) continue;
+      if (!finite3(p.x, p.y, p.z)) { ++nHitDropped; continue; }
 
-      double d_mm = std::abs(double(h.getDistanceToWire()));
-      if (!std::isfinite(d_mm)) continue;
+      const double d_raw = double(h.getDistanceToWire());
+      if (!std::isfinite(d_raw)) { ++nHitDropped; continue; }
+      const double d_mm = std::abs(d_raw);
+
+      if (d_mm > m_maxDriftMMForHit.value()) { ++nHitDropped; continue; }
 
       double derr_mm = double(h.getDistanceToWireError());
       if (!(derr_mm > 0.0) || !std::isfinite(derr_mm)) derr_mm = m_minDriftErrMM.value();
       derr_mm = std::max(derr_mm, m_minDriftErrMM.value());
+      if (std::isfinite(m_maxDriftErrMM.value()) && m_maxDriftErrMM.value() > 0.0) {
+        derr_mm = std::min(derr_mm, m_maxDriftErrMM.value());
+      }
 
       const double d_cm    = d_mm    * posScale_cm_per_mm;
       const double derr_cm = std::max(derr_mm * posScale_cm_per_mm, minErr_cm);
 
-      // Wire angles
       double phi = double(h.getWireAzimuthalAngle());
       double st  = double(h.getWireStereoAngle());
-      if (!std::isfinite(phi) || !std::isfinite(st)) continue;
+      if (!std::isfinite(phi) || !std::isfinite(st)) { ++nHitDropped; continue; }
       if (wireAnglesAreDegrees) { phi *= kDegToRad; st *= kDegToRad; }
 
-      // Wire direction convention (same as your original)
       TVector3 dir(0, 0, 1);
       dir.RotateX(st);
       dir.RotateZ(phi);
       dir = safeUnit(dir, TVector3(0, 0, 1));
 
-      // A point on the wire in internal units (cm)
       TVector3 wp_cm(posScale_cm_per_mm * p.x,
                      posScale_cm_per_mm * p.y,
                      posScale_cm_per_mm * p.z);
 
-      // Synth endpoints (internal cm)
-      TVector3 e1 = wp_cm - halfL_cm * dir;
-      TVector3 e2 = wp_cm + halfL_cm * dir;
+      const TVector3 e1 = wp_cm - halfL_cm * dir;
+      const TVector3 e2 = wp_cm + halfL_cm * dir;
 
       auto* tp = new genfit::TrackPoint(&outTrack);
 
-      // WireMeasurementNew(driftDistance, driftDistanceError, endPoint1, endPoint2, detId, hitId, tp)
       auto* meas = new genfit::WireMeasurementNew(d_cm, derr_cm, e1, e2,
                                                   detIdForAllHits, hitId, tp);
 
-      // Let DAF decide left/right (0)
       meas->setLeftRightResolution(0);
-
-      // Used for DAF's initial weights
       meas->setMaxDistance(maxD_cm);
 
       tp->addRawMeasurement(meas);
       outTrack.insertPoint(tp);
+
       ++hitId;
       ++nInserted;
     }
     return nInserted;
   }
 
+  double seedPTFromSagitta(const ObsMetrics& obs) const {
+    if (!obs.ok) return std::numeric_limits<double>::quiet_NaN();
+    if (!(obs.chordMM > 0.0) || !(obs.sagittaMM > 0.0)) return std::numeric_limits<double>::quiet_NaN();
+
+    const double L = obs.chordMM;     // mm
+    const double s = obs.sagittaMM;   // mm
+    if (s < m_minSagittaForSeedMM.value()) return std::numeric_limits<double>::quiet_NaN();
+
+    const double R_mm = (L*L) / (8.0 * s);
+    if (!std::isfinite(R_mm) || R_mm <= 0.0) return std::numeric_limits<double>::quiet_NaN();
+
+    const double R_m = R_mm * 1e-3;
+    return 0.3 * m_Bz.value() * R_m;
+  }
+
+  static TVector3 tangentDirFromWindowMM(const std::vector<extension::SenseWireHit>& hw,
+                                        size_t i0, size_t i1,
+                                        const TVector3& chordDirMM_unit) {
+    if (hw.size() < 3) return chordDirMM_unit;
+    i1 = std::min(i1, hw.size());
+    if (i1 <= i0 + 2) return chordDirMM_unit;
+
+    TVector3 ax = principalAxisFromPositionsMM(hw, i0, i1);
+    if (ax.Dot(chordDirMM_unit) < 0) ax *= -1.0;
+    return safeUnit(ax, chordDirMM_unit);
+  }
+
   extension::TrackCollection
   operator()(const extension::TrackCollection& inTracks) const override {
     extension::TrackCollection out;
 
-    const double posScale_cm_per_mm = m_posScale.value(); // internal cm per mm
+    const double posScale_cm_per_mm = m_posScale.value();
     const int qPublish = chargeFromPDG(m_pdg.value());
 
-    unsigned nIn = 0, nFit = 0, nFail = 0, nSkipNoHits = 0, nSkipMinHits = 0;
-    unsigned nSkipNoSenseWireHits = 0;
-    unsigned nSkipTooFewMeas = 0;
-    unsigned nSkipBadSeed = 0;
-
+    unsigned nIn = 0, nFit = 0, nFail = 0;
+    unsigned nSkipNoHitsRead = 0, nSkipNoSenseWireHits = 0, nSkipMinHits = 0;
+    unsigned nSkipTooFewMeas = 0, nSkipBadSeed = 0, nSkipFewFI = 0;
+    unsigned nSkipChi2 = 0, nSkipObs = 0;
     unsigned nWarnedType = 0;
+    unsigned nPrunedTotal = 0;
+
+    std::vector<double> publishedPTs;
+    publishedPTs.reserve(inTracks.size());
 
     for (const auto& trkIn : inTracks) {
       ++nIn;
@@ -789,7 +1407,6 @@ struct GenFit2DCHFitter final
       const int label = int(trkIn.getType());
       if (m_rejectNegativeLabels.value() && label < 0) continue;
 
-      // --------- Gather SenseWireHits from the GGTF candidate track ----------
       std::vector<extension::SenseWireHit> wireHits;
       wireHits.reserve(256);
 
@@ -801,10 +1418,9 @@ struct GenFit2DCHFitter final
         for (const auto& th : rng) {
           if (!th.isAvailable()) continue;
           if (!th.isA<extension::SenseWireHit>()) {
-            // Don't spam: only warn a few times in DEBUG mode
             if (msgLevel(MSG::DEBUG) && nWarnedType < 3) {
-              debug() << "Non-SenseWireHit trackerHit encountered on label=" << label
-                      << " (skipping). If all are non-SenseWireHit, your GGTF is not attaching SenseWireHit relations."
+              debug() << "Non-SenseWireHit trackerHit on label=" << label
+                      << " (skipping). If all are non-SenseWireHit, GGTF is not attaching SenseWireHit relations."
                       << endmsg;
               ++nWarnedType;
             }
@@ -814,13 +1430,13 @@ struct GenFit2DCHFitter final
         }
       } catch (...) {
         warning() << "Track trackerHits relation read failed (label=" << label << "). Skipping." << endmsg;
-        ++nSkipNoHits;
+        ++nSkipNoHitsRead;
         continue;
       }
 
       if (wireHits.empty()) {
         ++nSkipNoSenseWireHits;
-        if (msgLevel(MSG::DEBUG) && (m_diagEveryNTracks.value() > 0) && (nIn % m_diagEveryNTracks.value() == 0)) {
+        if (msgLevel(MSG::DEBUG) && m_diagEveryNTracks.value() > 0 && (nIn % m_diagEveryNTracks.value() == 0)) {
           debug() << "Diag: label=" << label
                   << " trackerHits_total=" << totalTH
                   << " senseWireHits_found=0"
@@ -829,38 +1445,96 @@ struct GenFit2DCHFitter final
         continue;
       }
 
-      if (msgLevel(MSG::DEBUG) && (m_diagEveryNTracks.value() > 0) && (nIn % m_diagEveryNTracks.value() == 0)) {
-        debug() << "Diag: label=" << label
-                << " trackerHits_total=" << totalTH
-                << " senseWireHits_found=" << wireHits.size()
-                << endmsg;
-      }
-
-      if (m_sortHits.value()) sortWireHitsDeterministic(wireHits);
+      if (m_sortHits.value()) sortWireHitsAlongPCA(wireHits);
       if (m_dedupHits.value() && m_dedupTolMM.value() > 0.0) dedupWireHits(wireHits, m_dedupTolMM.value());
+
+      if (m_prefitOutlierVeto.value()) {
+        const unsigned dropped = pruneOutliersXY(
+          wireHits,
+          m_outlierMaxDrop.value(),
+          m_outlierCircleResMM.value(),
+          m_outlierChordResMM.value(),
+          std::max<unsigned>(m_outlierMinKeep.value(), m_minHitsPerTrack.value())
+        );
+        nPrunedTotal += dropped;
+      }
 
       if (wireHits.size() < m_minHitsPerTrack.value()) { ++nSkipMinHits; continue; }
 
-      // --------- Seed from endpoints of on-wire points (just for convergence) ----------
-      const auto p0 = wireHits.front().getPosition();
-      const auto p1 = wireHits.back().getPosition();
-      if (!finite3(p0.x, p0.y, p0.z) || !finite3(p1.x, p1.y, p1.z)) { ++nSkipBadSeed; continue; }
+      const ObsMetrics obs = computeObsMetricsXY(wireHits, m_obsSigmaEffMM.value(), m_minHitsForObs.value());
 
-      TVector3 pos0_cm(posScale_cm_per_mm * p0.x,
-                       posScale_cm_per_mm * p0.y,
-                       posScale_cm_per_mm * p0.z);
+      const bool obsPass =
+        obs.ok &&
+        (obs.phiSpanRad >= m_obsMinPhiSpanRad.value()) &&
+        (obs.chordMM    >= m_obsMinChordMM.value()) &&
+        (obs.sagittaMM  >= m_obsMinSagittaMM.value()) &&
+        (obs.obsScore   >= m_obsMinScore.value());
 
-      TVector3 pos1_cm(posScale_cm_per_mm * p1.x,
-                       posScale_cm_per_mm * p1.y,
-                       posScale_cm_per_mm * p1.z);
+      if (!obsPass && m_skipIfObsTooLow.value()) {
+        ++nSkipObs;
+        continue;
+      }
 
-      TVector3 dpos = pos1_cm - pos0_cm;
-      if (!std::isfinite(dpos.Mag2()) || dpos.Mag2() < 1e-12) dpos = TVector3(0, 0, 1);
-      TVector3 dir = safeUnit(dpos, TVector3(0, 0, 1));
+      if (msgLevel(MSG::DEBUG) && m_diagEveryNTracks.value() > 0 && (nIn % m_diagEveryNTracks.value() == 0)) {
+        debug() << "Diag: label=" << label
+                << " nHits=" << wireHits.size()
+                << " obs(phiSpanRad=" << obs.phiSpanRad
+                << ", chordMM=" << obs.chordMM
+                << ", sagittaMM=" << obs.sagittaMM
+                << ", obsScore=" << obs.obsScore
+                << ", pass=" << (obsPass ? "Y":"N") << ")"
+                << endmsg;
+      }
 
-      // Conservative seed pT
-      double pTseed = 5.0;
-      pTseed = clampFinite(pTseed, m_seedPTMinGeV.value(), m_seedPTMaxGeV.value(), 5.0);
+      const unsigned Kprop = std::max(1u, m_seedEndpointK.value());
+      const unsigned K = std::min<unsigned>(Kprop, unsigned(wireHits.size() / 2));
+
+      auto meanPosMM = [&](size_t i0, size_t i1) -> TVector3 {
+        double sx = 0, sy = 0, sz = 0;
+        size_t n = 0;
+        for (size_t i = i0; i < i1; ++i) {
+          const auto p = wireHits[i].getPosition();
+          if (!finite3(p.x, p.y, p.z)) continue;
+          sx += p.x; sy += p.y; sz += p.z; ++n;
+        }
+        if (n == 0) return TVector3(0, 0, 0);
+        return TVector3(sx / double(n), sy / double(n), sz / double(n));
+      };
+
+      const TVector3 pStartMM = meanPosMM(0, K);
+      const TVector3 pEndMM   = meanPosMM(wireHits.size() - K, wireHits.size());
+
+      if (!finite3(pStartMM.X(), pStartMM.Y(), pStartMM.Z()) ||
+          !finite3(pEndMM.X(),   pEndMM.Y(),   pEndMM.Z())) {
+        ++nSkipBadSeed;
+        continue;
+      }
+
+      TVector3 chordDirMM = pEndMM - pStartMM;
+      if (!std::isfinite(chordDirMM.Mag2()) || chordDirMM.Mag2() < 1e-12) chordDirMM = TVector3(0,0,1);
+      chordDirMM = safeUnit(chordDirMM, TVector3(0,0,1));
+
+      const unsigned KtanProp = std::max(3u, m_seedTangentK.value());
+      const unsigned Ktan = std::min<unsigned>(KtanProp, unsigned(wireHits.size() / 2));
+
+      const TVector3 t1 = tangentDirFromWindowMM(wireHits, 0, Ktan, chordDirMM);
+      const TVector3 t2 = tangentDirFromWindowMM(wireHits, wireHits.size() - Ktan, wireHits.size(), chordDirMM);
+
+      TVector3 dirMM = safeUnit(t1 + t2, chordDirMM);
+      if (!std::isfinite(dirMM.Mag2()) || dirMM.Mag2() < 1e-12) dirMM = chordDirMM;
+
+      const TVector3 pos0_cm(posScale_cm_per_mm * pStartMM.X(),
+                             posScale_cm_per_mm * pStartMM.Y(),
+                             posScale_cm_per_mm * pStartMM.Z());
+
+      TVector3 dir = safeUnit(dirMM, TVector3(0,0,1));
+
+      double pTseed = m_seedPTFallbackGeV.value();
+      if (m_useSagittaSeed.value()) {
+        const double ptSag = seedPTFromSagitta(obs);
+        if (std::isfinite(ptSag) && ptSag > 0.0) pTseed = ptSag;
+      }
+      pTseed = clampFinite(pTseed, m_seedPTMinGeV.value(), m_seedPTMaxGeV.value(), m_seedPTFallbackGeV.value());
 
       const double cosTheta = std::clamp(std::abs(dir.Z()), 0.0, 0.999999);
       const double sinTheta = std::sqrt(std::max(1e-4, 1.0 - cosTheta * cosTheta));
@@ -869,44 +1543,55 @@ struct GenFit2DCHFitter final
       if (!std::isfinite(pMag) || pMag <= 0) pMag = pTseed;
       pMag = std::max(pMag, m_seedPMinGeV.value());
 
-      TVector3 mom0 = pMag * dir;
+      const TVector3 mom0 = pMag * dir;
 
-      // detId policy
       const int detId = m_useLabelAsDetId.value() ? label : m_detId.value();
 
-      // --------- build and fit (try +/- mom0) ----------
       auto rep1_up = std::make_unique<genfit::RKTrackRep>(m_pdg.value());
       genfit::Track trk1(rep1_up.release(), pos0_cm, mom0);
       trk1.setCovSeed(makeSeedCov(1.0, 1.0));
 
-      const unsigned nMeas1 = buildTrackFromWireHits(trk1, wireHits, detId, posScale_cm_per_mm, m_wireAnglesAreDegrees.value());
+      unsigned nDrop1 = 0;
+      const unsigned nMeas1 = buildTrackFromWireHits(trk1, wireHits, detId,
+                                                     posScale_cm_per_mm,
+                                                     m_wireAnglesAreDegrees.value(),
+                                                     nDrop1);
       if (nMeas1 < m_minMeasurementsToFit.value()) { ++nSkipTooFewMeas; continue; }
 
-      const genfit::FitStatus* fs1 = run_fit(trk1, "base(+mom)", label);
-      const bool ok1 = (fs1 && has_any_FI(trk1));
+      bool usedDAF1 = false;
+      const genfit::FitStatus* fs1 = run_fit_kf_then_daf(trk1, "fit(+mom)", label, usedDAF1);
+      const bool ok1 = isGoodFS(fs1) && (countFIPoints(trk1) >= m_minFittedPointsWithFI.value());
 
       std::unique_ptr<genfit::Track> trk2_ptr;
       const genfit::FitStatus* fs2 = nullptr;
       bool ok2 = false;
+      bool usedDAF2 = false;
 
       if (m_tryBothMomDirs.value()) {
         auto rep2_up = std::make_unique<genfit::RKTrackRep>(m_pdg.value());
         trk2_ptr = std::make_unique<genfit::Track>(rep2_up.release(), pos0_cm, -mom0);
         trk2_ptr->setCovSeed(makeSeedCov(1.0, 1.0));
 
-        const unsigned nMeas2 = buildTrackFromWireHits(*trk2_ptr, wireHits, detId, posScale_cm_per_mm, m_wireAnglesAreDegrees.value());
+        unsigned nDrop2 = 0;
+        const unsigned nMeas2 = buildTrackFromWireHits(*trk2_ptr, wireHits, detId,
+                                                       posScale_cm_per_mm,
+                                                       m_wireAnglesAreDegrees.value(),
+                                                       nDrop2);
         if (nMeas2 >= m_minMeasurementsToFit.value()) {
-          fs2 = run_fit(*trk2_ptr, "base(-mom)", label);
-          ok2 = (fs2 && has_any_FI(*trk2_ptr));
+          fs2 = run_fit_kf_then_daf(*trk2_ptr, "fit(-mom)", label, usedDAF2);
+          ok2 = isGoodFS(fs2) && (countFIPoints(*trk2_ptr) >= m_minFittedPointsWithFI.value());
         }
       }
 
       auto better = [&](genfit::Track* aTrk, const genfit::FitStatus* aFs,
                         genfit::Track* bTrk, const genfit::FitStatus* bFs)->bool {
-        const bool aGood = isGoodFS(aFs) && has_any_FI(*aTrk);
-        const bool bGood = isGoodFS(bFs) && has_any_FI(*bTrk);
+        const bool aGood = isGoodFS(aFs) && (countFIPoints(*aTrk) >= m_minFittedPointsWithFI.value());
+        const bool bGood = isGoodFS(bFs) && (countFIPoints(*bTrk) >= m_minFittedPointsWithFI.value());
         if (aGood != bGood) return aGood;
-        return chi2ndf(aFs) < chi2ndf(bFs);
+        const double ca = chi2ndf(aFs);
+        const double cb = chi2ndf(bFs);
+        if (ca != cb) return ca < cb;
+        return countFIPoints(*aTrk) > countFIPoints(*bTrk);
       };
 
       genfit::Track* bestTrk = nullptr;
@@ -921,80 +1606,124 @@ struct GenFit2DCHFitter final
         }
       }
 
-      if (!(bestTrk && bestFs && has_any_FI(*bestTrk))) { ++nFail; continue; }
+      if (!(bestTrk && bestFs)) { ++nFail; continue; }
 
-      // --------- select best fitted state ----------
-      genfit::MeasuredStateOnPlane bestState;
-      float fittedPT = 0.f;
-      size_t fitIdx = 0;
+      const unsigned nFI = countFIPoints(*bestTrk);
+      if (nFI < m_minFittedPointsWithFI.value()) { ++nSkipFewFI; continue; }
 
-      const bool haveBestState = selectBestFittedState(*bestTrk,
-                                                       m_publishPTMaxGeV.value(),
-                                                       m_bestStateZWeight.value(),
-                                                       m_bestStateIdxWeight.value(),
-                                                       bestState,
-                                                       fittedPT,
-                                                       fitIdx);
-      if (!haveBestState) { ++nFail; continue; }
+      const double c2 = chi2ndf(bestFs);
+      if (!std::isfinite(c2) || c2 > m_maxChi2Ndf.value()) { ++nSkipChi2; continue; }
+
+      genfit::MeasuredStateOnPlane pubState;
+      size_t pubIdx = 0;
+      const bool havePubState = selectPublishStateCentral(*bestTrk,
+                                                          m_useBiasedStateForPublish.value(),
+                                                          m_publishStateCentralFrac.value(),
+                                                          pubState,
+                                                          pubIdx);
+      if (!havePubState) { ++nFail; continue; }
+
+      const TVector3 pos_cm = pubState.getPos();
+      const TVector3 mom    = pubState.getMom();
+      const float fittedPT  = float(std::hypot(mom.X(), mom.Y()));
 
       bool ptValid = true;
       ptValid = ptValid && std::isfinite(fittedPT) && (fittedPT > 0.0f) &&
                 (double(fittedPT) < m_publishPTMaxGeV.value());
+      if (!obsPass) ptValid = false;
 
       const float omegaVar = ptValid ? m_omegaVarGood.value() : m_omegaVarBad.value();
 
-      // --------- export output track ----------
       auto trkOut = out.create();
-      trkOut.setType(m_pdg.value()); // store PDG hypothesis (kept from your convention)
-      try { trkOut.setChi2(bestFs->getChi2()); trkOut.setNdf(bestFs->getNdf()); } catch (...) {}
+      trkOut.setType(m_pdg.value());
 
-      // Keep original hit relations (all types) for debugging / downstream
       try {
-        for (const auto& th : trkIn.getTrackerHits()) {
-          trkOut.addToTrackerHits(th);
-        }
+        trkOut.setChi2(bestFs->getChi2());
+        trkOut.setNdf(bestFs->getNdf());
       } catch (...) {}
 
-      const TVector3 pos_cm = bestState.getPos();
-      const TVector3 mom    = bestState.getMom();
+      try {
+        for (const auto& th : trkIn.getTrackerHits()) trkOut.addToTrackerHits(th);
+      } catch (...) {}
 
-      // Placeholder observability score (wire-only fit; can be upgraded once we compute arc span)
-      const float obsScore = 1.0f;
+      const float obsScoreF = float(std::isfinite(obs.obsScore) ? obs.obsScore : -1.0);
+      const float c2f = float(std::isfinite(c2) ? std::min(c2, 1e6) : -1.0);
+      const float nFIf = float(nFI);
 
       addAtIPState(trkOut,
                    pos_cm,
                    mom,
-                   /*posScale_cm_per_mm=*/posScale_cm_per_mm,
-                   /*chargeSign=*/qPublish,
-                   /*ptValid=*/ptValid,
+                   posScale_cm_per_mm,
+                   qPublish,
+                   ptValid,
                    m_invalidPTSentinel.value(),
                    omegaVar,
-                   obsScore,
-                   /*pTOverrideOrNeg=*/fittedPT);
+                   obsScoreF,
+                   c2f,
+                   nFIf);
 
+      if (ptValid) publishedPTs.push_back(double(fittedPT));
       ++nFit;
     }
 
-    info() << "GenFit2DCHFitter: inputTracks=" << nIn
+    RobustStats rs = robustStats(publishedPTs, m_statsTruncCentralFrac.value());
+
+    try {
+      std::ostringstream os;
+      os << "{";
+      os << "\"nInputTracks\":" << nIn;
+      os << ",\"nFitted\":" << nFit;
+      os << ",\"nFailed\":" << nFail;
+      os << ",\"skipNoTrackerHitsRead\":" << nSkipNoHitsRead;
+      os << ",\"skipNoSenseWireHits\":" << nSkipNoSenseWireHits;
+      os << ",\"skipMinHits\":" << nSkipMinHits;
+      os << ",\"skipTooFewMeasurements\":" << nSkipTooFewMeas;
+      os << ",\"skipBadSeed\":" << nSkipBadSeed;
+      os << ",\"skipFewFIPoints\":" << nSkipFewFI;
+      os << ",\"skipObs\":" << nSkipObs;
+      os << ",\"skipChi2\":" << nSkipChi2;
+      os << ",\"nPrunedHitsTotal\":" << nPrunedTotal;
+      os << ",\"pTStats_n\":" << rs.n;
+      os << ",\"pTStats_median\":" << (std::isfinite(rs.median) ? rs.median : -1.0);
+      os << ",\"pTStats_mad\":" << (std::isfinite(rs.mad) ? rs.mad : -1.0);
+      os << ",\"pTStats_madSigma\":" << (std::isfinite(rs.madSigma) ? rs.madSigma : -1.0);
+      os << ",\"pTStats_truncRms\":" << (std::isfinite(rs.trRms) ? rs.trRms : -1.0);
+      os << "}";
+      m_evtMeta.put(os.str());
+    } catch (...) {
+      // non-fatal
+    }
+
+    info() << "GenFit2DCHFitter summary: inputTracks=" << nIn
            << " fitted=" << nFit
            << " failed=" << nFail
-           << " skipNoTrackerHitsRead=" << nSkipNoHits
+           << " skipNoTrackerHitsRead=" << nSkipNoHitsRead
            << " skipNoSenseWireHits=" << nSkipNoSenseWireHits
            << " skipMinHits=" << nSkipMinHits
            << " skipTooFewMeasurements=" << nSkipTooFewMeas
            << " skipBadSeed=" << nSkipBadSeed
-           << " (UseDAF=" << (m_useDAF.value() ? "true":"false") << ")"
+           << " skipFewFIPoints=" << nSkipFewFI
+           << " skipObs=" << nSkipObs
+           << " skipChi2=" << nSkipChi2
+           << " prunedHitsTotal=" << nPrunedTotal
+           << " | pT(robust): n=" << rs.n
+           << " median=" << (std::isfinite(rs.median) ? rs.median : -1.0)
+           << " MAD=" << (std::isfinite(rs.mad) ? rs.mad : -1.0)
+           << " MADsigma~=" << (std::isfinite(rs.madSigma) ? rs.madSigma : -1.0)
+           << " truncRMS=" << (std::isfinite(rs.trRms) ? rs.trRms : -1.0)
+           << " (centralFrac=" << m_statsTruncCentralFrac.value() << ")"
            << endmsg;
 
     return out;
   }
 
-  StatusCode finalize() override { return StatusCode::SUCCESS; }
-
 private:
   mutable std::unique_ptr<genfit::KalmanFitterRefTrack> m_kalman;
   mutable std::unique_ptr<genfit::DAF>                 m_daf;
-  k4FWCore::MetaDataHandle<std::string>                m_cfgMeta;
+
+  // NOTE: must be mutable because we call put() in operator() const
+  mutable k4FWCore::MetaDataHandle<std::string> m_cfgMeta;
+  mutable k4FWCore::MetaDataHandle<std::string> m_evtMeta;
 };
 
 DECLARE_COMPONENT(GenFit2DCHFitter)
