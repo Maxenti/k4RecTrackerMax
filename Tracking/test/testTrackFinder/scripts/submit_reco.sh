@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # -------- EDIT/OVERRIDE VIA ENV --------
-IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples/1_18_2026}"
-OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples2/1_19_2026}"
-COMPACT_XML="${COMPACT_XML:-/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml}"
+IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples/1_19_2026/W}"
+OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples2/1_19_2026/W}"
+COMPACT_XML="${COMPACT_XML:-/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml}"
 
 FITTER="${FITTER:-genfit2}"             # genfit2 | simple | threepoint
 FIT_OUT="${FIT_OUT:-auto}"              # auto | <collection name>

@@ -16,8 +16,8 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 
 # ---- EDIT THESE ----
-COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
-OUT_DIR="/eos/user/c/cglenn/gun_samples/1_18_2026"
+COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml"
+OUT_DIR="/eos/user/c/cglenn/gun_samples/1_19_2026/W"
 GRID_JSON="params_ddsim.jsonl"
 TRANSFER_COMPACT="${TRANSFER_COMPACT:-0}"   # 0: use EOS path on worker, 1: ship the XML file with each job
 # --------------------

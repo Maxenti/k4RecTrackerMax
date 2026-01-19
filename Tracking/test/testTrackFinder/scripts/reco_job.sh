@@ -59,7 +59,38 @@ to_xrd() {
     echo "$p"
   fi
 }
+
+# root://eosuser.cern.ch///eos/user/...  -> /eos/user/...
+to_eos_posix() {
+  local p="$1"
+  if [[ "$p" == root://eosuser.cern.ch//* ]]; then
+    echo "/${p#root://eosuser.cern.ch//}"
+  else
+    echo "$p"
+  fi
+}
+
 eos_path_from_xrd() { echo "$1" | sed -E 's#^root://eosuser\.cern\.ch##'; }
+
+# Extract eta directory name as "eta_+X.XX" from path or filename.
+extract_eta_dir() {
+  local eos_path="$1"
+  local eta=""
+  # Prefer explicit directory segment "eta_+0.00"
+  eta="$(echo "$eos_path" | grep -oE 'eta_[+-][0-9]+(\.[0-9]+)?' | head -n1 || true)"
+  if [[ -n "$eta" ]]; then
+    echo "$eta"
+    return 0
+  fi
+  # Fallback: filename token like "gun_eta+2.50_pt..."
+  local tok
+  tok="$(basename "$eos_path" | grep -oE 'eta[+-][0-9]+(\.[0-9]+)?' | head -n1 || true)"
+  if [[ -n "$tok" ]]; then
+    echo "eta_${tok#eta}"
+    return 0
+  fi
+  echo "eta_unknown"
+}
 
 # ---------------- Runtime bundle ----------------
 [[ -s runtime.tgz ]] || { echo "FATAL: runtime.tgz missing"; exit 4; }
@@ -88,18 +119,48 @@ export GAUDI_USE_CONFIGURATION_DB=1
 echo "[env] GAUDI_PLUGIN_PATH=$GAUDI_PLUGIN_PATH"
 echo "[env] GAUDI_COMPONENT_PATH=$GAUDI_COMPONENT_PATH"
 
-# ---------------- Stage COMPACT XML locally if on EOS/xrd ----------------
-COMPACT_LOCAL="$PWD/compact.xml"
-if [[ "$COMPACT_XML" == /eos/* || "$COMPACT_XML" == root://* ]]; then
-  echo "[stage] compact xrdcp -> $COMPACT_LOCAL"
-  xrdcp -f "$(to_xrd "$COMPACT_XML")" "$COMPACT_LOCAL"
-  COMPACT_USE="$COMPACT_LOCAL"
+# ---------------- Stage compact geometry (XML + all includes) ----------------
+# The compact XML typically includes other XMLs via relative paths (elements/materials/etc),
+# so we must stage the whole directory, not just the single compact.xml.
+LOCAL_GEOM_BASE="$PWD/geom"
+mkdir -p "$LOCAL_GEOM_BASE"
+
+# Resolve COMPACT_XML to a local file
+LOCAL_COMPACT_XML="$COMPACT_XML"
+
+if [[ "$COMPACT_XML" == root://* ]]; then
+  # Strip the eosuser prefix and recover a /eos/... POSIX path to find the directory name
+  EOS_COMPACT_PATH="$(echo "$COMPACT_XML" | sed -E 's#^root://eosuser\.cern\.ch/+##')"
+  EOS_COMPACT_PATH="/${EOS_COMPACT_PATH#"/"}"   # ensure leading /
+  EOS_COMPACT_DIR="$(dirname "$EOS_COMPACT_PATH")"
+  COMPACT_DIR_BASENAME="$(basename "$EOS_COMPACT_DIR")"
+
+  echo "[stage] geometry dir xrdcp -r -> $LOCAL_GEOM_BASE/"
+  xrdcp -r -f "root://eosuser.cern.ch//${EOS_COMPACT_DIR#/}" "$LOCAL_GEOM_BASE/"
+
+  LOCAL_COMPACT_XML="$LOCAL_GEOM_BASE/$COMPACT_DIR_BASENAME/$(basename "$EOS_COMPACT_PATH")"
+
+elif [[ "$COMPACT_XML" == /eos/* ]]; then
+  EOS_COMPACT_DIR="$(dirname "$COMPACT_XML")"
+  COMPACT_DIR_BASENAME="$(basename "$EOS_COMPACT_DIR")"
+
+  echo "[stage] geometry dir xrdcp -r -> $LOCAL_GEOM_BASE/"
+  xrdcp -r -f "root://eosuser.cern.ch//${EOS_COMPACT_DIR#/}" "$LOCAL_GEOM_BASE/"
+
+  LOCAL_COMPACT_XML="$LOCAL_GEOM_BASE/$COMPACT_DIR_BASENAME/$(basename "$COMPACT_XML")"
 else
-  [[ -s "$COMPACT_XML" ]] || { echo "FATAL: compact missing/unreadable: $COMPACT_XML"; exit 3; }
-  COMPACT_USE="$COMPACT_XML"
+  # Already local (e.g. shipped in tarball)
+  LOCAL_COMPACT_XML="$COMPACT_XML"
 fi
-export DD4hep_XMLPATH="$(dirname "$COMPACT_USE"):${DD4hep_XMLPATH:-}"
-echo "[env] Using compact: $COMPACT_USE"
+
+[[ -s "$LOCAL_COMPACT_XML" ]] || { echo "[env][FATAL] staged compact not found: $LOCAL_COMPACT_XML"; exit 31; }
+
+# Make sure DD4hep can resolve relative include files
+export DD4hep_XMLPATH="$(dirname "$LOCAL_COMPACT_XML"):${DD4hep_XMLPATH:-}"
+
+echo "[env] Using compact: $LOCAL_COMPACT_XML"
+echo "[env] DD4hep_XMLPATH=$DD4hep_XMLPATH"
+# ---------------------------------------------------------------------------
 
 # ---------------- Model resolution (same as before) ----------------
 MODEL="${MODEL:-}"
@@ -117,20 +178,22 @@ echo "[env] Using ONNX model: $MODEL"
 # ---------------- I/O naming + idempotence ----------------
 INFILE_XRD="$(to_xrd "$INFILE")"
 
-# Preserve relative subdir under gun_samples if possible
-rel="${INFILE#/eos/user/c/cglenn/gun_samples/}"
-if [[ "$rel" == "$INFILE" ]]; then rel="$(basename "$INFILE")"; fi
-subdir="$(dirname "$rel")"
-base="$(basename "$rel")"
+# Normalize to EOS-style path so we can reliably extract eta
+INFILE_EOS="$(to_eos_posix "$INFILE")"
+ETA_DIR="$(extract_eta_dir "$INFILE_EOS")"
 
+base="$(basename "$INFILE_EOS")"
 OUT_LOCAL="$PWD/reco_${base}"
-OUT_EOS_POSIX="${OUTDIR%/}/$subdir/reco_${base}"
+
+# *** KEY CHANGE: always write under OUTDIR/<eta_dir>/reco_<inputfile> ***
+OUT_EOS_POSIX="${OUTDIR%/}/${ETA_DIR}/reco_${base}"
 OUT_EOS_XRD="$(to_xrd "$OUT_EOS_POSIX")"
 OUT_EOS_PATH_ON_EOS="$(eos_path_from_xrd "$OUT_EOS_XRD")"
 
-echo "[io] input:  $INFILE_XRD"
-echo "[io] output: $OUT_EOS_XRD"
-echo "[io] local:  $OUT_LOCAL"
+echo "[io] input:   $INFILE_XRD"
+echo "[io] eta_dir: $ETA_DIR"
+echo "[io] output:  $OUT_EOS_XRD"
+echo "[io] local:   $OUT_LOCAL"
 
 # Skip if output already exists (idempotent)
 if command -v xrdfs >/dev/null 2>&1; then
@@ -139,6 +202,7 @@ if command -v xrdfs >/dev/null 2>&1; then
     exit 0
   fi
 fi
+
 # Ensure EOS parent exists
 if command -v xrdfs >/dev/null 2>&1; then
   xrdfs eosuser.cern.ch mkdir -p "$(dirname "$OUT_EOS_PATH_ON_EOS")" >/dev/null 2>&1 || true
@@ -303,7 +367,7 @@ K4_ARGS=(
   --inputFile  "$INFILE_XRD"
   --outputFile "$OUT_LOCAL"
   --modelPath  "$MODEL"
-  --compactXML "$COMPACT_USE"
+  --compactXML "$LOCAL_COMPACT_XML"
   --dchName    "DCH_v2"
   --dchSimHits "DCHCollection"
   --ggtfLog    "$GGTF_LOG"
@@ -324,7 +388,6 @@ K4_ARGS=(
   --dch-signal-vel-mm-ns  "$DCH_SIGNAL_VEL_MM_NS"
   --rw-start-ns      "$DCH_READOUT_START_NS"
   --rw-duration-ns   "$DCH_READOUT_DUR_NS"
-
 
   # ---- GenFit2DCHFitter core ----
   --gf-bz           "$GF_BZ"
@@ -392,7 +455,6 @@ fi
 if [[ "$GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE" == "1" ]]; then
   K4_ARGS+=( --ggtf-dropWireIfAbsDTooLarge )
 else
-  K4_ARGS+=( --no-ggtf-dropWireIfAbsDToo_Large )  # safety: keep old typo away
   K4_ARGS+=( --no-ggtf-dropWireIfAbsDTooLarge )
 fi
 K4_ARGS+=( --ggtf-maxAbsDMM "$GGTF_MAX_ABS_D_MM" )
@@ -512,8 +574,6 @@ else
   K4_ARGS+=( --gf-wireAnglesAreRadians )
 fi
 
-# Late override flags from condor "extraargs"
-
 LOG="job.log"
 echo "[k4run] args: ${K4_ARGS[*]}" | tee "$LOG"
 
@@ -573,5 +633,8 @@ PY
 echo "[stage] xrdcp -> $OUT_EOS_XRD"
 xrdcp -f "$OUT_LOCAL" "$OUT_EOS_XRD"
 echo "[ok] wrote $OUT_EOS_XRD"
+
+# Keep submit host clean: remove local output after successful stage
+rm -f "$OUT_LOCAL" || true
 
 exit $K4_RC

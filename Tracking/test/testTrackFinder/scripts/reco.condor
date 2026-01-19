@@ -13,6 +13,8 @@ request_disk    = 3 GB
 # --- I/O under HTCondor ---
 # Only ship what the job actually needs
 transfer_input_files    = runtime.tgz
+transfer_output_files =
+
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
 
@@ -29,7 +31,7 @@ stream_error  = True
 queuefile  = scripts/filelist.txt
 
 outdir     = /eos/user/c/cglenn/reco_samples2/1_19_2026
-compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
+compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml
 
 fitter    = genfit2
 usemat    = 1

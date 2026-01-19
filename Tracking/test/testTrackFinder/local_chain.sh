@@ -22,7 +22,7 @@ set -euo pipefail
 DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_16_2026/eta_+0.00/gun_eta+0.00_pt1.root"
 DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_18_2026/eta_+0.00/reco_eta+0.00_pt1.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
-DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
+DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
 DEFAULT_DCH_NAME="DCH_v2"
 ###########################################
