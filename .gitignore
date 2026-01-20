@@ -19,3 +19,6 @@ Tracking/test/testTrackFinder/logs
 *.pdf
 *.tgz
 *.jpeg
+*.tar
+*.tar.gz
+*.tgz
