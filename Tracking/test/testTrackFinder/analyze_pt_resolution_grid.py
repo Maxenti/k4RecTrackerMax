@@ -8,17 +8,18 @@ Batch analysis of reco gun samples organized as:
 
 Writes an output ROOT file with:
   - byEta/<eta_dir> :
-      * TGraphErrors per method vs pT
+      * TGraphErrors per method vs pT (now WITH Y-errors for ALL methods)
       * one TMultiGraph overlay + legend
       * a log-log TCanvas overlay (markers only, no connecting lines)
+      * an additional "relative error" graph per method (err/value) to spot unusable estimators
   - diagnostics/<eta_dir> :
-      * diagnostic graphs vs pT
+      * diagnostic graphs vs pT (now WITH errors where meaningful)
       * a log-x TCanvas overlay of key diagnostics (markers only)
   - byMethod/<method> :
       * overlay multigraph of all etas + legend
       * per-eta clones (styled)
       * a log-log TCanvas overlay (markers only)
-  - summary TTree with all values
+  - summary TTree with all values (now includes *_err for all methods and diag errs)
 
 IMPORTANT PyROOT stability rules used here:
   - Always directory.cd() before calling Write()
@@ -108,9 +109,78 @@ def trunc_rms(vals, central_frac=0.68, center=None):
     return math.sqrt(s2 / len(kept))
 
 def sigma_err_from_std(std, n):
+    """Standard error of sample standard deviation (normal approx)."""
     if not (finite(std) and n and n > 1):
         return float("nan")
     return std / math.sqrt(2.0 * (n - 1))
+
+def sigma_err_from_mad_sigma(mad_sigma, n):
+    """
+    Rough SE for MAD-based sigma estimator.
+    For a normal distribution, asymptotic var(MAD) known, but for robustness we use ~1.253*sigma/sqrt(n).
+    This is intentionally conservative and "order-of-magnitude" useful for error bars.
+    """
+    if not (finite(mad_sigma) and n and n > 1):
+        return float("nan")
+    return 1.2533 * mad_sigma / math.sqrt(n)
+
+def sigma_err_from_iqr_sigma(iqr_sigma, n):
+    """
+    For central68 half-width (~0.994*sigma for normal), use same scaling ~sigma/sqrt(n).
+    Conservative.
+    """
+    if not (finite(iqr_sigma) and n and n > 1):
+        return float("nan")
+    return 1.0 * iqr_sigma / math.sqrt(n)
+
+def sigma_err_from_truncrms(trr, n):
+    """
+    Truncated RMS: no clean closed form; use ~trr/sqrt(2(n-1)) as a conservative stand-in.
+    """
+    if not (finite(trr) and n and n > 1):
+        return float("nan")
+    return trr / math.sqrt(2.0 * (n - 1))
+
+def frac_binom_err(p, n):
+    """Binomial SE for a fraction p over n trials."""
+    if not (finite(p) and n and n > 0):
+        return float("nan")
+    p = max(0.0, min(1.0, float(p)))
+    return math.sqrt(p * (1.0 - p) / float(n))
+
+
+def bootstrap_se(vals, stat_fn, nboot=300, seed=12345):
+    v = [x for x in vals if finite(x)]
+    n = len(v)
+    if n < 2:
+        return float("nan")
+    import random
+    rnd = random.Random(seed)
+    stats = []
+    for _ in range(int(nboot)):
+        sample = [v[rnd.randrange(n)] for _ in range(n)]
+        stats.append(stat_fn(sample))
+    _, s = mean_std(stats)
+    return float(s) if finite(s) else float("nan")
+
+
+def median_err_bootstrap(vals, nboot=200, seed=12345):
+    """
+    Bootstrap SE for the median. Keeps it light.
+    vals: list of finite floats
+    """
+    v = [x for x in vals if finite(x)]
+    n = len(v)
+    if n < 2:
+        return float("nan")
+    import random
+    rnd = random.Random(seed)
+    meds = []
+    for _ in range(int(nboot)):
+        sample = [v[rnd.randrange(n)] for _ in range(n)]
+        meds.append(median(sample))
+    _, s = mean_std(meds)
+    return float(s) if finite(s) else float("nan")
 
 def choose_quality(results, mode):
     if mode == "none":
@@ -179,11 +249,9 @@ def add_point(g, x, y, ex=0.0, ey=0.0):
     g.SetPointError(i, float(ex), float(ey))
 
 def style_graph(g, color, mstyle):
-    # marker styling
     g.SetMarkerColor(color)
     g.SetMarkerStyle(mstyle)
     g.SetMarkerSize(0.9)
-    # kill connecting lines
     g.SetLineColor(color)
     g.SetLineWidth(0)
     g.SetLineStyle(1)
@@ -220,23 +288,18 @@ def ensure_dir(rootdir, path_parts):
     return d
 
 def write_obj(dir_obj, obj, name_override=None):
-    """Safely write obj into dir_obj by cd()'ing first."""
     dir_obj.cd()
     if name_override:
         obj.Write(name_override)
     else:
         obj.Write()
 
-
 def graph_minmax_positive(g):
-    """Return (min_pos_y, max_y) over points with y>0."""
     n = g.GetN()
     minp = float("inf")
     maxv = -float("inf")
-
     x = ctypes.c_double(0.0)
     y = ctypes.c_double(0.0)
-
     for i in range(n):
         g.GetPoint(i, x, y)
         yy = float(y.value)
@@ -244,16 +307,13 @@ def graph_minmax_positive(g):
             if yy > 0.0:
                 minp = min(minp, yy)
             maxv = max(maxv, yy)
-
     if not math.isfinite(minp):
         minp = float("nan")
     if not math.isfinite(maxv):
         maxv = float("nan")
     return minp, maxv
 
-
 def multigraph_minmax_positive(graphs):
-    """graphs: iterable of TGraphErrors. Return y-range (min_pos, max) for log-safe plotting."""
     minp = float("inf")
     maxv = -float("inf")
     for g in graphs:
@@ -269,6 +329,186 @@ def multigraph_minmax_positive(graphs):
     return minp, maxv
 
 
+def _leaf_exists(tree, leafname):
+    try:
+        return tree.GetLeaf(leafname) is not None
+    except Exception:
+        return False
+
+def _get_leaf_value(tree, leafname, default=float("nan")):
+    leaf = tree.GetLeaf(leafname)
+    if not leaf:
+        return default
+    try:
+        return float(leaf.GetValue())
+    except Exception:
+        return default
+
+def probe_trackstate_covmatrix(root_path, track_coll="GenFitTracks", max_events=50, verbose=True):
+    """
+    Tries to locate and sanity-check the TrackState covariance matrix leaves
+    in an EDM4hep Track collection saved by Podio/ROOT.
+
+    Prints:
+      - which prefix matched
+      - how many events scanned
+      - how many entries had any finite/nonzero cov element
+      - sample omega variance values if found
+
+    Returns a dict with basic stats.
+    """
+    f = ROOT.TFile.Open(root_path, "READ")
+    if not f or f.IsZombie():
+        raise RuntimeError(f"Could not open {root_path}")
+
+    # Heuristic: try common trees used in edm4hep/podio ROOT output
+    # (you can add more if your files use a different name)
+    tree_candidates = ["events", "Events", "podio_metadata", "metadata"]
+    tree = None
+    for tn in tree_candidates:
+        obj = f.Get(tn)
+        if obj and obj.InheritsFrom("TTree") and obj.GetEntries() > 0:
+            tree = obj
+            break
+    if tree is None:
+        # fallback: pick the first TTree with entries
+        for key in f.GetListOfKeys():
+            obj = f.Get(key.GetName())
+            if obj and obj.InheritsFrom("TTree") and obj.GetEntries() > 0:
+                tree = obj
+                break
+    if tree is None:
+        raise RuntimeError(f"No TTree with entries found in {root_path}")
+
+    # Typical podio naming patterns seen in your project:
+    #   GenFitTracks.trackStates._<fields>
+    #   _GenFitTracks_trackStates.<fields>
+    # We'll search for candidate prefixes for omega and cov.
+    prefixes = [
+        f"{track_coll}.trackStates.",
+        f"{track_coll}.TrackStates.",
+        f"_{track_coll}_trackStates.",
+        f"_{track_coll}_TrackStates.",
+        f"{track_coll}.trackStates_AtIP.",
+        f"{track_coll}.TrackStates_AtIP.",
+        f"_{track_coll}_trackStates_AtIP.",
+        f"_{track_coll}_TrackStates_AtIP.",
+    ]
+
+    # Leaves we want to find. Cov matrix leaf naming is the tricky part.
+    # Common patterns:
+    #   <prefix>covMatrix[15] or covMatrix._xx style (varies)
+    #   <prefix>covMatrix (packed) with leaf names covMatrix[0], covMatrix[1], ...
+    # We'll probe by asking the tree for leaves that *start* with these strings.
+    # Since ROOT leaf discovery is clunky, we try explicit indices 0..24 and see if any exist.
+    cov_names = ["covMatrix", "covariance", "cov", "covMat"]
+
+    matched = None
+    matched_cov_base = None
+
+    # Find a prefix where omega exists (so we're looking at the right TrackState block)
+    for pref in prefixes:
+        if _leaf_exists(tree, pref + "omega") or _leaf_exists(tree, pref + "time"):
+            # Now try to find some cov leaf under the same pref
+            for base in cov_names:
+                # Try common indexed leaves base[0], base[1], ...
+                if _leaf_exists(tree, pref + f"{base}[0]") or _leaf_exists(tree, pref + f"{base}.0"):
+                    matched = pref
+                    matched_cov_base = base
+                    break
+                # Some files store as a flat object leaf "covMatrix" (no indices visible)
+                if _leaf_exists(tree, pref + base):
+                    matched = pref
+                    matched_cov_base = base
+                    break
+            if matched:
+                break
+
+    stats = {
+        "file": root_path,
+        "tree": tree.GetName(),
+        "prefix": matched,
+        "cov_base": matched_cov_base,
+        "n_entries": int(tree.GetEntries()),
+        "n_scanned": 0,
+        "n_with_any_finite_cov": 0,
+        "n_with_any_nonzero_cov": 0,
+        "omega_var_samples": [],
+    }
+
+    if verbose:
+        print(f"[covprobe] file={root_path}")
+        print(f"[covprobe] tree={stats['tree']} entries={stats['n_entries']}")
+        print(f"[covprobe] matched prefix={stats['prefix']} cov_base={stats['cov_base']}")
+
+    if matched is None or matched_cov_base is None:
+        if verbose:
+            print("[covprobe] Could not find covMatrix leaves with heuristics.")
+            print("          Try printing tree.GetListOfLeaves() for debugging.")
+        f.Close()
+        return stats
+
+    # If we can see indexed cov leaves, scan a handful and count occupancy
+    # EDM4hep TrackState cov matrix is 5x5 symmetric -> 15 unique elements stored.
+    # Some writers store 21 or 25; we’ll probe 0..24 and read what exists.
+    cov_indices = []
+    for i in range(0, 25):
+        if _leaf_exists(tree, matched + f"{matched_cov_base}[{i}]"):
+            cov_indices.append(("bracket", i))
+        elif _leaf_exists(tree, matched + f"{matched_cov_base}.{i}"):
+            cov_indices.append(("dot", i))
+
+    # We'll treat omega variance as element (omega,omega). In EDM4hep TrackState parameter order:
+    # [d0, phi, omega, z0, tanLambda] => omega is index 2.
+    # If symmetric packed order is row-major upper triangle:
+    # (0,0)=0, (0,1)=1, (0,2)=2, (0,3)=3, (0,4)=4,
+    # (1,1)=5, (1,2)=6, (1,3)=7, (1,4)=8,
+    # (2,2)=9, (2,3)=10, (2,4)=11,
+    # (3,3)=12, (3,4)=13,
+    # (4,4)=14
+    omega_var_slot = 9  # if packed upper-tri 15
+
+    nmax = min(int(tree.GetEntries()), int(max_events))
+    for ievt in range(nmax):
+        tree.GetEntry(ievt)
+        stats["n_scanned"] += 1
+
+        # Read whatever cov elements exist
+        cov_vals = []
+        for kind, idx in cov_indices:
+            if kind == "bracket":
+                v = _get_leaf_value(tree, matched + f"{matched_cov_base}[{idx}]", default=float("nan"))
+            else:
+                v = _get_leaf_value(tree, matched + f"{matched_cov_base}.{idx}", default=float("nan"))
+            cov_vals.append(v)
+
+        finites = [v for v in cov_vals if finite(v)]
+        nonzeros = [v for v in finites if abs(v) > 0.0]
+
+        if finites:
+            stats["n_with_any_finite_cov"] += 1
+        if nonzeros:
+            stats["n_with_any_nonzero_cov"] += 1
+
+        # Try to record omega variance sample if present
+        # If we found at least 15 values in packed order, take slot 9.
+        if len(cov_vals) >= (omega_var_slot + 1) and finite(cov_vals[omega_var_slot]):
+            stats["omega_var_samples"].append(float(cov_vals[omega_var_slot]))
+
+    if verbose:
+        print(f"[covprobe] scanned {stats['n_scanned']} events")
+        print(f"[covprobe] events with any finite cov element: {stats['n_with_any_finite_cov']}/{stats['n_scanned']}")
+        print(f"[covprobe] events with any nonzero cov element: {stats['n_with_any_nonzero_cov']}/{stats['n_scanned']}")
+        if stats["omega_var_samples"]:
+            samp = stats["omega_var_samples"][:10]
+            print(f"[covprobe] omega var samples (first 10): {samp}")
+        else:
+            print("[covprobe] omega var samples: none found (or packing differs)")
+
+    f.Close()
+    return stats
+
+
 # ---------------------------
 # metrics per (eta, pt)
 # ---------------------------
@@ -281,24 +521,83 @@ METHODS = [
     ("medianAbs",  "Median(|rel error|)",                     "rel_abs"),
 ]
 
+# Diagnostics now optionally get errors too
 DIAG_FIELDS = [
-    ("frac_curvObs",    "Fraction curvObservable==1"),
-    ("frac_circleOK",   "Fraction circleOK==1"),
-    ("frac_timeSrc",    "Fraction pt_used_src==time"),
-    ("med_phiSpan",     "Median phiSpan [rad]"),
-    ("med_chord",       "Median chordXY_mm [mm]"),
-    ("med_cond",        "Median circleCond"),
-    ("med_nhits",       "Median n_hits_primary"),
-    ("med_rmsAlgRes",   "Median rmsAlgRes"),
-    ("n_usable",        "Usable events (post scan_file)"),
-    ("n_quality",       "Events used after qualityCut"),
+    ("frac_curvObs",    "Fraction curvObservable==1", "binom"),
+    ("frac_circleOK",   "Fraction circleOK==1",       "binom"),
+    ("frac_timeSrc",    "Fraction pt_used_src==time", "binom"),
+    ("med_phiSpan",     "Median phiSpan [rad]",       "median_boot"),
+    ("med_chord",       "Median chordXY_mm [mm]",     "median_boot"),
+    ("med_cond",        "Median circleCond",          "median_boot"),
+    ("med_nhits",       "Median n_hits_primary",      "median_boot"),
+    ("med_rmsAlgRes",   "Median rmsAlgRes",           "median_boot"),
+    ("n_usable",        "Usable events (post scan_file)", "count"),
+    ("n_quality",       "Events used after qualityCut",   "count"),
 ]
 
-def compute_metrics(results_all, expected_pt, quality_cut):
+def compute_metrics_and_diags(results_all, expected_pt, quality_cut,
+                              diag_bootstrap=200, diag_bootstrap_seed=12345,
+                              err_bootstrap=300, err_bootstrap_seed=54321,
+                              err_bootstrap_cap=5000):
+    """
+    Returns:
+      metrics: dict method -> (value, err, n_used)
+      diags: dict diagnostic -> value
+      diag_errs: dict diagnostic -> err
+    Notes:
+      - Keeps your existing median bootstrap for diagnostics + medianAbs.
+      - Adds REAL bootstrap SEs for central68 and truncrms68.
+      - Caps bootstrap sample size for speed (err_bootstrap_cap) without touching fitter.
+    """
+    # ---------------------------
+    # local helpers (self-contained)
+    # ---------------------------
+    def _finite_list(vals):
+        return [x for x in vals if finite(x)]
+
+    def _cap_sample(v, cap, seed):
+        v = _finite_list(v)
+        n = len(v)
+        if cap and cap > 0 and n > cap:
+            import random
+            rnd = random.Random(seed)
+            return [v[rnd.randrange(n)] for _ in range(cap)]
+        return v
+
+    def _bootstrap_se(v, stat_fn, nboot, seed):
+        v = _finite_list(v)
+        n = len(v)
+        if n < 2 or not nboot or nboot < 2:
+            return float("nan")
+        import random
+        rnd = random.Random(seed)
+        stats = []
+        for _ in range(int(nboot)):
+            sample = [v[rnd.randrange(n)] for _ in range(n)]
+            stats.append(stat_fn(sample))
+        _, s = mean_std(stats)
+        return float(s) if finite(s) else float("nan")
+
+    def _stat_central68(sample):
+        p16 = percentile(sample, 16)
+        p84 = percentile(sample, 84)
+        return 0.5 * (p84 - p16) if (finite(p16) and finite(p84)) else float("nan")
+
+    def _stat_truncrms68(sample):
+        m = median(sample)
+        return trunc_rms(sample, central_frac=0.68, center=m)
+
+    # ---------------------------
+    # main logic
+    # ---------------------------
     n_usable = len(results_all)
     if n_usable == 0:
-        return {}, {"n_usable": 0, "n_quality": 0}
+        metrics = {}
+        diags = {"n_usable": 0, "n_quality": 0}
+        diag_errs = {}
+        return metrics, diags, diag_errs
 
+    # Fractions over ALL usable
     frac_curv = sum(int(r.get("curvObservable", 0)) == 1 for r in results_all) / n_usable
     frac_cok  = sum(int(r.get("circleOK", 0)) == 1 for r in results_all) / n_usable
     frac_time = sum((r.get("pt_used_src", "") == "time") for r in results_all) / n_usable
@@ -310,7 +609,7 @@ def compute_metrics(results_all, expected_pt, quality_cut):
     rr  = [r.get("rmsAlgRes", float("nan")) for r in results_all]
 
     diags = {
-        "n_usable": n_usable,
+        "n_usable": int(n_usable),
         "frac_curvObs": float(frac_curv),
         "frac_circleOK": float(frac_cok),
         "frac_timeSrc": float(frac_time),
@@ -321,16 +620,34 @@ def compute_metrics(results_all, expected_pt, quality_cut):
         "med_rmsAlgRes": float(median(rr)),
     }
 
+    # Errors for diagnostics
+    diag_errs = {}
+    diag_errs["n_usable"] = 0.0
+    diag_errs["n_quality"] = 0.0
+    diag_errs["frac_curvObs"] = float(frac_binom_err(frac_curv, n_usable))
+    diag_errs["frac_circleOK"] = float(frac_binom_err(frac_cok, n_usable))
+    diag_errs["frac_timeSrc"] = float(frac_binom_err(frac_time, n_usable))
+
+    # Bootstrap median errors (lightweight)
+    diag_errs["med_phiSpan"]  = float(median_err_bootstrap(phi, nboot=diag_bootstrap, seed=diag_bootstrap_seed + 1))
+    diag_errs["med_chord"]    = float(median_err_bootstrap(ch,  nboot=diag_bootstrap, seed=diag_bootstrap_seed + 2))
+    diag_errs["med_cond"]     = float(median_err_bootstrap(cd,  nboot=diag_bootstrap, seed=diag_bootstrap_seed + 3))
+    diag_errs["med_nhits"]    = float(median_err_bootstrap(nh,  nboot=diag_bootstrap, seed=diag_bootstrap_seed + 4))
+    diag_errs["med_rmsAlgRes"]= float(median_err_bootstrap(rr,  nboot=diag_bootstrap, seed=diag_bootstrap_seed + 5))
+
+    # Apply quality cut for resolution estimators
     results = choose_quality(results_all, quality_cut)
     n_q = len(results)
-    diags["n_quality"] = n_q
+    diags["n_quality"] = int(n_q)
+    diag_errs["n_quality"] = 0.0  # count; no error bar
+
     if n_q == 0:
-        return {}, diags
+        return {}, diags, diag_errs
 
     rel_signed = [r.get("rel_signed", float("nan")) for r in results]
     rel_signed = [x for x in rel_signed if finite(x)]
     if not rel_signed:
-        return {}, diags
+        return {}, diags, diag_errs
 
     rel_abs = [abs(x) for x in rel_signed if finite(x)]
 
@@ -338,6 +655,8 @@ def compute_metrics(results_all, expected_pt, quality_cut):
     _, s_rs = mean_std(rel_signed)
     mad_rs = mad(rel_signed, med=med_rs)
     mad_sigma = 1.4826 * mad_rs if finite(mad_rs) else float("nan")
+
+    # Point estimates
     p16 = percentile(rel_signed, 16)
     p84 = percentile(rel_signed, 84)
     central68 = 0.5 * (p84 - p16) if (finite(p16) and finite(p84)) else float("nan")
@@ -347,15 +666,42 @@ def compute_metrics(results_all, expected_pt, quality_cut):
     med_abs = median(rel_abs)
     mean_abs_err = (std_abs / math.sqrt(n_q)) if (finite(std_abs) and n_q > 1) else float("nan")
 
-    metrics = {}
-    metrics["rms"] = (float(s_rs), float(sigma_err_from_std(s_rs, n_q)), n_q)
-    metrics["madsigma"] = (float(mad_sigma), float("nan"), n_q)
-    metrics["central68"] = (float(central68), float("nan"), n_q)
-    metrics["truncrms68"] = (float(trr68), float("nan"), n_q)
-    metrics["meanAbs"] = (float(mean_abs), float(mean_abs_err), n_q)
-    metrics["medianAbs"] = (float(med_abs), float("nan"), n_q)
+    # --- Bootstrap SE for central68 + truncrms68 (the main requested change) ---
+    # cap for speed
+    rel_signed_cap = _cap_sample(rel_signed, err_bootstrap_cap, seed=err_bootstrap_seed + 7)
 
-    return metrics, diags
+    central68_err = _bootstrap_se(
+        rel_signed_cap, _stat_central68,
+        nboot=err_bootstrap, seed=err_bootstrap_seed + 100
+    )
+    trr68_err = _bootstrap_se(
+        rel_signed_cap, _stat_truncrms68,
+        nboot=err_bootstrap, seed=err_bootstrap_seed + 200
+    )
+
+    # Now compute errors for all methods
+    metrics = {}
+
+    # rms: standard SE for std (normal approx)
+    metrics["rms"] = (float(s_rs), float(sigma_err_from_std(s_rs, n_q)), n_q)
+
+    # MAD sigma: keep your conservative analytic SE (fast)
+    metrics["madsigma"] = (float(mad_sigma), float(sigma_err_from_mad_sigma(mad_sigma, n_q)), n_q)
+
+    # central68: REPLACE conservative SE with bootstrap SE
+    metrics["central68"] = (float(central68), float(central68_err), n_q)
+
+    # truncated RMS: REPLACE stand-in SE with bootstrap SE
+    metrics["truncrms68"] = (float(trr68), float(trr68_err), n_q)
+
+    # meanAbs: standard error of the mean
+    metrics["meanAbs"] = (float(mean_abs), float(mean_abs_err), n_q)
+
+    # medianAbs: keep your median bootstrap SE (lightweight)
+    med_abs_err = float(median_err_bootstrap(rel_abs, nboot=diag_bootstrap, seed=diag_bootstrap_seed + 10))
+    metrics["medianAbs"] = (float(med_abs), float(med_abs_err), n_q)
+
+    return metrics, diags, diag_errs
 
 
 def main():
@@ -372,6 +718,19 @@ def main():
 
     ap.add_argument("--qualityCut", choices=["none", "curv", "curv_circle"], default="none")
     ap.add_argument("--maxFilesPerEta", type=int, default=0, help="0=all; otherwise cap files per eta (debug)")
+
+    # New: bootstrap controls + "usability" flagging
+    ap.add_argument("--diagBootstrap", type=int, default=200, help="Bootstrap samples for median-type error bars")
+    ap.add_argument("--diagBootstrapSeed", type=int, default=12345, help="Seed base for bootstrap RNG")
+    ap.add_argument("--maxRelErrWarn", type=float, default=0.5,
+                    help="Warn if (err/value) exceeds this for any method point (value>0)")
+
+    ap.add_argument("--probeCov", action="store_true",
+                    help="Probe TrackState covMatrix leaves in the first reco file of each eta dir")
+    ap.add_argument("--probeCovMaxEv", type=int, default=50,
+                    help="How many events to scan per probed file (default 50)")
+
+
     args = ap.parse_args()
 
     inputs = discover_inputs(args.inputDir)
@@ -393,7 +752,15 @@ def main():
 
     method_val = {m[0]: array.array("d", [float("nan")]) for m in METHODS}
     method_err = {m[0]: array.array("d", [float("nan")]) for m in METHODS}
-    diag_br = {k: array.array("d", [float("nan")]) for (k, _) in DIAG_FIELDS if k not in ("n_usable", "n_quality")}
+
+    # Diagnostics values + errs
+    diag_val = {}
+    diag_err = {}
+    for (k, _, _) in DIAG_FIELDS:
+        if k in ("n_usable", "n_quality"):
+            continue
+        diag_val[k] = array.array("d", [float("nan")])
+        diag_err[k] = array.array("d", [float("nan")])
 
     summary.Branch("eta", eta_buf, "eta/C")
     summary.Branch("pt_true", pt_true, "pt_true/D")
@@ -404,13 +771,15 @@ def main():
         summary.Branch(f"{key}", method_val[key], f"{key}/D")
         summary.Branch(f"{key}_err", method_err[key], f"{key}_err/D")
 
-    for k in diag_br:
-        summary.Branch(k, diag_br[k], f"{k}/D")
+    for k in diag_val:
+        summary.Branch(k, diag_val[k], f"{k}/D")
+        summary.Branch(f"{k}_err", diag_err[k], f"{k}_err/D")
 
     # Accumulators
-    data = {}       # data[eta][method] = [(pt,val,err)]
-    diag_data = {}  # diag_data[eta][diagKey] = [(pt,val)]
-    per_method_graphs = {m[0]: {} for m in METHODS}  # store per-eta method graphs for later overlay
+    data = {}          # data[eta][method] = [(pt,val,err)]
+    relerr_data = {}   # relerr_data[eta][method] = [(pt, err/value)]
+    diag_data = {}     # diag_data[eta][diagKey] = [(pt,val,err)]
+    per_method_graphs = {m[0]: {} for m in METHODS}
 
     # Loop over eta dirs and files
     for eta_dir, files in inputs.items():
@@ -419,16 +788,28 @@ def main():
             files_sorted = files_sorted[:args.maxFilesPerEta]
 
         data[eta_dir] = {m[0]: [] for m in METHODS}
-        diag_data[eta_dir] = {k: [] for (k, _) in DIAG_FIELDS}
+        relerr_data[eta_dir] = {m[0]: [] for m in METHODS}
+        diag_data[eta_dir] = {k: [] for (k, _, _) in DIAG_FIELDS}
 
         print(f"[eta] {eta_dir}: {len(files_sorted)} files")
+
+        if args.probeCov and files_sorted:
+            try:
+                probe_trackstate_covmatrix(
+                    files_sorted[0],
+                    track_coll=args.trackCollection,
+                    max_events=args.probeCovMaxEv,
+                    verbose=True
+                )
+            except Exception as e:
+                print(f"[covprobe] failed for {files_sorted[0]}: {e}")
+
 
         for fpath in files_sorted:
             pt = parse_pt_from_name(fpath)
             if pt is None:
                 continue
 
-            # IMPORTANT: scan_file returns 3 values
             results, n_ev, n_scanned = scanmod.scan_file(
                 fpath,
                 track_coll=args.trackCollection,
@@ -441,7 +822,11 @@ def main():
                 logger=None,
             )
 
-            metrics, diags = compute_metrics(results, pt, args.qualityCut)
+            metrics, diags, diag_errs = compute_metrics_and_diags(
+                results, pt, args.qualityCut,
+                diag_bootstrap=args.diagBootstrap,
+                diag_bootstrap_seed=args.diagBootstrapSeed
+            )
 
             # Fill summary
             eta_s = eta_dir.encode("utf-8")[:63]
@@ -465,13 +850,23 @@ def main():
                     method_err[key][0] = float(e) if finite(e) else float("nan")
                     data[eta_dir][key].append((pt, v, e))
 
-            for k in diag_br:
-                diag_br[k][0] = float(diags.get(k, float("nan")))
+                    # relative error diagnostic for "is this estimator usable?"
+                    if finite(v) and v != 0.0 and finite(e) and e >= 0.0:
+                        rel = abs(e / v)
+                        relerr_data[eta_dir][key].append((pt, rel))
+                        if v > 0 and rel > args.maxRelErrWarn:
+                            print(f"[warn] {eta_dir} pt={pt:g} method={key}: relErr={rel:.3g} (err={e:.3g}, val={v:.3g})")
 
-            diag_data[eta_dir]["n_usable"].append((pt, float(diags.get("n_usable", 0))))
-            diag_data[eta_dir]["n_quality"].append((pt, float(diags.get("n_quality", 0))))
-            for k in diag_br:
-                diag_data[eta_dir][k].append((pt, float(diags.get(k, float("nan")))))
+            # diagnostics + errors
+            for (k, _, _) in DIAG_FIELDS:
+                if k in ("n_usable", "n_quality"):
+                    diag_data[eta_dir][k].append((pt, float(diags.get(k, 0.0)), 0.0))
+                else:
+                    vv = float(diags.get(k, float("nan")))
+                    ee = float(diag_errs.get(k, float("nan")))
+                    diag_val[k][0] = vv
+                    diag_err[k][0] = ee if finite(ee) else float("nan")
+                    diag_data[eta_dir][k].append((pt, vv, ee if finite(ee) else 0.0))
 
             summary.Fill()
 
@@ -483,7 +878,6 @@ def main():
     colors = [1, 2, 4, 6, 8, 9, 46, 38, 28, 32]
     mstyles = [20, 21, 22, 23, 24, 25, 26, 27, 28, 30]
 
-    # Keepalive lists to prevent PyROOT GC from nuking objects in multigraphs/legends/canvases
     keepalive = []
 
     # ---------------------------
@@ -493,35 +887,42 @@ def main():
         eta_out = ensure_dir(byEta_dir, [eta_dirname])
 
         graphs = {}
+        relerr_graphs = {}
+
         for im, (mkey, mlabel, _) in enumerate(METHODS):
             pts = sorted(data[eta_dirname][mkey], key=lambda t: t[0])
-            g = make_graph(
-                f"gr_{mkey}",
-                f"{eta_dirname}: {mlabel}",
-                "resolution"
-            )
+            g = make_graph(f"gr_{mkey}", f"{eta_dirname}: {mlabel}", "resolution")
             for (pt, val, err) in pts:
                 if finite(val) and val > 0.0:
                     add_point(g, pt, val, 0.0, err if finite(err) and err >= 0 else 0.0)
             style_graph(g, colors[im % len(colors)], mstyles[im % len(mstyles)])
             graphs[mkey] = g
             per_method_graphs[mkey][eta_dirname] = g
-
             write_obj(eta_out, g)
             keepalive.append(g)
+
+            # rel err graph (err/value)
+            gre = make_graph(f"gr_{mkey}_relerr", f"{eta_dirname}: {mkey} relative error", "err/value")
+            for (pt, rel) in sorted(relerr_data[eta_dirname][mkey], key=lambda t: t[0]):
+                if finite(rel):
+                    add_point(gre, pt, rel, 0.0, 0.0)
+            style_graph(gre, colors[im % len(colors)], mstyles[im % len(mstyles)])
+            relerr_graphs[mkey] = gre
+            write_obj(eta_out, gre)
+            keepalive.append(gre)
 
         # Overlay multigraph (stored)
         mg = make_multigraph("mg_methods", f"{eta_dirname}: resolution estimators; pT [GeV]; resolution")
         leg = make_legend("legend_methods")
         for (mkey, _, _) in METHODS:
-            mg.Add(graphs[mkey], "P")          # markers only (no lines)
+            mg.Add(graphs[mkey], "P")
             leg.AddEntry(graphs[mkey], mkey, "p")
 
         write_obj(eta_out, mg)
         write_obj(eta_out, leg)
         keepalive.extend([mg, leg])
 
-        # Overlay canvas (log-log, markers only)
+        # Overlay canvas (log-log)
         c = make_canvas("c_methods_loglog", f"{eta_dirname} methods (log-log)")
         c.SetLogx(1)
         c.SetLogy(1)
@@ -538,26 +939,43 @@ def main():
         mg.GetXaxis().SetTitle("p_{T}^{true} [GeV]")
         mg.GetYaxis().SetTitle("resolution")
         leg.Draw()
-
         write_obj(eta_out, c)
         keepalive.append(c)
 
-        # Diagnostics graphs
-        ddir = ensure_dir(diag_rootdir, [eta_dirname])
+        # Relative-error overlay (log-x, linear y)
+        mgre = make_multigraph("mg_methods_relerr", f"{eta_dirname}: method relative errors; pT [GeV]; err/value")
+        legre = make_legend("legend_methods_relerr")
+        for (mkey, _, _) in METHODS:
+            mgre.Add(relerr_graphs[mkey], "P")
+            legre.AddEntry(relerr_graphs[mkey], mkey, "p")
+        cre = make_canvas("c_methods_relerr_logx", f"{eta_dirname} method relative errors")
+        cre.SetLogx(1)
+        cre.SetLogy(0)
+        mgre.Draw("A")
+        mgre.GetXaxis().SetTitle("p_{T}^{true} [GeV]")
+        mgre.GetYaxis().SetTitle("err/value")
+        legre.Draw()
+        write_obj(eta_out, mgre)
+        write_obj(eta_out, legre)
+        write_obj(eta_out, cre)
+        keepalive.extend([mgre, legre, cre])
 
+        # Diagnostics graphs (now with errors)
+        ddir = ensure_dir(diag_rootdir, [eta_dirname])
         diag_graphs = {}
-        for idg, (dk, dlabel) in enumerate(DIAG_FIELDS):
+
+        for idg, (dk, dlabel, _) in enumerate(DIAG_FIELDS):
             g = make_graph(f"gr_{dk}", f"{eta_dirname}: {dlabel}", dk)
             pts = sorted(diag_data[eta_dirname][dk], key=lambda t: t[0])
-            for (pt, v) in pts:
+            for (pt, v, e) in pts:
                 if finite(v):
-                    add_point(g, pt, v, 0.0, 0.0)
+                    add_point(g, pt, v, 0.0, e if (finite(e) and e >= 0.0) else 0.0)
             style_graph(g, colors[idg % len(colors)], mstyles[idg % len(mstyles)])
             write_obj(ddir, g)
             keepalive.append(g)
             diag_graphs[dk] = g
 
-        # A compact diagnostics canvas (log-x, linear y; markers only)
+        # Key fractions overlay (log-x)
         cdiag = make_canvas("c_diagnostics_logx", f"{eta_dirname} diagnostics (log-x)")
         cdiag.SetLogx(1)
         cdiag.SetLogy(0)

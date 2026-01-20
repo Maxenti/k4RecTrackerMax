@@ -41,6 +41,12 @@ parser.add_argument("--outputFile", default="output_digi_ggtf_fit.root",
                     help="Output EDM4hep file")
 parser.add_argument("--compactXML", default="",
                     help="Path/URL to compact XML (same one used by ddsim). Required for GenFit material effects.")
+
+# NEW: optional TGeo ROOT file to explicitly populate gGeoManager (fallback for GenFit material effects)
+parser.add_argument("--tgeoFile", default="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root",
+                    help="Optional TGeo ROOT geometry file to Import() if gGeoManager is null "
+                         "(e.g. IDEA_o1_v03W.root). Passed to GenFit2DCHFitter property TGeoFile.")
+
 parser.add_argument("--dchSimHits", default="DCHCollection",
                     help="Name of DCH SimTrackerHit collection in the input file")
 parser.add_argument("--dchName", default="DCH_v2",
@@ -602,6 +608,12 @@ def _configure_genfit2():
     # Core physics knobs
     _set_any(alg, ["Bz"], float(args.gf_bz), label="Bz")
     _set_any(alg, ["PDG"], int(args.gf_pdg), label="PDG")
+
+    # NEW: TGeo root file (optional) for gGeoManager fallback
+    if args.tgeoFile:
+        _set_any(alg, ["TGeoFile"], str(args.tgeoFile), label="TGeoFile")
+    else:
+        print("[fitter] tgeoFile not provided; relying on GeoSvc/DD4hep to populate gGeoManager (may be null).")
 
     # Material policy
     _set_any(alg, ["UseMaterialEffects"], bool(gf_useMat_effective), label="UseMaterialEffects")

@@ -3,35 +3,27 @@
 # Updated for: runDCHTestTrackFinder.py (Jan 18 2026) + GenFit2DCHFitter (Jan 11 2026 nightly)
 #
 # This version:
-#   - Removes unused knobs / CLI flags that no longer exist in runDCHTestTrackFinder.py:
-#       * GF_BEST_STATE_Z_WEIGHT / GF_BEST_STATE_IDX_WEIGHT (removed)
-#       * GF_SIMLINK_* seeding knobs (removed)
-#   - Adds new knobs exposed by runDCHTestTrackFinder.py:
-#       * publish-state: GF_PUBLISH_STATE_CENTRAL_FRAC
-#       * seed tangent:  GF_SEED_TANGENT_K
-#       * prefit outlier veto: GF_PREFIT_OUTLIER_VETO + GF_OUTLIER_* knobs
-#       * PD guards / stats / diag: GF_MIN_COV_EIGENVALUE, GF_STATS_TRUNC_CENTRAL_FRAC, GF_DIAG_EVERY_N_TRACKS
-#   - Aligns defaults with the updated python script.
+#   - Adds optional TGeo ROOT geometry import support via runDCHTestTrackFinder.py:
+#       * New env knob:  TGEO_FILE
+#       * New positional arg: [7] TGeo ROOT file (optional)
+#       * Passes: --tgeoFile "$TGEO_FILE" (only if non-empty)
+#       * Stamps: tgeo_file into metadata extras
 #
 # Usage:
-#   ./local_chain.sh [INPUT] [OUTPUT] [MODEL_SPEC] [COMPACT_XML] [DCH_SIMHITS] [DCH_NAME]
+#   ./local_chain.sh [INPUT] [OUTPUT] [MODEL_SPEC] [COMPACT_XML] [DCH_SIMHITS] [DCH_NAME] [TGEO_FILE]
 #
 set -euo pipefail
 
 ########## defaults  ##########
 DEFAULT_INPUT="/eos/user/c/cglenn/gun_samples/1_16_2026/eta_+0.00/gun_eta+0.00_pt1.root"
-DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/1_18_2026/eta_+0.00/reco_eta+0.00_pt1.root"
+DEFAULT_OUTPUT="/eos/user/c/cglenn/reco_samples2/Debugging/eta_+0.00/reco_eta+0.00_pt1_nomat.root"
 DEFAULT_MODEL_SPEC="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx"
-DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml"
+DEFAULT_COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml"
 DEFAULT_DCH_SIMHITS="DCHCollection"
 DEFAULT_DCH_NAME="DCH_v2"
+# Optional: if you have a pre-exported ROOT TGeo geometry file (sets gGeoManager via TGeoManager::Import)
+DEFAULT_TGEO_FILE="/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root"
 ###########################################
-
-
-
-
-
-
 
 # CLI overrides (optional positional args)
 INPUT="${1:-$DEFAULT_INPUT}"
@@ -40,6 +32,7 @@ MODEL_SPEC="${3:-$DEFAULT_MODEL_SPEC}"
 COMPACT_XML="${4:-$DEFAULT_COMPACT_XML}"
 DCH_SIMHITS="${5:-$DEFAULT_DCH_SIMHITS}"
 DCH_NAME="${6:-$DEFAULT_DCH_NAME}"
+TGEO_FILE="${7:-$DEFAULT_TGEO_FILE}"
 
 # ----------------- pipeline controls -----------------
 : "${STAGE:=fit}"              # digi|ggtf|fit  (cumulative in runDCHTestTrackFinder.py)
@@ -198,6 +191,7 @@ echo "[cfg] INPUT=$INPUT"
 echo "[cfg] OUTPUT=$OUTPUT"
 echo "[cfg] MODEL_SPEC=$MODEL_SPEC"
 echo "[cfg] COMPACT_XML=$COMPACT_XML  DCH_SIMHITS=$DCH_SIMHITS  DCH_NAME=$DCH_NAME"
+echo "[cfg] TGEO_FILE=${TGEO_FILE:-<none>}"
 echo "[cfg] STAGE=$STAGE SKIP_DIGI=$SKIP_DIGI FITTER=$FITTER FIT_OUT=$FIT_OUT GGTF_TRACKS_OUT=$GGTF_TRACKS_OUT"
 echo "[cfg] GGTF_LOG=$GGTF_LOG FITTER_LOG=$FITTER_LOG MAX_HITS=$MAX_HITS TIMEOUT_K4RUN=$TIMEOUT_K4RUN"
 echo "[cfg] TBETA=$TBETA TD=$TD ONNX_CHUNK=$ONNX_CHUNK"
@@ -246,6 +240,7 @@ build_stamp_extras () {
   extras+=( --extra "output=${OUTPUT}" )
   extras+=( --extra "model_spec=${MODEL_SPEC}" )
   extras+=( --extra "compact_xml=${COMPACT_XML}" )
+  extras+=( --extra "tgeo_file=${TGEO_FILE}" )
   extras+=( --extra "dch_name=${DCH_NAME}" )
   extras+=( --extra "dch_simhits=${DCH_SIMHITS}" )
 
@@ -260,7 +255,7 @@ build_stamp_extras () {
       | LC_ALL=C sort \
       | awk '
           /^(DCH_|GGTF_|GF_)/ {print; next}
-          /^(STAGE|SKIP_DIGI|FITTER|FIT_OUT|GGTF_TRACKS_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK)$/ {print; next}
+          /^(STAGE|SKIP_DIGI|FITTER|FIT_OUT|GGTF_TRACKS_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK|TGEO_FILE)$/ {print; next}
         '
   )
 
@@ -371,6 +366,11 @@ K4_ARGS=(
   --gf-statsTruncCentralFrac   "$GF_STATS_TRUNC_CENTRAL_FRAC"
   --gf-diagEveryNTracks        "$GF_DIAG_EVERY_N_TRACKS"
 )
+
+# Optional: import a ROOT TGeo geometry file (sets gGeoManager) if provided
+if [[ -n "${TGEO_FILE}" ]]; then
+  K4_ARGS+=( --tgeoFile "$TGEO_FILE" )
+fi
 
 # --skipDigi
 if [[ "$SKIP_DIGI" == "1" ]]; then

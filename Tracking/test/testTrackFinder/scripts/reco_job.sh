@@ -20,10 +20,30 @@ INFILE="${1:?need INFILE}"            # /eos/... or root://...
 OUTDIR="${2:?need OUTDIR}"            # /eos/...
 COMPACT_XML="${3:?need COMPACT_XML}"  # /eos/... or root://... or /cvmfs...
 FITTER="${4:-genfit2}"                # genfit2|none
-GF_USE_MAT_ARG="${5:-0}"              # 0/1 (match local_chain default: 0)
+GF_USE_MAT_ARG="${5:-1}"              # 0/1 (match local_chain default: 0)
 STAGE="${6:-fit}"                     # digi|ggtf|fit
 FIT_OUT="${7:-auto}"                  # auto|<name>
 K4REL="${8:-2026-01-11}"              # key4hep nightly tag
+
+
+TGEO_FILE="${9:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root}"   # /eos/... or root://... or local
+LOCAL_TGEO=""
+
+if [[ -n "$TGEO_FILE" ]]; then
+  if [[ "$TGEO_FILE" == root://* ]]; then
+    LOCAL_TGEO="$PWD/$(basename "$TGEO_FILE")"
+    xrdcp -f "$TGEO_FILE" "$LOCAL_TGEO"
+  elif [[ "$TGEO_FILE" == /eos/* ]]; then
+    LOCAL_TGEO="$PWD/$(basename "$TGEO_FILE")"
+    xrdcp -f "root://eosuser.cern.ch//${TGEO_FILE#/}" "$LOCAL_TGEO"
+  else
+    LOCAL_TGEO="$TGEO_FILE"
+  fi
+  [[ -s "$LOCAL_TGEO" ]] || { echo "[env][FATAL] TGeo file missing: $LOCAL_TGEO"; exit 32; }
+  echo "[env] Using TGeo: $LOCAL_TGEO"
+fi
+
+
 
 echo "[args] INFILE=$INFILE"
 echo "[args] OUTDIR=$OUTDIR"
@@ -194,6 +214,32 @@ echo "[io] input:   $INFILE_XRD"
 echo "[io] eta_dir: $ETA_DIR"
 echo "[io] output:  $OUT_EOS_XRD"
 echo "[io] local:   $OUT_LOCAL"
+
+
+
+# ---------------- Full log policy (keep only on failure) ----------------
+# Full logs go to scratch (TMPDIR) and are copied to EOS only if something looks bad.
+TMPDIR="${_CONDOR_SCRATCH_DIR:-${TMPDIR:-$PWD}}"
+
+FULLLOG="${TMPDIR}/reco_${ETA_DIR}_${base}.full.log"
+
+# Where to store logs on EOS (alongside outputs, but in a logs/ subdir)
+LOG_EOS_POSIX="${OUTDIR%/}/${ETA_DIR}/logs/reco_${base}.log"
+LOG_EOS_XRD="$(to_xrd "$LOG_EOS_POSIX")"
+LOG_EOS_PATH_ON_EOS="$(eos_path_from_xrd "$LOG_EOS_XRD")"
+
+# Ensure EOS logs dir exists
+if command -v xrdfs >/dev/null 2>&1; then
+  xrdfs eosuser.cern.ch mkdir -p "$(dirname "$LOG_EOS_PATH_ON_EOS")" >/dev/null 2>&1 || true
+fi
+
+echo "[log] full log (scratch): $FULLLOG"
+echo "[log] eos log (on fail):  $LOG_EOS_XRD"
+
+
+
+
+
 
 # Skip if output already exists (idempotent)
 if command -v xrdfs >/dev/null 2>&1; then
@@ -539,6 +585,16 @@ else
   K4_ARGS+=( --no-gf-fallbackToKFIfDAFFails )
 fi
 
+
+
+if [[ "$GF_USE_MAT" == "1" ]]; then
+  [[ -n "$LOCAL_TGEO" ]] || { echo "[env][FATAL] GF_USE_MAT=1 but no TGeo file provided"; exit 33; }
+  K4_ARGS+=( --tgeoFile "$LOCAL_TGEO" )
+fi
+
+
+
+
 # Observability skip toggle
 if [[ "$GF_SKIP_IF_OBS_TOO_LOW" == "1" ]]; then
   K4_ARGS+=( --gf-skipIfObsTooLow )
@@ -574,8 +630,8 @@ else
   K4_ARGS+=( --gf-wireAnglesAreRadians )
 fi
 
-LOG="job.log"
-echo "[k4run] args: ${K4_ARGS[*]}" | tee "$LOG"
+# ---------------- Run (capture full output to scratch; keep only if bad) ----------------
+echo "[k4run] args: ${K4_ARGS[*]}" > "$FULLLOG"
 
 run_cmd() {
   if [[ "$TIMEOUT_K4RUN" -gt 0 ]]; then
@@ -585,9 +641,10 @@ run_cmd() {
   fi
 }
 
-# ---------------- Run ----------------
-( run_cmd /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" ) 2>&1 | tee -a "$LOG"
-K4_RC=${PIPESTATUS[0]}
+set +e
+run_cmd /usr/bin/time -v stdbuf -oL -eL k4run "${K4_ARGS[@]}" >>"$FULLLOG" 2>&1
+K4_RC=$?
+set -e
 
 # If k4run failed but output is usable, override rc to 0 (same philosophy as local_chain)
 check_edm_root() {
@@ -605,14 +662,38 @@ print("[verify] %s OK=%s NEV=%d" % (sys.argv[1], ok, nev))
 sys.exit(0 if ok and nev>0 else 1)
 PY
 }
+
 if [[ $K4_RC -ne 0 ]]; then
   if check_edm_root "$OUT_LOCAL"; then
     echo "[note] k4run rc=$K4_RC but output looks fine; overriding to 0."
+    echo "[note] k4run rc=$K4_RC but output looks fine; overriding to 0." >>"$FULLLOG"
     K4_RC=0
   fi
 fi
 
+# Decide whether to keep/copy the full log
+NEED_LOG=0
+if [[ $K4_RC -ne 0 ]]; then
+  NEED_LOG=1
+fi
+if grep -Eqi '(FATAL|Segmentation|Traceback|Exception thrown|ill-conditioned covariance|not positive definite|ERROR)' "$FULLLOG"; then
+  NEED_LOG=1
+fi
+
+if [[ $NEED_LOG -eq 1 ]]; then
+  echo "[log] issues detected -> copying full log to EOS: $LOG_EOS_XRD"
+  # show a short tail in the condor .out for quick triage
+  echo "---- tail(full log) ----"
+  tail -n 120 "$FULLLOG" || true
+  xrdcp -f "$FULLLOG" "$LOG_EOS_XRD" || true
+else
+  # keep condor .out small; delete full log
+  rm -f "$FULLLOG" || true
+fi
+
+
 # Verify required collection exists (match your older reco_job behavior)
+set +e
 python3 - <<PY "$OUT_LOCAL" "$FIT_OUT"
 import sys, ROOT
 out = sys.argv[1]; coll = sys.argv[2]
@@ -629,6 +710,17 @@ print(f"[verify] looking for '{coll}' -> present={present}")
 f.Close()
 sys.exit(0 if present else 4)
 PY
+VER_RC=$?
+set -e
+
+if [[ $VER_RC -ne 0 ]]; then
+  echo "[verify] collection check failed rc=$VER_RC (coll=$FIT_OUT)."
+  echo "[verify] collection check failed rc=$VER_RC (coll=$FIT_OUT)." >>"$FULLLOG"
+  echo "[log] copying full log to EOS due to verify failure: $LOG_EOS_XRD"
+  xrdcp -f "$FULLLOG" "$LOG_EOS_XRD" || true
+  exit $VER_RC
+fi
+
 
 echo "[stage] xrdcp -> $OUT_EOS_XRD"
 xrdcp -f "$OUT_LOCAL" "$OUT_EOS_XRD"

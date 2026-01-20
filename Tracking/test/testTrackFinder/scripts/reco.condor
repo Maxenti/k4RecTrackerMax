@@ -19,18 +19,20 @@ should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
 
 # Logging (make sure logs/ exists before condor_submit)
-output  = logs/reco.$(ClusterId).$(ProcId).out
-error   = logs/reco.$(ClusterId).$(ProcId).err
-log     = logs/reco.$(ClusterId).$(ProcId).log
+# Logging MUST be on AFS/local (EOS submission not supported)
+output  = /dev/null
+error   = /dev/null
+log     = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/$(ClusterId).$(ProcId).log
+
 
 getenv = True
-stream_output = True
-stream_error  = True
+stream_output = False
+stream_error  = False
 
 # --- Defaults (can be overridden by condor_submit -append "...") ---
 queuefile  = scripts/filelist.txt
 
-outdir     = /eos/user/c/cglenn/reco_samples2/1_19_2026
+outdir     = /eos/user/c/cglenn/reco_samples2/1_20_2026/Wmat
 compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml
 
 fitter    = genfit2
@@ -42,7 +44,7 @@ fitout    = auto
 
 # Key4hep nightly used INSIDE the job (must match runtime build ABI expectations)
 k4rel = 2026-01-11
-
+tgeofile  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root
 # Wrapper args:
 #   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8... extraargs tokens ...  last: k4rel
 #
@@ -53,7 +55,7 @@ k4rel = 2026-01-11
 
 
 # Arguments: fixed-position only
-arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(k4rel)
+arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(k4rel) $(tgeofile)
 
 
 

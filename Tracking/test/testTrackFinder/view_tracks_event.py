@@ -76,33 +76,34 @@ def _scan_leaf_by_suffix(tree, coll_name, suffix):
 def _resolve_begin_end_leaves(tree, coll_name):
     """
     Resolve trackStates begin/end leaves for a Track collection.
-
-    Common names:
-      - <coll>.trackStates_begin / <coll>.trackStates_end
-      - <coll>.TrackStates_begin / <coll>.TrackStates_end
-      - Sometimes different capitalization; if not found, scan by suffix.
-    Returns (begin_leaf_name, end_leaf_name) or (None, None)
+    Handles normal and underscore-prefixed naming.
     """
     candidates = [
         (f"{coll_name}.trackStates_begin", f"{coll_name}.trackStates_end"),
         (f"{coll_name}.TrackStates_begin", f"{coll_name}.TrackStates_end"),
+        (f"_{coll_name}_trackStates_begin", f"_{coll_name}_trackStates_end"),
+        (f"_{coll_name}_TrackStates_begin", f"_{coll_name}_TrackStates_end"),
     ]
     for bname, ename in candidates:
         if _find_leaf(tree, bname) and _find_leaf(tree, ename):
             return bname, ename
 
-    # Fallback: scan
-    bname = _scan_leaf_by_suffix(tree, coll_name, "trackStates_begin")
-    ename = _scan_leaf_by_suffix(tree, coll_name, "trackStates_end")
-    if bname and ename:
-        return bname, ename
+    # Fallback suffix scan
+    for sufB, sufE in [("trackStates_begin", "trackStates_end"),
+                      ("TrackStates_begin", "TrackStates_end")]:
+        bname = _scan_leaf_by_suffix(tree, coll_name, sufB)
+        ename = _scan_leaf_by_suffix(tree, coll_name, sufE)
+        if bname and ename:
+            return bname, ename
 
-    bname = _scan_leaf_by_suffix(tree, coll_name, "TrackStates_begin")
-    ename = _scan_leaf_by_suffix(tree, coll_name, "TrackStates_end")
-    if bname and ename:
-        return bname, ename
+        # underscore-prefixed scan
+        bname = _scan_leaf_by_suffix(tree, f"_{coll_name}_", sufB)
+        ename = _scan_leaf_by_suffix(tree, f"_{coll_name}_", sufE)
+        if bname and ename:
+            return bname, ename
 
     return None, None
+
 
 
 def resolve_ts_prefix(tree, coll_name):
@@ -128,6 +129,8 @@ def resolve_ts_prefix(tree, coll_name):
         f"_{coll_name}_TrackStates.",
         f"_{coll_name}_trackStates_AtIP.",
         f"_{coll_name}_TrackStates_AtIP.",
+        f"{coll_name}TrackStates.",
+        f"_{coll_name}TrackStates.",
     ]
 
     for pref in candidates:
@@ -466,6 +469,64 @@ def load_track_states(tree, ev_idx, coll_name="GenFitTracks", assume_q=1):
     return per_track
 
 
+def add_xy_track_overlay(c_xy, track_states, Bz):
+    """
+    Draw the fitted helix projection (circle in XY) on top of the XY histogram canvas.
+    Uses the same helix math you already use in 3D.
+    """
+    if not track_states:
+        return []
+
+    overlays = []
+    c_xy.cd()
+
+    # Draw each track as a circle arc (polyline) in XY
+    nseg = 250
+    for it, st in enumerate(track_states):
+        x0 = st["x0"]; y0 = st["y0"]
+        phi = st["phi"]
+        omg = st["omega"]
+
+        # If omega invalid -> draw straight line
+        if (not math.isfinite(omg)) or abs(omg) == 0.0 or abs(Bz) == 0.0:
+            ln = ROOT.TLine(x0, y0, x0 + 1000.0*math.cos(phi), y0 + 1000.0*math.sin(phi))
+            ln.SetLineWidth(3)
+            ln.SetLineStyle(2)
+            ln.SetLineColor(ROOT.kBlack if it == 0 else ROOT.kGray + 2)
+            ln.Draw("SAME")
+            overlays.append(ln)
+            continue
+
+        # Radius in meters: R = 1 / (|omega| * 0.3 * |B|)
+        R_m  = 1.0 / (abs(omg) * 0.3 * abs(Bz))
+        R_mm = R_m * 1000.0
+        sgn = 1.0 if (omg * Bz) > 0.0 else -1.0
+
+        xc = x0 - sgn * R_mm * math.sin(phi)
+        yc = y0 + sgn * R_mm * math.cos(phi)
+        alpha0 = math.atan2(y0 - yc, x0 - xc)
+
+        # pick an arc length range based on radius (enough to see curvature)
+        # arc angle span ~ +/- 0.8 rad, clamp if R huge
+        dAlpha = 0.8 if R_mm < 2e6 else 0.05
+
+        pl = ROOT.TPolyLine(nseg)
+        pl.SetLineWidth(3)
+        pl.SetLineColor(ROOT.kBlue if it == 0 else ROOT.kYellow + 1)
+
+        for i in range(nseg):
+            a = alpha0 - dAlpha + (2*dAlpha) * i / (nseg - 1)
+            x = xc + R_mm * math.cos(a)
+            y = yc + R_mm * math.sin(a)
+            pl.SetPoint(i, x, y)
+
+        pl.Draw("SAME")
+        overlays.append(pl)
+
+    return overlays
+
+
+
 # ------------------------------------------------------------
 # Build histograms + 3D display and save to ROOT file
 # ------------------------------------------------------------
@@ -559,9 +620,12 @@ def make_plots(tracks_by_label,
     c_rz = ROOT.TCanvas("c_rz", "RZ view", 800, 800)
     c_3d = ROOT.TCanvas("c_3d", "3D tracks", 800, 800)
 
+    xy_overlays = []
     if h_xy:
         c_xy.cd()
         h_xy.Draw("COLZ")
+        if track_states:
+            xy_overlays = add_xy_track_overlay(c_xy, track_states, Bz)
 
     if h_rz:
         c_rz.cd()
@@ -684,6 +748,10 @@ def make_plots(tracks_by_label,
     if h_xy:
         c_xy.Write()
         h_xy.Write()
+
+        for o in xy_overlays:
+            o.Write()
+
     if h_rz:
         c_rz.Write()
         h_rz.Write()
@@ -740,7 +808,7 @@ def main():
     ap.add_argument("--tree", default="events", help="TTree name (default: events)")
     ap.add_argument("--event", type=int, default=-1,
                     help="Event index (0-based). If <0, auto-find first event with hits.")
-    ap.add_argument("--hitsCollection", default="GGTF_SenseWireHits",
+    ap.add_argument("--hitsCollection", default="OutputWireHitsGGTF",
                     help="Hit collection with position.{x,y,z} (default: GGTF_SenseWireHits). "
                          "If not found, auto-detect a likely GGTF hit collection.")
     ap.add_argument("--autoDetectHits", action="store_true",
@@ -774,13 +842,14 @@ def main():
     print(f"[info] File: {args.input}, tree='{args.tree}', events: {n_ev}")
 
     # Decide hits collection name
+    # Decide hits collection name
     hits_coll = args.hitsCollection
-    if args.autoDetectHits or (not _collection_has_xyz(tree, hits_coll)):
-        hits_coll = _auto_detect_hits_collection(tree, preferred=None if args.autoDetectHits else hits_coll)
+    if (not _collection_has_xyz(tree, hits_coll)):
+        hits_coll = _auto_detect_hits_collection(tree, preferred=hits_coll)
         if not hits_coll:
             raise RuntimeError("Could not auto-detect any collection with '.position.x/y/z' in this file.")
     else:
-        print(f"[info] Using user hits collection = '{hits_coll}'")
+        print(f"[info] Using hits collection = '{hits_coll}'")
 
     # Decide which event index to use
     if args.event >= 0:

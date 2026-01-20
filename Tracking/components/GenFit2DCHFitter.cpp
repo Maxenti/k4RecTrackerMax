@@ -55,6 +55,8 @@
 #include <ctime>
 #include <numeric>
 #include <cstdint>
+#include <mutex>
+#include <atomic>
 
 // Gaudi
 #include "Gaudi/Algorithm.h"
@@ -479,20 +481,29 @@ static CircleFitXY fitCircleKasaXY(const std::vector<extension::SenseWireHit>& h
   M(1,0)=Sxy; M(1,1)=Syy; M(1,2)=Sy;
   M(2,0)=Sx;  M(2,1)=Sy;  M(2,2)=S1;
 
-  TVectorD b(3);
-  b(0)=Tx; b(1)=Ty; b(2)=T1;
+  // RHS
+  TVectorD rhs(3);
+  rhs(0)=Tx; rhs(1)=Ty; rhs(2)=T1;
 
-  // Solve M * u = b
-  double det = M.Determinant();
+  // (Optional quick singularity guard; SVD can handle rank-deficiency,
+  // but keeping your fast check is fine.)
+  const double det = M.Determinant();
   if (!std::isfinite(det) || std::abs(det) < 1e-12) return res;
 
+  // Solve M * sol = rhs
+  TVectorD sol(3);
   TDecompSVD svd(M);
-  Bool_t ok = svd.Solve(b);
+
+  Bool_t ok = kFALSE;
+  sol = svd.Solve(rhs, ok);   // returns x, sets ok
   if (!ok) return res;
 
-  const double A = b(0);
-  const double B = b(1);
-  const double C = b(2);
+  if (!ok) return res;
+
+  const double A = sol(0);
+  const double B = sol(1);
+  const double C = sol(2);
+
 
   const double xc = -A/2.0;
   const double yc = -B/2.0;
@@ -505,6 +516,7 @@ static CircleFitXY fitCircleKasaXY(const std::vector<extension::SenseWireHit>& h
   res.R  = std::sqrt(rad2);
   return res;
 }
+
 
 static double chordPerpDistMM(const TVector3& A, const TVector3& B, const TVector3& P) {
   const double dx = B.X() - A.X();
@@ -658,6 +670,111 @@ static bool selectPublishStateCentral(const genfit::Track& gftrk,
   return true;
 }
 
+
+// ----------------------------------------------------------------------
+// Perigee params (EDM4hep-style) from (pos,mom) + numerical Jacobian for cov.
+// ----------------------------------------------------------------------
+
+// Build EDM4hep-like perigee parameters from (pos_mm, mom_GeV).
+// a = (d0, phi, omega, z0, tanLambda)
+static void perigeeFromPosMom(const TVector3& pos_mm,
+  const TVector3& mom_GeV,
+  int q,
+  TVectorD& a5 /*size 5*/) {
+const double x = pos_mm.X();
+const double y = pos_mm.Y();
+const double z = pos_mm.Z();
+
+const double px = mom_GeV.X();
+const double py = mom_GeV.Y();
+const double pz = mom_GeV.Z();
+
+const double pT  = std::hypot(px, py);
+const double phi = std::atan2(py, px);
+const double tanL = (pT > 1e-12) ? (pz / pT) : 0.0;
+const double omega = (pT > 1e-12) ? (double(q) / pT) : std::numeric_limits<double>::quiet_NaN();
+
+const double d0 = - (x * std::sin(phi) - y * std::cos(phi));
+const double z0 =   z - (x * std::cos(phi) + y * std::sin(phi)) * tanL;
+
+a5.ResizeTo(5);
+a5(0) = d0;
+a5(1) = phi;
+a5(2) = omega;
+a5(3) = z0;
+a5(4) = tanL;
+}
+
+// Convert a 6D Cartesian cov in (x,y,z,px,py,pz) into perigee 5x5 cov
+// for (d0,phi,omega,z0,tanLambda) via finite-difference Jacobian.
+static bool covPerigeeFromCov6(const TVector3& pos_mm,
+    const TVector3& mom_GeV,
+    int q,
+    const TMatrixDSym& cov6,   // (x,y,z,px,py,pz)
+    TMatrixDSym& cov5_out) {   // (d0,phi,omega,z0,tanL)
+if (cov6.GetNrows() != 6) return false;
+
+TVectorD a0(5);
+perigeeFromPosMom(pos_mm, mom_GeV, q, a0);
+for (int i=0;i<5;++i) if (!std::isfinite(a0(i))) return false;
+
+// step sizes: pos in mm, mom in GeV
+const double eps_x = 1e-3;  // 1 micron
+const double eps_p = 1e-4;  // 0.1 MeV
+
+TMatrixD J(5,6); J.Zero();
+
+auto bump = [&](int j, double delta, TVector3& p, TVector3& m) {
+if (j==0) p.SetX(p.X()+delta);
+if (j==1) p.SetY(p.Y()+delta);
+if (j==2) p.SetZ(p.Z()+delta);
+if (j==3) m.SetX(m.X()+delta);
+if (j==4) m.SetY(m.Y()+delta);
+if (j==5) m.SetZ(m.Z()+delta);
+};
+
+for (int j=0;j<6;++j) {
+const double d = (j < 3) ? eps_x : eps_p;
+
+TVector3 pP = pos_mm, mP = mom_GeV;
+TVector3 pM = pos_mm, mM = mom_GeV;
+bump(j, +d, pP, mP);
+bump(j, -d, pM, mM);
+
+TVectorD aP(5), aM(5);
+perigeeFromPosMom(pP, mP, q, aP);
+perigeeFromPosMom(pM, mM, q, aM);
+
+for (int i=0;i<5;++i) {
+if (!std::isfinite(aP(i)) || !std::isfinite(aM(i))) return false;
+J(i,j) = (aP(i) - aM(i)) / (2.0*d);
+}
+}
+
+// cov5 = J * cov6 * J^T
+TMatrixD cov6D(cov6);
+TMatrixD tmp = J * cov6D * TMatrixD(TMatrixD::kTransposed, J);
+
+cov5_out.ResizeTo(5,5);
+for (int i=0;i<5;++i)
+for (int j=0;j<5;++j)
+cov5_out(i,j) = tmp(i,j);
+
+// symmetrize + PD guard
+for (int i=0;i<5;++i)
+for (int j=i+1;j<5;++j) {
+const double v = 0.5*(cov5_out(i,j)+cov5_out(j,i));
+cov5_out(i,j)=v; cov5_out(j,i)=v;
+}
+
+ensurePD_eigenClamp(cov5_out, 1e-12);
+return true;
+}
+
+
+
+
+
 // Fill TrackState(AtIP). pos_internal is in internal length units (cm).
 static void addAtIPState(extension::MutableTrack& trk,
                          const TVector3& pos_internal_cm,
@@ -669,7 +786,9 @@ static void addAtIPState(extension::MutableTrack& trk,
                          float omegaVar,
                          float obsScore,
                          float extra0 = -1.f,
-                         float extra1 = -1.f) {
+                         float extra1 = -1.f,
+                         const TMatrixDSym* cov5 = nullptr) {
+
   using TP = edm4hep::TrackParams;
 
   const double inv_ps = (posScale_cm_per_mm > 0 ? 1.0 / posScale_cm_per_mm : 10.0);
@@ -704,12 +823,25 @@ static void addAtIPState(extension::MutableTrack& trk,
   if (ptValid) ts.time = float(pT);
   else         ts.time = invalidPTSentinel;
 
-  // Minimal covariance placeholders.
-  ts.setCovMatrix(std::isfinite(extra0) ? extra0 : 1.0f, TP::d0,       TP::d0);
-  ts.setCovMatrix(1e-3f,                                TP::phi,      TP::phi);
-  ts.setCovMatrix(omegaVar,                             TP::omega,    TP::omega);
-  ts.setCovMatrix(std::isfinite(extra1) ? extra1 : 1.0f, TP::z0,      TP::z0);
-  ts.setCovMatrix(std::isfinite(obsScore) ? obsScore : -1.0f, TP::tanLambda, TP::tanLambda);
+  if (cov5 && cov5->GetNrows() == 5) {
+    // Map our (d0,phi,omega,z0,tanL) ordering into EDM4hep indices
+    const edm4hep::TrackParams idx[5] = {TP::d0, TP::phi, TP::omega, TP::z0, TP::tanLambda};
+
+
+    for (int i=0;i<5;++i) {
+      for (int j=i;j<5;++j) {
+        const double v = (*cov5)(i,j);
+        if (std::isfinite(v)) ts.setCovMatrix(float(v), idx[i], idx[j]);
+      }
+    }
+  } else {
+    // Fallback: minimal placeholders (your old behavior)
+    ts.setCovMatrix(std::isfinite(extra0) ? extra0 : 1.0f, TP::d0,       TP::d0);
+    ts.setCovMatrix(1e-3f,                                TP::phi,      TP::phi);
+    ts.setCovMatrix(omegaVar,                             TP::omega,    TP::omega);
+    ts.setCovMatrix(std::isfinite(extra1) ? extra1 : 1.0f, TP::z0,      TP::z0);
+    ts.setCovMatrix(std::isfinite(obsScore) ? obsScore : -1.0f, TP::tanLambda, TP::tanLambda);
+  }
 
   trk.addToTrackStates(ts);
 }
@@ -865,6 +997,16 @@ struct GenFit2DCHFitter final
   // Material effects
   Gaudi::Property<bool> m_useMatEff{this, "UseMaterialEffects", true,
                                     "Use TGeoMaterialInterface for GenFit MaterialEffects"};
+
+  Gaudi::Property<std::string> m_tgeoFile{
+                                      this, "TGeoFile", "",
+                                      "Optional ROOT geometry file to import if gGeoManager is null (e.g. detector.root)."
+                                    };
+  Gaudi::Property<std::string> m_tgeoTopVolume{
+                                      this, "TGeoTopVolume", "",
+                                      "Optional: if importing, set a specific top volume name (usually leave empty)."
+                                    };
+                                    
   Gaudi::Property<bool> m_disableEloss{this, "DisableEnergyLoss", true,
                                        "Disable energy loss (keep MS) when material effects enabled"};
   Gaudi::Property<bool> m_disableAllMat{this, "DisableAllMaterialEffects", false,
@@ -1038,44 +1180,80 @@ struct GenFit2DCHFitter final
     // GenFit uses kGauss internally. 1 Tesla = 10 kGauss.
     genfit::FieldManager::getInstance()->init(
       new genfit::ConstField(0., 0., 10.0*m_Bz.value()));
+    
+    (void)ensureGeometryLoaded();
 
-    // ----- MaterialEffects HARD policy -----
-    auto* me = genfit::MaterialEffects::getInstance();
+    // ----- MaterialEffects: one-time configuration -----
+    std::call_once(m_matOnce, [&]() {
+      auto* me = genfit::MaterialEffects::getInstance();
 
-    const bool wantMat = bool(m_useMatEff.value());
-    const bool haveGeo = (gGeoManager != nullptr);
+      const bool wantMat = bool(m_useMatEff.value());
+      const bool hardOff = bool(m_disableAllMat.value());
+      const bool haveGeo = (gGeoManager != nullptr);
 
-    if (!wantMat || m_disableAllMat.value()) {
-      me->setNoEffects(true);
-      info() << "MaterialEffects: HARD disabled (UseMaterialEffects=false or DisableAllMaterialEffects=true)" << endmsg;
-    } else if (!haveGeo) {
-      if (m_hardDisableMatIfNoGeo.value()) {
+
+
+      // Case 1: user asked for no material (or hard-off)
+      if (!wantMat || hardOff) {
         me->setNoEffects(true);
-        warning() << "UseMaterialEffects=true but gGeoManager is null; HARD disabling MaterialEffects." << endmsg;
-      } else {
-        warning() << "UseMaterialEffects=true but gGeoManager is null; MaterialEffects may throw." << endmsg;
+        info() << "MaterialEffects: DISABLED (UseMaterialEffects=false or DisableAllMaterialEffects=true)" << endmsg;
+        return;
       }
-    } else {
+
+      // Case 2: user wants material, but we have no geometry
+      if (!haveGeo) {
+        if (m_hardDisableMatIfNoGeo.value()) {
+          me->setNoEffects(true);
+          warning() << "MaterialEffects requested but gGeoManager==null; HARD disabling material effects." << endmsg;
+        } else {
+          warning() << "MaterialEffects requested but gGeoManager==null; leaving MaterialEffects as-is (may throw later)." << endmsg;
+        }
+        return;
+      }
+
+      // Case 3: geometry exists: initialize TGeo interface + enable effects
       try {
         me->init(new genfit::TGeoMaterialInterface());
         me->setNoEffects(false);
-        info() << "Initialized GenFit MaterialEffects with TGeoMaterialInterface." << endmsg;
+        info() << "MaterialEffects: ENABLED with TGeoMaterialInterface (gGeoManager present)." << endmsg;
 
+        // Optional sanity print
+        dumpMaterialSanity();
+
+        // Your policy knobs
         if (m_disableEloss.value()) {
           me->setEnergyLossBetheBloch(false);
           me->setNoiseBetheBloch(false);
           me->setEnergyLossBrems(false);
           me->setNoiseBrems(false);
-          info() << "MaterialEffects: disabled energy loss, kept MS [DisableEnergyLoss=true]" << endmsg;
+          info() << "MaterialEffects: energy loss DISABLED, multiple scattering kept." << endmsg;
+        } else {
+          // Explicitly turn eloss back on if user enables it
+          me->setEnergyLossBetheBloch(true);
+          me->setNoiseBetheBloch(true);
+          me->setEnergyLossBrems(true);
+          me->setNoiseBrems(true);
+          info() << "MaterialEffects: energy loss ENABLED." << endmsg;
         }
+
       } catch (const std::exception& e) {
         me->setNoEffects(true);
-        warning() << "Failed to init/configure MaterialEffects(TGeo): " << e.what()
-                  << " — HARD disabling MaterialEffects." << endmsg;
+        warning() << "MaterialEffects init failed: " << e.what() << " -> disabling material effects." << endmsg;
       } catch (...) {
         me->setNoEffects(true);
-        warning() << "Failed to init/configure MaterialEffects(TGeo) (unknown) — HARD disabling." << endmsg;
+        warning() << "MaterialEffects init failed (unknown) -> disabling material effects." << endmsg;
       }
+    });
+    
+    {
+      auto* me = genfit::MaterialEffects::getInstance();
+      info() << "MaterialEffects status: initialized="
+             << (me->isInitialized() ? "true" : "false")
+             << " gGeoManager=" << (gGeoManager ? "present" : "null")
+             << " wantMat=" << (m_useMatEff.value() ? "true" : "false")
+             << " hardOff=" << (m_disableAllMat.value() ? "true" : "false")
+             << endmsg;
+      
     }
 
     // Create fitters
@@ -1171,6 +1349,69 @@ struct GenFit2DCHFitter final
   StatusCode finalize() override { return StatusCode::SUCCESS; }
 
   // ----------------- internal helpers -----------------
+
+
+  void dumpMaterialSanity() const {
+    if (!gGeoManager) {
+      warning() << "Material sanity: gGeoManager is null." << endmsg;
+      return;
+    }
+    auto* top = gGeoManager->GetTopVolume();
+    info() << "Material sanity: TopVolume="
+           << (top ? top->GetName() : "(null)")
+           << " nMaterials="
+           << (gGeoManager->GetListOfMaterials() ? gGeoManager->GetListOfMaterials()->GetEntries() : -1)
+           << " nMedia="
+           << (gGeoManager->GetListOfMedia() ? gGeoManager->GetListOfMedia()->GetEntries() : -1)
+           << endmsg;
+  
+    // OPTIONAL: try common material names you might expect in your geometry
+    const char* names[] = {"Tungsten", "W", "Gold", "CarbonFiber", "CF", "ArCO2", "Helium", "Air"};
+    for (auto* nm : names) {
+      if (auto* mat = gGeoManager->GetMaterial(nm)) {
+        info() << "  Found material '" << nm << "' rho=" << mat->GetDensity()
+               << " radlen=" << mat->GetRadLen() << endmsg;
+      }
+    }
+  }
+
+  
+
+  bool ensureGeometryLoaded() const {
+    if (gGeoManager) return true;
+  
+    if (m_tgeoFile.value().empty()) return false;
+  
+    info() << "gGeoManager is null. Importing TGeo from file: " << m_tgeoFile.value() << endmsg;
+  
+    // This call sets gGeoManager in most ROOT builds, but we also assign explicitly below.
+    TGeoManager* gm = TGeoManager::Import(m_tgeoFile.value().c_str());
+    if (!gm) {
+      warning() << "TGeoManager::Import failed for " << m_tgeoFile.value() << endmsg;
+      return false;
+    }
+    gGeoManager = gm;
+  
+    if (!m_tgeoTopVolume.value().empty()) {
+      auto* top = gGeoManager->GetVolume(m_tgeoTopVolume.value().c_str());
+      if (top) gGeoManager->SetTopVolume(top);
+    }
+  
+    if (!gGeoManager->GetTopVolume()) {
+      warning() << "Imported geometry has no top volume set." << endmsg;
+      return false;
+    }
+  
+    info() << "Imported TGeo geometry. TopVolume=" << gGeoManager->GetTopVolume()->GetName()
+           << " nMaterials=" << (gGeoManager->GetListOfMaterials() ? gGeoManager->GetListOfMaterials()->GetEntries() : -1)
+           << " nMedia=" << (gGeoManager->GetListOfMedia() ? gGeoManager->GetListOfMedia()->GetEntries() : -1)
+           << endmsg;
+  
+    return true;
+  }
+  
+
+  
 
   TMatrixDSym makeSeedCov(double posInfl=1.0, double momInfl=1.0) const {
     TMatrixDSym C(6);
@@ -1388,6 +1629,8 @@ struct GenFit2DCHFitter final
   operator()(const extension::TrackCollection& inTracks) const override {
     extension::TrackCollection out;
 
+    
+    
     const double posScale_cm_per_mm = m_posScale.value();
     const int qPublish = chargeFromPDG(m_pdg.value());
 
@@ -1627,6 +1870,53 @@ struct GenFit2DCHFitter final
       const TVector3 mom    = pubState.getMom();
       const float fittedPT  = float(std::hypot(mom.X(), mom.Y()));
 
+
+            // --- Build a real covMatrix for the published TrackState (optional but recommended) ---
+      bool haveCov5 = false;
+      TMatrixDSym cov5(5);
+
+      try {
+        genfit::AbsTrackRep* rep = bestTrk->getCardinalRep();
+        if (rep) {
+          // If you truly want "AtIP", extrapolate to origin (cm units):
+          genfit::MeasuredStateOnPlane stIP = pubState;
+          rep->extrapolateToPoint(stIP, TVector3(0.,0.,0.)); // (0,0,0) in cm
+
+          const TVector3 pos_ip_cm = stIP.getPos();
+          const TVector3 mom_ip    = stIP.getMom();
+
+          // Build 6D covariance in (x,y,z,px,py,pz).
+          // NOTE: API differs by GenFit build. If your RKTrackRep provides getPosMomCov, use it here.
+          TMatrixDSym cov6(6); cov6.Zero();
+
+          // --- TRY THIS FIRST (common in many GenFit builds) ---
+          // static_cast<genfit::RKTrackRep*>(rep)->getPosMomCov(stIP, cov6);
+
+          // If you *don't* have a direct cov6 API yet, leave cov6 as zeros and you’ll fall back below.
+
+          // Convert cm->mm for our perigee helper
+          const double inv_ps = (posScale_cm_per_mm > 0 ? 1.0 / posScale_cm_per_mm : 10.0);
+          const TVector3 pos_ip_mm(pos_ip_cm.X()*inv_ps, pos_ip_cm.Y()*inv_ps, pos_ip_cm.Z()*inv_ps);
+
+          // Only attempt conversion if cov6 has something non-trivial
+          double diagSum = 0.0;
+          for (int i=0;i<6;++i) diagSum += cov6(i,i);
+
+          if (std::isfinite(diagSum) && diagSum > 0.0) {
+            haveCov5 = covPerigeeFromCov6(pos_ip_mm, mom_ip, qPublish, cov6, cov5);
+          }
+
+          // If successful, replace pubState pos/mom with the true IP-extrapolated ones for consistency
+          if (haveCov5) {
+            // overwrite locals used below
+            // (we can’t reassign const refs above; just use new variables in the addAtIPState call)
+          }
+        }
+      } catch (...) {
+        haveCov5 = false;
+      }
+
+
       bool ptValid = true;
       ptValid = ptValid && std::isfinite(fittedPT) && (fittedPT > 0.0f) &&
                 (double(fittedPT) < m_publishPTMaxGeV.value());
@@ -1650,9 +1940,14 @@ struct GenFit2DCHFitter final
       const float c2f = float(std::isfinite(c2) ? std::min(c2, 1e6) : -1.0);
       const float nFIf = float(nFI);
 
+      // If you did stIP extrapolation above, you should pass those here.
+      // For now: keep your existing pubState pos/mom unless you wire stIP variables through.
+      const TVector3 pos_used_cm = pos_cm;
+      const TVector3 mom_used    = mom;
+
       addAtIPState(trkOut,
-                   pos_cm,
-                   mom,
+                   pos_used_cm,
+                   mom_used,
                    posScale_cm_per_mm,
                    qPublish,
                    ptValid,
@@ -1660,7 +1955,9 @@ struct GenFit2DCHFitter final
                    omegaVar,
                    obsScoreF,
                    c2f,
-                   nFIf);
+                   nFIf,
+                   haveCov5 ? &cov5 : nullptr);
+
 
       if (ptValid) publishedPTs.push_back(double(fittedPT));
       ++nFit;
@@ -1720,6 +2017,10 @@ struct GenFit2DCHFitter final
 private:
   mutable std::unique_ptr<genfit::KalmanFitterRefTrack> m_kalman;
   mutable std::unique_ptr<genfit::DAF>                 m_daf;
+  mutable std::once_flag m_matOnce;
+  mutable std::atomic<bool> m_matInitDone{false};
+  mutable std::mutex        m_matInitMutex;
+
 
   // NOTE: must be mutable because we call put() in operator() const
   mutable k4FWCore::MetaDataHandle<std::string> m_cfgMeta;
