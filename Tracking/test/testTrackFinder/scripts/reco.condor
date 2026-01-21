@@ -32,8 +32,8 @@ stream_error  = False
 # --- Defaults (can be overridden by condor_submit -append "...") ---
 queuefile  = scripts/filelist.txt
 
-outdir     = /eos/user/c/cglenn/reco_samples2/1_20_2026/Wmat
-compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml
+outdir     = /eos/user/c/cglenn/reco_samples2/1_21_2026/CFmat
+compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
 
 fitter    = genfit2
 usemat    = 1
@@ -44,7 +44,7 @@ fitout    = auto
 
 # Key4hep nightly used INSIDE the job (must match runtime build ABI expectations)
 k4rel = 2026-01-11
-tgeofile  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root
+tgeofile  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root
 # Wrapper args:
 #   1 infile  2 outdir  3 compact  4 fitter  5 usemat  6 stage  7 fitout  8... extraargs tokens ...  last: k4rel
 #

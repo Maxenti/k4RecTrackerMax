@@ -123,6 +123,64 @@ inline double clampFinite(double x, double lo, double hi, double fallback) {
   return x;
 }
 
+// Try to extract 6D covariance in (x,y,z,px,py,pz) from the TrackRep at a given state.
+// Returns true if cov6 was filled with something non-trivial.
+static bool tryGetPosMomCov6(genfit::AbsTrackRep* rep,
+  const genfit::MeasuredStateOnPlane& st,
+  TMatrixDSym& cov6_out)
+{
+cov6_out.ResizeTo(6,6);
+cov6_out.Zero();
+
+if (!rep) return false;
+
+// Many GenFit builds implement this on RKTrackRep
+if (auto* rk = dynamic_cast<genfit::RKTrackRep*>(rep)) {
+// ---- OPTION A: common API name in several GenFit forks/builds ----
+// rk->getPosMomCov(st, cov6_out);
+
+// ---- OPTION B: sometimes it's on AbsTrackRep ----
+// rep->getPosMomCov(st, cov6_out);
+
+// ---- OPTION C: sometimes returns TMatrixDSym by value/reference ----
+// cov6_out = rk->getPosMomCov(st);
+
+// Because ABI differs, you will uncomment the one that compiles.
+} else {
+// Some builds may still provide it on AbsTrackRep even if not RK
+// rep->getPosMomCov(st, cov6_out);
+}
+
+// "Non-trivial" check
+double diagSum = 0.0;
+for (int i=0;i<6;++i) diagSum += cov6_out(i,i);
+return std::isfinite(diagSum) && diagSum > 0.0;
+}
+
+
+static void cov6_posCm_to_posMm(TMatrixDSym& cov6, double cm_per_mm)
+{
+  // x,y,z scale factor: cm -> mm is (1/cm_per_mm)
+  const double s = (cm_per_mm > 0) ? (1.0 / cm_per_mm) : 10.0; // if cm_per_mm=0.1, s=10
+  // scale:
+  // pos-pos: * s^2
+  // pos-mom: * s
+  // mom-mom: unchanged
+  for (int i=0;i<6;++i) {
+    for (int j=i;j<6;++j) {
+      double v = cov6(i,j);
+      const bool iPos = (i<3);
+      const bool jPos = (j<3);
+      if (iPos && jPos) v *= (s*s);
+      else if (iPos != jPos) v *= s;
+      // else mom-mom no change
+      cov6(i,j) = v;
+      cov6(j,i) = v;
+    }
+  }
+}
+
+
 // ----------------- covariance guards -----------------
 inline void makeDiagonalFloor(TMatrixDSym& C, double eps) {
   for (int i = 0; i < C.GetNrows(); ++i) C(i, i) = std::max(C(i, i), eps);
@@ -703,6 +761,123 @@ a5(1) = phi;
 a5(2) = omega;
 a5(3) = z0;
 a5(4) = tanL;
+}
+
+
+// Convert fitted rep-state covariance (from MeasuredStateOnPlane) into perigee 5x5 covariance
+// via finite-difference Jacobian w.r.t. the rep state parameters.
+//
+// Works even if your GenFit build lacks getPosMomCov().
+// Requires only:
+//   - stIP.getState()  (rep state vector)
+//   - stIP.getCov()    (rep covariance)
+//   - stIP.getPos()/getMom() (pos/mom at that plane, derived from rep+state)
+//
+// NOTE: stIP must be the state *at the same reference* you will publish (we extrapolate to IP before calling).
+static bool covPerigeeFromRepStateFD(genfit::AbsTrackRep* rep,
+  const genfit::MeasuredStateOnPlane& stIP,
+  int q,
+  double posScale_cm_per_mm,
+  TMatrixDSym& cov5_out) {
+(void)rep; // rep not strictly needed if stIP.getPos/getMom work; keep for future use.
+
+// --- Pull rep-space state + covariance ---
+const TVectorD s0 = stIP.getState();      // rep state vector
+const TMatrixDSym C0 = stIP.getCov();     // rep covariance
+
+const int n = int(s0.GetNrows());
+if (n <= 0) return false;
+if (C0.GetNrows() != n) return false;
+
+// --- Base perigee params from pos/mom at IP ---
+const double inv_ps = (posScale_cm_per_mm > 0 ? 1.0 / posScale_cm_per_mm : 10.0);
+const TVector3 pos0_mm(stIP.getPos().X() * inv_ps,
+stIP.getPos().Y() * inv_ps,
+stIP.getPos().Z() * inv_ps);
+const TVector3 mom0 = stIP.getMom();
+
+TVectorD a0(5);
+perigeeFromPosMom(pos0_mm, mom0, q, a0);
+for (int i = 0; i < 5; ++i) if (!std::isfinite(a0(i))) return false;
+
+// --- Finite-difference Jacobian J(5 x n): da/ds ---
+TMatrixD J(5, n);
+J.Zero();
+
+auto stepFor = [&](int k) -> double {
+// Robust step size: relative to parameter magnitude, with a floor.
+const double x = s0(k);
+const double rel = 1e-5;
+const double abs0 = 1e-6;
+const double d = std::max(abs0, rel * std::max(1.0, std::abs(x)));
+return d;
+};
+
+for (int k = 0; k < n; ++k) {
+const double d = stepFor(k);
+
+// Copy states and perturb rep parameters
+genfit::MeasuredStateOnPlane stP = stIP;
+genfit::MeasuredStateOnPlane stM = stIP;
+
+TVectorD sP = s0; sP(k) += d;
+TVectorD sM = s0; sM(k) -= d;
+
+// --- IMPORTANT: setState(...) name can differ across GenFit builds ---
+// Most common:
+stP.setState(sP);
+stM.setState(sM);
+// If your build uses a different name, swap the above for one of:
+//   stP.setStateVec(sP); stM.setStateVec(sM);
+//   stP.setState(sP);    stM.setState(sM);
+
+// Recompute perigee params from each perturbed state
+const TVector3 posP_mm(stP.getPos().X() * inv_ps,
+stP.getPos().Y() * inv_ps,
+stP.getPos().Z() * inv_ps);
+const TVector3 momP = stP.getMom();
+
+const TVector3 posM_mm(stM.getPos().X() * inv_ps,
+stM.getPos().Y() * inv_ps,
+stM.getPos().Z() * inv_ps);
+const TVector3 momM = stM.getMom();
+
+TVectorD aP(5), aM(5);
+perigeeFromPosMom(posP_mm, momP, q, aP);
+perigeeFromPosMom(posM_mm, momM, q, aM);
+
+for (int i = 0; i < 5; ++i) {
+if (!std::isfinite(aP(i)) || !std::isfinite(aM(i))) return false;
+
+double num = aP(i) - aM(i);
+
+// handle phi wrapping for stable derivatives
+if (i == 1) num = unwrapDeltaPhi(num);
+
+J(i, k) = num / (2.0 * d);
+if (!std::isfinite(J(i, k))) return false;
+}
+}
+
+// --- Propagate: cov5 = J * C0 * J^T ---
+TMatrixD C0d(C0);
+TMatrixD tmp = J * C0d * TMatrixD(TMatrixD::kTransposed, J);
+
+cov5_out.ResizeTo(5, 5);
+for (int i = 0; i < 5; ++i) {
+for (int j = 0; j < 5; ++j) cov5_out(i, j) = tmp(i, j);
+}
+
+// Symmetrize + PD guard
+for (int i = 0; i < 5; ++i) {
+for (int j = i + 1; j < 5; ++j) {
+const double v = 0.5 * (cov5_out(i, j) + cov5_out(j, i));
+cov5_out(i, j) = v;
+cov5_out(j, i) = v;
+}
+}
+ensurePD_eigenClamp(cov5_out, 1e-12);
+return true;
 }
 
 // Convert a 6D Cartesian cov in (x,y,z,px,py,pz) into perigee 5x5 cov
@@ -1858,6 +2033,8 @@ struct GenFit2DCHFitter final
       if (!std::isfinite(c2) || c2 > m_maxChi2Ndf.value()) { ++nSkipChi2; continue; }
 
       genfit::MeasuredStateOnPlane pubState;
+
+
       size_t pubIdx = 0;
       const bool havePubState = selectPublishStateCentral(*bestTrk,
                                                           m_useBiasedStateForPublish.value(),
@@ -1868,54 +2045,36 @@ struct GenFit2DCHFitter final
 
       const TVector3 pos_cm = pubState.getPos();
       const TVector3 mom    = pubState.getMom();
-      const float fittedPT  = float(std::hypot(mom.X(), mom.Y()));
 
 
-            // --- Build a real covMatrix for the published TrackState (optional but recommended) ---
+
       bool haveCov5 = false;
       TMatrixDSym cov5(5);
+      
+      TVector3 pos_used_cm = pos_cm;   // default publish state
+      TVector3 mom_used    = mom;
+      const float fittedPT = float(std::hypot(mom_used.X(), mom_used.Y()));
 
+      
       try {
         genfit::AbsTrackRep* rep = bestTrk->getCardinalRep();
         if (rep) {
-          // If you truly want "AtIP", extrapolate to origin (cm units):
-          genfit::MeasuredStateOnPlane stIP = pubState;
-          rep->extrapolateToPoint(stIP, TVector3(0.,0.,0.)); // (0,0,0) in cm
-
-          const TVector3 pos_ip_cm = stIP.getPos();
-          const TVector3 mom_ip    = stIP.getMom();
-
-          // Build 6D covariance in (x,y,z,px,py,pz).
-          // NOTE: API differs by GenFit build. If your RKTrackRep provides getPosMomCov, use it here.
-          TMatrixDSym cov6(6); cov6.Zero();
-
-          // --- TRY THIS FIRST (common in many GenFit builds) ---
-          // static_cast<genfit::RKTrackRep*>(rep)->getPosMomCov(stIP, cov6);
-
-          // If you *don't* have a direct cov6 API yet, leave cov6 as zeros and you’ll fall back below.
-
-          // Convert cm->mm for our perigee helper
-          const double inv_ps = (posScale_cm_per_mm > 0 ? 1.0 / posScale_cm_per_mm : 10.0);
-          const TVector3 pos_ip_mm(pos_ip_cm.X()*inv_ps, pos_ip_cm.Y()*inv_ps, pos_ip_cm.Z()*inv_ps);
-
-          // Only attempt conversion if cov6 has something non-trivial
-          double diagSum = 0.0;
-          for (int i=0;i<6;++i) diagSum += cov6(i,i);
-
-          if (std::isfinite(diagSum) && diagSum > 0.0) {
-            haveCov5 = covPerigeeFromCov6(pos_ip_mm, mom_ip, qPublish, cov6, cov5);
-          }
-
-          // If successful, replace pubState pos/mom with the true IP-extrapolated ones for consistency
+          genfit::MeasuredStateOnPlane stAtIP = pubState;          // start from publish state
+          rep->extrapolateToPoint(stAtIP, TVector3(0.,0.,0.));     // move to IP and transport cov
+      
+          haveCov5 = covPerigeeFromRepStateFD(rep, stAtIP, qPublish, posScale_cm_per_mm, cov5);
+      
           if (haveCov5) {
-            // overwrite locals used below
-            // (we can’t reassign const refs above; just use new variables in the addAtIPState call)
+            pos_used_cm = stAtIP.getPos();
+            mom_used    = stAtIP.getMom();
           }
         }
       } catch (...) {
         haveCov5 = false;
       }
-
+      
+      
+      
 
       bool ptValid = true;
       ptValid = ptValid && std::isfinite(fittedPT) && (fittedPT > 0.0f) &&
@@ -1940,23 +2099,18 @@ struct GenFit2DCHFitter final
       const float c2f = float(std::isfinite(c2) ? std::min(c2, 1e6) : -1.0);
       const float nFIf = float(nFI);
 
-      // If you did stIP extrapolation above, you should pass those here.
-      // For now: keep your existing pubState pos/mom unless you wire stIP variables through.
-      const TVector3 pos_used_cm = pos_cm;
-      const TVector3 mom_used    = mom;
-
       addAtIPState(trkOut,
-                   pos_used_cm,
-                   mom_used,
-                   posScale_cm_per_mm,
-                   qPublish,
-                   ptValid,
-                   m_invalidPTSentinel.value(),
-                   omegaVar,
-                   obsScoreF,
-                   c2f,
-                   nFIf,
-                   haveCov5 ? &cov5 : nullptr);
+                  pos_used_cm,
+                  mom_used,
+                  posScale_cm_per_mm,
+                  qPublish,
+                  ptValid,
+                  m_invalidPTSentinel.value(),
+                  omegaVar,
+                  obsScoreF,
+                  c2f,
+                  nFIf,
+                  haveCov5 ? &cov5 : nullptr);
 
 
       if (ptValid) publishedPTs.push_back(double(fittedPT));
