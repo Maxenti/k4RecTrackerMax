@@ -13,7 +13,7 @@ request_disk   = 3 GB
 
 # ---- Inputs to ship with the job ----
 # Include BOTH python files + (optionally) runtime.tgz if you use it
-transfer_input_files = analyze_pt_resolution_grid.py,scan_pt_time_by_event.py,runtime.tgz
+transfer_input_files = scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py,runtime.tgz
 
 # ---- Logging ----
 output = logs/analyze_$(ClusterId)_$(ProcId).out
@@ -25,7 +25,8 @@ log    = logs/analyze_$(ClusterId).log
 arguments = $(INPUTDIR) $(EOSOUT) $(TRACKCOLL) $(HITCOLL) $(QCUT) $(MINPHI) $(MINCHORD) $(MAXCOND) $(CENTFRAC)
 
 # ---- Your campaign values ----
-INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_12_2026/CFmat   # <- usually you want the BASE dir containing eta_* subdirs
+INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_22_2026/CFmat   
+# <- usually you want the BASE dir containing eta_* subdirs
 # better example:
 # INPUTDIR = /eos/user/c/cglenn/reco_samples2/1_18_2026/
 
