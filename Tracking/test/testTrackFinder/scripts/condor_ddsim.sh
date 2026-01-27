@@ -154,7 +154,7 @@ stamp_metadata_local () {
     --phi-opts "${phi_opts[*]}" \
     --out-eos "$EOS_POSIX" \
     --out-url "$EOS_URL" \
-    --k4-release "2025-09-21" \
+    --k4-release "2026-01-11" \
     --job-extra "jobfile=$(basename "$PARAMS_JSON")" \
     --job-extra "attempt=$attempt" \
     --job-extra "TRANSFER_COMPACT=${TRANSFER_COMPACT:-unknown}" \

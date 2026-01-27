@@ -54,8 +54,9 @@ IMPORTANT_SUBPATH_HINTS = (
 
 TEXTFILE_MAX = 400_000  # bytes
 
-DOC_START_RE = re.compile(r"^\s*(#|//)\s*DOC:\s*$")
-DOC_END_RE   = re.compile(r"^\s*(#|//)\s*DOC_END\s*$")
+DOC_START_RE = re.compile(r'^\s*(?:(#|//)\s*)?DOC:\s*$')
+DOC_END_RE   = re.compile(r'^\s*(?:(#|//)\s*)?DOC_END\s*$')
+
 
 PY_IMPORT_RE = re.compile(r"^\s*(?:from\s+([A-Za-z0-9_\.]+)\s+import|import\s+([A-Za-z0-9_\.]+))")
 CPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^">]+)[">]')
@@ -95,12 +96,15 @@ def read_text_safely(p: Path) -> str:
     except Exception:
         return ""
 
+
+
+        
 def parse_doc_block(text: str) -> Dict[str, List[str]]:
     lines = text.splitlines()
     in_doc = False
     block: List[str] = []
 
-    # doc block should be near top, but allow a bit more room for licenses
+    # scan near top (allow licenses + module docstring)
     for ln in lines[:260]:
         if not in_doc and DOC_START_RE.match(ln):
             in_doc = True
@@ -108,7 +112,13 @@ def parse_doc_block(text: str) -> Dict[str, List[str]]:
         if in_doc and DOC_END_RE.match(ln):
             break
         if in_doc:
+            # Remove leading comment markers if present
             ln2 = re.sub(r"^\s*(#|//)\s*", "", ln).rstrip()
+
+            # Remove bare triple-quote lines inside the DOC block (optional)
+            if ln2.strip() in ('"""', "'''"):
+                continue
+
             block.append(ln2)
 
     if not block:
@@ -132,6 +142,7 @@ def parse_doc_block(text: str) -> Dict[str, List[str]]:
                 fields[current_key].append(ln.strip())
 
     return fields
+
 
 def fallback_summary(text: str) -> str:
     # Python module docstring first line

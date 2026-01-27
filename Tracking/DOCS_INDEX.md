@@ -17,6 +17,7 @@ python3 scripts/autoreadme.py --root . --write
 - `src/README.md`
 - `test/README.md`
 - `test/testTrackFinder/README.md`
+- `test/testTrackFinder/Archive/README.md`
 - `test/testTrackFinder/params/README.md`
 - `test/testTrackFinder/scripts/README.md`
 - `test/testTracksFromGenParticles/README.md`
@@ -46,20 +47,30 @@ python3 scripts/autoreadme.py --root . --write
 | `src/GenFitter.cpp` | include "GenFitter.h" | no |  |
 | `src/utils.cpp` | include "utils.hpp" | no |  |
 | `test/runGenFitTrackingOnSimplifiedDriftChamber.py` | ################# Particle gun setup | no |  |
+| `test/testTrackFinder/.__afs724E` |  | no |  |
+| `test/testTrackFinder/Archive/compare_pt_trackstate_vs_hitcircle.py` | compare_pt_trackstate_vs_hitcircle.py | no |  |
+| `test/testTrackFinder/Archive/ddsim_local.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/Archive/filetest.sh` | PODIO “split” layout usually has: | no |  |
+| `test/testTrackFinder/Archive/generate_joblist.py` |  | no |  |
+| `test/testTrackFinder/Archive/local_chain_all.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/Archive/make_ptres.py` | !/usr/bin/env python3 | no |  |
+| `test/testTrackFinder/Archive/make_sigma_pt_plot.py` | Try binding ROOT TTreeReaderValue('vector<type>') for the given branch. | no |  |
+| `test/testTrackFinder/Archive/pt_resolution_plot_pyroot.py` | Pick best index given optional std::vector<int> (or float/bool) branches. | no |  |
+| `test/testTrackFinder/Archive/ptres_from_edm4hep.py` | Returns (eta, E_GeV or None, pt_GeV or None) parsed from the path. | no |  |
+| `test/testTrackFinder/Archive/reco_all.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/Archive/reco_scan.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/Archive/run_dch_chain.sh` | !/bin/bash | no |  |
+| `test/testTrackFinder/Archive/simple_local_chain.sh` | !/bin/bash | no |  |
+| `test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py` | Return a local .onnx path for ONNXRuntime. | no |  |
+| `test/testTrackFinder/Archive/skim_edm4hep.py` | !/usr/bin/env python3 | no |  |
+| `test/testTrackFinder/Archive/SteeringFile_IDEA_o1_v03.py` | # The compact XML file, or multiple compact files, if the last one is the closer. | no |  |
+| `test/testTrackFinder/Archive/SteeringFile_IDEA_o1_v03DCH.py` | dch_only_steer.py  — DCH-only DDSim steering (truth-friendly, robust) | no |  |
+| `test/testTrackFinder/Archive/test_trackFinder_1.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/Archive/testcondor.sh` |  | no |  |
 | `test/testTrackFinder/cglenn.cc` |  | no |  |
-| `test/testTrackFinder/compare_pt_trackstate_vs_hitcircle.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/ddsim_local.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/debug_z_spur_event.py` | debug_z_spur_event.py | no |  |
-| `test/testTrackFinder/docker_stderror` |  | no |  |
+| `test/testTrackFinder/dd4hep2root.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/filelist.txt` |  | no |  |
-| `test/testTrackFinder/generate_joblist.py` |  | no |  |
-| `test/testTrackFinder/inspect_events_pt_pathology.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/k4rt_env.sh` |  | no |  |
 | `test/testTrackFinder/local_chain.sh` | !/bin/bash | no |  |
-| `test/testTrackFinder/local_chain_all.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/make_ptres.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/Noddsim_track_test.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/pack_k4rt_runtime.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/params/job_0.json` |  | no |  |
 | `test/testTrackFinder/params/job_1.json` |  | no |  |
 | `test/testTrackFinder/params/job_10.json` |  | no |  |
@@ -360,47 +371,36 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/params/job_97.json` |  | no |  |
 | `test/testTrackFinder/params/job_98.json` |  | no |  |
 | `test/testTrackFinder/params/job_99.json` |  | no |  |
-| `test/testTrackFinder/print_metadata.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/pt_resolution_plot_pyroot.py` | Pick best index given optional std::vector<int> (or float/bool) branches. | no |  |
-| `test/testTrackFinder/ptres_from_edm4hep.py` | Returns (eta, E_GeV or None, pt_GeV or None) parsed from the path. | no |  |
-| `test/testTrackFinder/reco_all.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/reco_filelist.txt` |  | no |  |
-| `test/testTrackFinder/reco_scan.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/run_dch_chain.sh` | !/bin/bash | no |  |
-| `test/testTrackFinder/runDCHTestTrackFinder.py` | Main Gaudi/k4run options “glue” for the IDEA DCH reconstruction chain. Runs (optional) DCH digitization → GGTF_tracking (ONNX ML track finding + 3D spacepoints) → selectable fitter (GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter), with robust component discovery, model staging (local/.md5/http/root://), optional looper event veto, and per-job JobTag propagation into all stages when supported. Primary entrypoints: 1) Direct (advanced): k4run runDCHTestTrackFinder.py [CLI flags...] 2) Recommended (project default): ./local_chain.sh [INPUT OUTPUT MODEL_SPEC COMPACT_XML DCH_SIMHITS DCH_NAME] - local_chain.sh sets sane env limits (OMP/MKL/ORT arenas), builds a complete flag list, runs k4run, and stamps provenance metadata into the ROOT files. | yes | DCH, GGTF, IDEA, crash-safe, digitization, gaudi, genfit2, k4run, onnx, pipeline, provenance, tracking |
+| `test/testTrackFinder/runDCHTestTrackFinder.py` | Return a set of property names, or None if not introspectable. | no |  |
 | `test/testTrackFinder/runTestTrackFinder.py` | ################# Parser | no |  |
-| `test/testTrackFinder/scan_pt_resolution.py` | filename pattern | no |  |
-| `test/testTrackFinder/scan_pt_time_by_event.py` | scan_pt_time_by_event.py | no |  |
-| `test/testTrackFinder/scripts/analyze_pt_resolution.py` | tracks: dict of arrays ('px','py','pz'), shape per event: variable-length list | no |  |
+| `test/testTrackFinder/scripts/analyze_job.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/scripts/analyze_pt_resolution_grid.py` | DOC | no |  |
 | `test/testTrackFinder/scripts/autoreadme.py` | ... | yes | ... |
+| `test/testTrackFinder/scripts/cglenn.cc` |  | no |  |
 | `test/testTrackFinder/scripts/compact_path.txt` |  | no |  |
+| `test/testTrackFinder/scripts/compare_pt_resolution_grid.py` | compare_pt_resolution_outputs.py | no |  |
 | `test/testTrackFinder/scripts/condor_ddsim.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/condor_reco.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/scripts/debug_z_spur_event.py` | debug_z_spur_event.py | no |  |
+| `test/testTrackFinder/scripts/dump_covmatrix_one_event.py` | dump_covmatrix_one_event.py | no |  |
 | `test/testTrackFinder/scripts/filelist.txt` |  | no |  |
-| `test/testTrackFinder/scripts/filetest.sh` | PODIO “split” layout usually has: | no |  |
+| `test/testTrackFinder/scripts/inspect_events_pt_pathology.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/make_filelist.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/make_runtime.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/make_sigma_pt_plot.py` | Try binding ROOT TTreeReaderValue('vector<type>') for the given branch. | no |  |
 | `test/testTrackFinder/scripts/mk_ddsim_grid.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/scripts/out_dir.txt` |  | no |  |
+| `test/testTrackFinder/scripts/plot_mcparticles_pt.py` | pt_diagnostics_to_root.py | no |  |
+| `test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py` | plot_pt_from_trackstate_time.py | no |  |
 | `test/testTrackFinder/scripts/prepare_and_submit.sh` | !/usr/bin/env bash | no |  |
+| `test/testTrackFinder/scripts/print_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/queue_items.txt` |  | no |  |
-| `test/testTrackFinder/scripts/reco_inputs.txt` |  | no |  |
 | `test/testTrackFinder/scripts/reco_job.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/reco_queue.txt` |  | no |  |
+| `test/testTrackFinder/scripts/scan_pt_time_by_event.py` | scan_pt_time_by_event.py | no |  |
 | `test/testTrackFinder/scripts/stamp_ddsim_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/stamp_pipeline_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/submit_reco.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/sweep_pt.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/simple_local_chain.sh` | !/bin/bash | no |  |
-| `test/testTrackFinder/SimplerunDCHTestTrackFinder.py` | Return a local .onnx path for ONNXRuntime. | no |  |
-| `test/testTrackFinder/skim_edm4hep.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/SteeringFile_IDEA_o1_v03.py` | # The compact XML file, or multiple compact files, if the last one is the closer. | no |  |
-| `test/testTrackFinder/SteeringFile_IDEA_o1_v03DCH.py` | dch_only_steer.py  — DCH-only DDSim steering (truth-friendly, robust) | no |  |
+| `test/testTrackFinder/scripts/view_simhits_event.py` | view_tracks_event_simhits.py | no |  |
+| `test/testTrackFinder/scripts/view_tracks_event.py` | view_tracks_event.py | no |  |
 | `test/testTrackFinder/test_trackFinder.sh` | !/bin/bash | no |  |
-| `test/testTrackFinder/test_trackFinder_1.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/testcondor.sh` |  | no |  |
-| `test/testTrackFinder/view_simhits_event.py` | view_simhits_event.py | no |  |
-| `test/testTrackFinder/view_tracks_event.py` | view_tracks_event.py | no |  |
 | `test/testTracksFromGenParticles/runTracksFromGenParticles.py` | Loading the output of the SIM step | no |  |
 | `test/testTracksFromGenParticles/test_TracksFromGenParticles.sh` | !/bin/bash | no |  |

@@ -11,37 +11,16 @@ NEW: Top-N event selection by sigma(pT) at an expected pT.
   - For each event, compute an event-level sigma(pT) using TrackState covariance:
         sigma(pT)/pT ≈ sigma(omega)/|omega|   with omega = q/pT
     so:
-        sigma(pT) ≈ expectedPt * sqrt(Var(omega)) / |q/expectedPt|
-                  = expectedPt^2 * sqrt(Var(omega)) / |q|
+        sigma(pT) ≈ expectedPt^2 * sqrt(Var(omega)) / |q|
     (uses expectedPt to avoid relying on TrackState.time semantics)
-  - Rank events by this sigma(pT) (default: largest sigma(pT))
-  - Process the top N events and write each event into its own directory in ONE output ROOT file:
-        event_000012/
-        event_000834/
-        ...
 
-Notes on covariance:
-  - EDM4hep TrackState covariance is 6x6 packed (d0,phi,omega,z0,tanLambda,time).
-  - We read Var(omega) from the packed lower-triangle:
-        idx(omega,omega) = idx(2,2) = 5  (for 6x6 lower-tri packed)
-
-Examples:
-  # Single event
-  python3 view_tracks_event_simhits.py --input reco.root --event 12
-
-  # Top 10 events by sigma(pT) at expectedPt=14.142 GeV
-  python3 view_tracks_event_simhits.py --input reco.root --topN 10 --expectedPt 14.142
-
-  # Limit scan to first 5000 events
-  python3 view_tracks_event_simhits.py --input reco.root --topN 25 --expectedPt 50 --scanMaxEvents 5000
-
-  # Sort smallest sigma(pT) instead (best fits)
-  python3 view_tracks_event_simhits.py --input reco.root --topN 10 --expectedPt 14.142 --rankOrder smallest
-
-  # If your omega is for mu- (q=-1), set assumeQ=-1
-  python3 view_tracks_event_simhits.py --input reco.root --topN 10 --expectedPt 14.142 --assumeQ -1
-
-Author: ChatGPT (adapted for your FCC-ee IDEA DCH workflow)
+NEW (requested): Per-event digihit -> nearest simhit diagnostics saved into output ROOT file.
+  - For each digihit, find nearest simhit (brute force) and store:
+        minDist3D_mm, minDistXY_mm, dZ_mm, nearestSimhitIndex
+  - Saved under each event directory as:
+        - TTree "hit_match"
+        - TH1F  "h_minDist3D", "h_minDistXY", "h_dZ"
+        - TNamed "hit_match_json" with top offenders + summary stats
 """
 
 import math
@@ -51,6 +30,7 @@ import sys
 import socket
 import getpass
 import time
+import json
 from collections import defaultdict
 
 import ROOT
@@ -190,19 +170,12 @@ def _auto_detect_hits_collection(tree, preferred=None):
 # Covariance utilities (EDM4hep TrackState covMatrix.values packed lower-triangle)
 # ------------------------------------------------------------
 def packed_lower_index(i, j):
-    """
-    Lower-triangle packed index for NxN symmetric matrix, row-major by i:
-      (0,0),
-      (1,0),(1,1),
-      (2,0),(2,1),(2,2), ...
-    """
     if i < j:
         i, j = j, i
     return i * (i + 1) // 2 + j
 
 
 def infer_packed_n_from_len(L):
-    # solve n(n+1)/2 = L
     disc = 1 + 8 * L
     if disc <= 0:
         return None
@@ -213,33 +186,20 @@ def infer_packed_n_from_len(L):
 
 
 def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick="atip", assume_q=-1):
-    """
-    Return (varOmega, omegaUsed, ptReco, details_dict) for event.
-    Picks ONE representative TrackState for the event:
-      - if trackStates_begin/end exist and >=1 track: pick first track's "best" AtIP-like state (min r2)
-      - else pick first TrackState entry.
-    Reads omega and Var(omega) from covMatrix.values.
-
-    varOmega is returned as float('nan') if cannot be computed.
-    """
-
     prefix = resolve_ts_prefix(tree, track_coll)
     if not prefix:
         return float("nan"), float("nan"), float("nan"), {"reason": "no_trackstate_prefix"}
 
-    # Leaves needed
     phi_leaf = _find_leaf(tree, prefix + "phi")
     omg_leaf = _find_leaf(tree, prefix + "omega")
     cov_leaf = _find_leaf(tree, prefix + "covMatrix.values")
     if not (phi_leaf and omg_leaf and cov_leaf):
         return float("nan"), float("nan"), float("nan"), {"reason": "missing_phi_omega_or_cov"}
 
-    # Ref point for r^2 selection if available
     refx_leaf = _find_leaf(tree, prefix + "referencePoint.x")
     refy_leaf = _find_leaf(tree, prefix + "referencePoint.y")
     d0_leaf   = _find_leaf(tree, prefix + "D0")
 
-    # Track association (optional)
     bname, ename = _resolve_begin_end_leaves(tree, track_coll)
     beg_leaf = _find_leaf(tree, bname) if bname else None
     end_leaf = _find_leaf(tree, ename) if ename else None
@@ -250,11 +210,9 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
     if n_states <= 0:
         return float("nan"), float("nan"), float("nan"), {"reason": "no_trackstates"}
 
-    # Determine state index to use
     state_index = 0
     track_index = None
     if beg_leaf and end_leaf and int(beg_leaf.GetNdata()) > 0:
-        # pick first track, then pick AtIP-like state in its [b,e) range
         track_index = 0
         b = int(beg_leaf.GetValue(track_index))
         e = int(end_leaf.GetValue(track_index))
@@ -262,7 +220,6 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
             state_index = 0
         else:
             e = min(e, n_states)
-            # choose min r^2 among that track's states
             best_si = b
             best_r2 = float("inf")
             for si in range(b, e):
@@ -270,7 +227,6 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
                     x0 = float(refx_leaf.GetValue(si))
                     y0 = float(refy_leaf.GetValue(si))
                 else:
-                    # derive rough x0,y0 from d0 if possible; otherwise 0
                     if d0_leaf:
                         d0 = float(d0_leaf.GetValue(si))
                         phi = float(phi_leaf.GetValue(si))
@@ -288,21 +244,14 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
 
     omega = float(omg_leaf.GetValue(state_index))
 
-    # covMatrix.values is a flat array; for podio it flattens per-state arrays too.
-    # BUT in your files you observed covLeaf.GetLen()==21 with 1 state => cov values start at offset 0.
-    # If multiple states exist, podio usually stores them concatenated: [state0...][state1...]
     cov_len_total = int(cov_leaf.GetLen())
-    # infer per-state len by dividing by n_states if divisible; else fall back to cov_len_total for 1-state case
     per_state_len = None
     if cov_len_total % n_states == 0:
         per_state_len = cov_len_total // n_states
     else:
-        # common: the covariance leaf stores only for the chosen TrackState branch (often one per track),
-        # but safest fallback is: assume per-state packed 21 (6x6) if possible.
         if cov_len_total in (21, 15):
             per_state_len = cov_len_total
         else:
-            # last resort: treat as single state
             per_state_len = cov_len_total
 
     n_packed = infer_packed_n_from_len(per_state_len)
@@ -314,7 +263,6 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
             "per_state_len": per_state_len,
         }
 
-    # omega parameter index is 2 for (d0,phi,omega,z0,tanLambda,time)
     if n_packed < 3:
         return float("nan"), omega, float("nan"), {"reason": "cov_n_too_small", "n": n_packed}
 
@@ -328,7 +276,6 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
 
     var_omega = float(cov_leaf.GetValue(offset + idx_oo))
 
-    # "reco pT" just from omega (not from time)
     pt_reco = (abs(float(assume_q)) / abs(omega)) if (math.isfinite(omega) and abs(omega) > 0.0) else float("nan")
 
     return var_omega, omega, pt_reco, {
@@ -344,16 +291,6 @@ def get_event_varomega(tree, ev_idx, track_coll="GenFitTracks", track_state_pick
 
 
 def sigma_pt_from_varomega(expected_pt, var_omega, assume_q=-1):
-    """
-    Using omega = q/pT and sigma(pT)/pT ≈ sigma(omega)/|omega|,
-
-    with omega_expected = q/expectedPt:
-      sigma(pT) ≈ expectedPt * sqrt(var_omega) / |omega_expected|
-               = expectedPt * sqrt(var_omega) / (|q|/expectedPt)
-               = expectedPt^2 * sqrt(var_omega) / |q|
-
-    Returns nan if cannot compute.
-    """
     if not (math.isfinite(expected_pt) and expected_pt > 0):
         return float("nan")
     if not (math.isfinite(var_omega) and var_omega >= 0):
@@ -415,6 +352,213 @@ def load_simhit_positions(tree, ev_idx, coll_name="DCHCollection"):
                     float(y_leaf.GetValue(i)),
                     float(z_leaf.GetValue(i))))
     return pts
+
+
+# ------------------------------------------------------------
+# NEW: nearest-simhit diagnostics
+# ------------------------------------------------------------
+def flatten_hit_points_with_labels(tracks_by_label):
+    """Return flat list of (hit_index, label, x,y,z)"""
+    flat = []
+    idx = 0
+    for lbl, pts in tracks_by_label.items():
+        for (x, y, z) in pts:
+            flat.append((idx, int(lbl), float(x), float(y), float(z)))
+            idx += 1
+    return flat
+
+
+def compute_nearest_simhit_diagnostics(hit_flat, simhit_points):
+    """
+    For each hit in hit_flat, find nearest simhit by 3D distance.
+    Returns list of dicts:
+      {hit_index,label, hit_x,hit_y,hit_z, nearest_sim_idx, sim_x,sim_y,sim_z,
+       minDist3D_mm, minDistXY_mm, dZ_mm}
+    """
+    out = []
+    if not hit_flat:
+        return out
+    if not simhit_points:
+        # no simhits: fill NaNs
+        for (hi, lbl, x, y, z) in hit_flat:
+            out.append({
+                "hit_index": hi, "label": lbl,
+                "hit_x": x, "hit_y": y, "hit_z": z,
+                "nearest_sim_idx": -1,
+                "sim_x": float("nan"), "sim_y": float("nan"), "sim_z": float("nan"),
+                "minDist3D_mm": float("nan"),
+                "minDistXY_mm": float("nan"),
+                "dZ_mm": float("nan"),
+            })
+        return out
+
+    # brute force O(Nhits * Nsimhits)
+    for (hi, lbl, hx, hy, hz) in hit_flat:
+        best_j = -1
+        best_d2 = float("inf")
+        best_dx = best_dy = best_dz = 0.0
+        best_sx = best_sy = best_sz = float("nan")
+        for j, (sx, sy, sz) in enumerate(simhit_points):
+            dx = hx - sx
+            dy = hy - sy
+            dz = hz - sz
+            d2 = dx*dx + dy*dy + dz*dz
+            if d2 < best_d2:
+                best_d2 = d2
+                best_j = j
+                best_dx, best_dy, best_dz = dx, dy, dz
+                best_sx, best_sy, best_sz = sx, sy, sz
+
+        min3d = math.sqrt(best_d2) if best_j >= 0 else float("nan")
+        minxy = math.hypot(best_dx, best_dy) if best_j >= 0 else float("nan")
+        out.append({
+            "hit_index": hi, "label": lbl,
+            "hit_x": hx, "hit_y": hy, "hit_z": hz,
+            "nearest_sim_idx": int(best_j),
+            "sim_x": float(best_sx), "sim_y": float(best_sy), "sim_z": float(best_sz),
+            "minDist3D_mm": float(min3d),
+            "minDistXY_mm": float(minxy),
+            "dZ_mm": float(best_dz) if best_j >= 0 else float("nan"),
+        })
+    return out
+
+
+def write_hit_match_products(out_dir, diagnostics, top_k=25):
+    """
+    Write:
+      - TTree hit_match
+      - TH1Fs: h_minDist3D, h_minDistXY, h_dZ
+      - TNamed hit_match_json
+    into the currently selected directory (out_dir.cd() should already be done).
+    """
+    if not out_dir:
+        return
+
+    # Histograms
+    h3d = ROOT.TH1F("h_minDist3D", "Nearest simhit distance;minDist3D [mm];count", 200, 0, 200)
+    hxy = ROOT.TH1F("h_minDistXY", "Nearest simhit transverse distance;minDistXY [mm];count", 200, 0, 100)
+    hdz = ROOT.TH1F("h_dZ", "dZ to nearest simhit;dZ [mm];count", 200, -200, 200)
+
+    # TTree with fixed-size branches
+    t = ROOT.TTree("hit_match", "Per-hit nearest simhit diagnostics")
+
+    hit_index = ROOT.std.vector('int')()
+    label     = ROOT.std.vector('int')()
+    nearest_j = ROOT.std.vector('int')()
+
+    hit_x = ROOT.std.vector('float')()
+    hit_y = ROOT.std.vector('float')()
+    hit_z = ROOT.std.vector('float')()
+
+    sim_x = ROOT.std.vector('float')()
+    sim_y = ROOT.std.vector('float')()
+    sim_z = ROOT.std.vector('float')()
+
+    min3d = ROOT.std.vector('float')()
+    minxy = ROOT.std.vector('float')()
+    dz_v  = ROOT.std.vector('float')()
+
+    t.Branch("hit_index", hit_index)
+    t.Branch("label", label)
+    t.Branch("nearest_sim_idx", nearest_j)
+
+    t.Branch("hit_x", hit_x)
+    t.Branch("hit_y", hit_y)
+    t.Branch("hit_z", hit_z)
+
+    t.Branch("sim_x", sim_x)
+    t.Branch("sim_y", sim_y)
+    t.Branch("sim_z", sim_z)
+
+    t.Branch("minDist3D_mm", min3d)
+    t.Branch("minDistXY_mm", minxy)
+    t.Branch("dZ_mm", dz_v)
+
+    # Fill vectors once (one entry holding all hits)
+    for d in diagnostics:
+        hit_index.push_back(int(d["hit_index"]))
+        label.push_back(int(d["label"]))
+        nearest_j.push_back(int(d["nearest_sim_idx"]))
+
+        hit_x.push_back(float(d["hit_x"]))
+        hit_y.push_back(float(d["hit_y"]))
+        hit_z.push_back(float(d["hit_z"]))
+
+        sim_x.push_back(float(d["sim_x"]) if math.isfinite(d["sim_x"]) else float("nan"))
+        sim_y.push_back(float(d["sim_y"]) if math.isfinite(d["sim_y"]) else float("nan"))
+        sim_z.push_back(float(d["sim_z"]) if math.isfinite(d["sim_z"]) else float("nan"))
+
+        min3d.push_back(float(d["minDist3D_mm"]) if math.isfinite(d["minDist3D_mm"]) else float("nan"))
+        minxy.push_back(float(d["minDistXY_mm"]) if math.isfinite(d["minDistXY_mm"]) else float("nan"))
+        dz_v.push_back(float(d["dZ_mm"]) if math.isfinite(d["dZ_mm"]) else float("nan"))
+
+        if math.isfinite(d["minDist3D_mm"]):
+            h3d.Fill(d["minDist3D_mm"])
+        if math.isfinite(d["minDistXY_mm"]):
+            hxy.Fill(d["minDistXY_mm"])
+        if math.isfinite(d["dZ_mm"]):
+            hdz.Fill(d["dZ_mm"])
+
+    t.Fill()
+
+    # JSON summary (top offenders + basic stats)
+    finite3d = [d["minDist3D_mm"] for d in diagnostics if math.isfinite(d["minDist3D_mm"])]
+    finitexy = [d["minDistXY_mm"] for d in diagnostics if math.isfinite(d["minDistXY_mm"])]
+    finitedz = [d["dZ_mm"] for d in diagnostics if math.isfinite(d["dZ_mm"])]
+
+    def _stats(vals):
+        if not vals:
+            return {"n": 0}
+        vals2 = sorted(vals)
+        n = len(vals2)
+        def q(p):
+            k = int(round(p*(n-1)))
+            return float(vals2[max(0, min(n-1, k))])
+        return {
+            "n": n,
+            "min": float(vals2[0]),
+            "p50": q(0.50),
+            "p90": q(0.90),
+            "p99": q(0.99),
+            "max": float(vals2[-1]),
+            "mean": float(sum(vals2)/n),
+        }
+
+    top = sorted(
+        [d for d in diagnostics if math.isfinite(d["minDist3D_mm"])],
+        key=lambda x: x["minDist3D_mm"],
+        reverse=True
+    )[:int(top_k)]
+
+    summary = {
+        "schema": "nearest_simhit_v1",
+        "n_hits": len(diagnostics),
+        "stats_minDist3D_mm": _stats(finite3d),
+        "stats_minDistXY_mm": _stats(finitexy),
+        "stats_dZ_mm": _stats(finitedz),
+        "top_by_minDist3D_mm": [
+            {
+                "hit_index": int(d["hit_index"]),
+                "label": int(d["label"]),
+                "minDist3D_mm": float(d["minDist3D_mm"]),
+                "minDistXY_mm": float(d["minDistXY_mm"]),
+                "dZ_mm": float(d["dZ_mm"]),
+                "hit_xyz": [float(d["hit_x"]), float(d["hit_y"]), float(d["hit_z"])],
+                "nearest_sim_idx": int(d["nearest_sim_idx"]),
+                "sim_xyz": [float(d["sim_x"]), float(d["sim_y"]), float(d["sim_z"])],
+            } for d in top
+        ]
+    }
+
+    jtxt = json.dumps(summary, indent=2)
+    tn = ROOT.TNamed("hit_match_json", jtxt)
+
+    # Write
+    h3d.Write()
+    hxy.Write()
+    hdz.Write()
+    t.Write()
+    tn.Write()
 
 
 # ------------------------------------------------------------
@@ -603,7 +747,7 @@ def add_xy_track_overlay(c_xy, track_states, Bz):
 
 
 # ------------------------------------------------------------
-# Plot builder (now supports writing into an existing file + per-event directory)
+# Plot builder (updated: returns the directory object so caller can add extra objects)
 # ------------------------------------------------------------
 def make_plots(tracks_by_label,
                simhit_points,
@@ -622,7 +766,7 @@ def make_plots(tracks_by_label,
 
     if not all_points:
         print("[warn] No 3D points (hits or simhits) found; nothing to plot.")
-        return
+        return None
 
     xs = [p[0] for p in all_points]
     ys = [p[1] for p in all_points]
@@ -653,6 +797,7 @@ def make_plots(tracks_by_label,
             d = out_file.mkdir(out_dir_name)
         d.cd()
     else:
+        d = out_file
         out_file.cd()
 
     if meta_info is not None:
@@ -715,7 +860,6 @@ def make_plots(tracks_by_label,
     markers = []
     track_lines = []
 
-    # GGTF hits markers per label
     for il, (lbl, pts) in enumerate(sorted(tracks_by_label.items(), key=lambda kv: kv[0])):
         if not pts:
             continue
@@ -729,7 +873,6 @@ def make_plots(tracks_by_label,
         pm.Draw("P SAME")
         markers.append(pm)
 
-    # SimHits overlay in orange
     if simhit_points:
         pm_sim = ROOT.TPolyMarker3D(len(simhit_points))
         pm_sim.SetMarkerColor(ROOT.kOrange + 1)
@@ -741,7 +884,6 @@ def make_plots(tracks_by_label,
         markers.append(pm_sim)
         print(f"[info] Drew {len(simhit_points)} simhit points in orange.")
 
-    # Track lines
     if track_states:
         print(f"[info] Drawing {len(track_states)} GenFit track line(s) in 3D view with style='{track_style}'.")
 
@@ -799,7 +941,7 @@ def make_plots(tracks_by_label,
     else:
         print("[info] No track states provided; only hits+simhits will be drawn in 3D.")
 
-    # Write objects into the directory
+    # Write objects
     if h_xy:
         c_xy.Write()
         h_xy.Write()
@@ -819,6 +961,8 @@ def make_plots(tracks_by_label,
     if created_local:
         out_file.Close()
         print(f"[info] Wrote plots to {out_root}")
+
+    return d
 
 
 # ------------------------------------------------------------
@@ -850,7 +994,6 @@ def main():
     ap.add_argument("--assumeQ", type=int, default=-1,
                     help="Charge sign used for pT(|q/omega|) and sigma(pT) calculations (default: -1 for mu-).")
 
-    # Top-N by sigma(pT)
     ap.add_argument("--topN", type=int, default=10,
                     help="If >0 and --event <0: process top N events ranked by sigma(pT).")
     ap.add_argument("--expectedPt", type=float, default=float("2.5897"),
@@ -859,6 +1002,10 @@ def main():
                     help="Limit scanning to first N events when ranking (default: -1 means all).")
     ap.add_argument("--rankOrder", choices=["largest", "smallest"], default="largest",
                     help="Rank by largest or smallest sigma(pT) (default: largest).")
+
+    # NEW knobs for diagnostics output size
+    ap.add_argument("--hitMatchTopK", type=int, default=25,
+                    help="How many worst hits to include in hit_match_json summary (default 25).")
 
     ap.add_argument("--outRoot", default="tracks_display_simhits_multi.root",
                     help="Output ROOT file for histos + canvases (multi-event).")
@@ -875,7 +1022,6 @@ def main():
     n_ev_total = int(tree.GetEntries())
     print(f"[info] File: {args.input}, tree='{args.tree}', events: {n_ev_total}")
 
-    # Decide hits collection
     hits_coll = args.hitsCollection
     if args.autoDetectHits or (not _collection_has_xyz(tree, hits_coll)):
         hits_coll = _auto_detect_hits_collection(tree, preferred=hits_coll)
@@ -884,7 +1030,6 @@ def main():
     else:
         print(f"[info] Using hits collection = '{hits_coll}'")
 
-    # Decide event list
     event_list = []
 
     if args.event >= 0:
@@ -899,18 +1044,15 @@ def main():
                 raise RuntimeError("--expectedPt must be provided (>0) when using --topN")
 
             n_scan = n_ev_total if args.scanMaxEvents < 0 else min(n_ev_total, int(args.scanMaxEvents))
-            print(f"[info] Ranking events by sigma(pT) using expectedPt={args.expectedPt} GeV "
-                  f"over n_scan={n_scan} events...")
+            print(f"[info] Ranking events by sigma(pT) using expectedPt={args.expectedPt} GeV over n_scan={n_scan} events...")
 
             scored = []
-            n_skipped = 0
             for iev in range(n_scan):
                 var_omega, omega, pt_reco, det = get_event_varomega(
                     tree, iev, track_coll=args.trackCollection, assume_q=args.assumeQ
                 )
                 sig_pt = sigma_pt_from_varomega(args.expectedPt, var_omega, assume_q=args.assumeQ)
                 if not math.isfinite(sig_pt):
-                    n_skipped += 1
                     continue
                 scored.append((sig_pt, iev, var_omega, omega, pt_reco, det))
 
@@ -919,7 +1061,6 @@ def main():
 
             scored.sort(key=lambda t: t[0], reverse=(args.rankOrder == "largest"))
             scored = scored[:int(args.topN)]
-
             event_list = [iev for (sig_pt, iev, *_rest) in scored]
 
             print(f"[info] Selected top {len(scored)} events by sigma(pT) ({args.rankOrder}):")
@@ -929,7 +1070,6 @@ def main():
                       f"  state={det.get('state_index','?')} perStateLen={det.get('per_state_len','?')}")
 
         else:
-            # fallback: first event with hits
             x_leaf = _find_leaf(tree, f"{hits_coll}.position.x")
             if not x_leaf:
                 raise RuntimeError(f"Missing leaf '{hits_coll}.position.x' for fallback selection.")
@@ -945,7 +1085,6 @@ def main():
             event_list = [first]
             print(f"[info] Using first event with hits: {first}")
 
-    # Open ONE output file for all events
     out_file = ROOT.TFile(args.outRoot, "RECREATE")
     if not out_file or out_file.IsZombie():
         raise RuntimeError(f"Could not create output ROOT file: {args.outRoot}")
@@ -974,7 +1113,6 @@ def main():
     )
     meta_global.Write()
 
-    # Process events
     for ev_idx in event_list:
         print(f"\n[info] ===== Processing event {ev_idx} =====")
 
@@ -988,7 +1126,6 @@ def main():
         if args.trackCollection:
             track_states = load_track_states(tree, ev_idx, args.trackCollection, assume_q=args.assumeQ)
 
-        # compute sigmaPt for metadata if possible
         var_omega, omega, pt_reco, det = get_event_varomega(tree, ev_idx, track_coll=args.trackCollection, assume_q=args.assumeQ)
         sig_pt = sigma_pt_from_varomega(args.expectedPt, var_omega, assume_q=args.assumeQ) if (math.isfinite(args.expectedPt) and args.expectedPt > 0) else float("nan")
 
@@ -1010,20 +1147,38 @@ def main():
         }
 
         out_dir = f"event_{ev_idx:06d}"
-        make_plots(tracks_by_label,
-                   simhit_points,
-                   args.outRoot,
-                   title_prefix=f"{hits_coll} (event {ev_idx})",
-                   track_states=track_states,
-                   track_style=args.trackStyle,
-                   Bz=args.Bz,
-                   meta_info=meta_info,
-                   out_file=out_file,
-                   out_dir_name=out_dir)
+        d = make_plots(
+            tracks_by_label,
+            simhit_points,
+            args.outRoot,
+            title_prefix=f"{hits_coll} (event {ev_idx})",
+            track_states=track_states,
+            track_style=args.trackStyle,
+            Bz=args.Bz,
+            meta_info=meta_info,
+            out_file=out_file,
+            out_dir_name=out_dir
+        )
+
+        # ---- NEW: nearest simhit diagnostics saved under the same event directory ----
+        if d:
+            d.cd()
+            hit_flat = flatten_hit_points_with_labels(tracks_by_label)
+            diagnostics = compute_nearest_simhit_diagnostics(hit_flat, simhit_points)
+            write_hit_match_products(d, diagnostics, top_k=args.hitMatchTopK)
+
+            # also add a short text note
+            note = ROOT.TNamed(
+                "hit_match_note",
+                "hit_match TTree stores one entry with vector branches; each element is one digihit.\n"
+                "minDist3D_mm is nearest simhit in 3D; minDistXY_mm is in XY; dZ_mm is hit_z - sim_z.\n"
+                "hit_match_json contains stats + top offenders."
+            )
+            note.Write()
 
     out_file.Close()
     f.Close()
-    print(f"[info] Wrote multi-event plots to {args.outRoot}")
+    print(f"[info] Wrote multi-event plots + hit_match diagnostics to {args.outRoot}")
 
 
 if __name__ == "__main__":

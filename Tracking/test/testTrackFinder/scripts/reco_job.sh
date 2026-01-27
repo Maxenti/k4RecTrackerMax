@@ -26,7 +26,7 @@ FIT_OUT="${7:-auto}"                  # auto|<name>
 K4REL="${8:-2026-01-11}"              # key4hep nightly tag
 
 
-TGEO_FILE="${9:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root}"   # /eos/... or root://... or local
+TGEO_FILE="${9:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root}"   # /eos/... or root://... or local
 LOCAL_TGEO=""
 
 if [[ -n "$TGEO_FILE" ]]; then
@@ -116,6 +116,160 @@ extract_eta_dir() {
 [[ -s runtime.tgz ]] || { echo "FATAL: runtime.tgz missing"; exit 4; }
 tar -xzf runtime.tgz
 RTPFX="$PWD/runtime"
+
+
+
+
+# ----------------- provenance stamping (Condor) -----------------
+: "${STAMP_KEY:=pipeline_metadata_json}"
+: "${JOBTAG:=}"
+: "${STAMP_CONFIGS:=1}"
+
+# Prefer separately-transferred stamper (NOT inside runtime.tgz)
+STAMPER="${STAMPER:-}"
+if [[ -z "$STAMPER" ]]; then
+  for cand in \
+    "$PWD/scripts/stamp_pipeline_metadata.py" \
+    "$PWD/stamp_pipeline_metadata.py" \
+    "$RTPFX/scripts/stamp_pipeline_metadata.py" \
+    "$RTPFX/python/stamp_pipeline_metadata.py"
+  do
+    if [[ -f "$cand" ]]; then
+      STAMPER="$cand"
+      break
+    fi
+  done
+fi
+
+echo "[meta] STAMPER=${STAMPER:-<not found>}"
+
+# Build a dense extras list: condor IDs + key runtime facts + all knobs
+build_stamp_extras () {
+  local -a extras
+
+  # --- Condor identity ---
+  extras+=( --extra "condor_clusterid=${_CONDOR_CLUSTERID:-}" )
+  extras+=( --extra "condor_procid=${_CONDOR_PROCID:-}" )
+  extras+=( --extra "condor_schedd=${_CONDOR_SCHEDD_HOST:-}" )
+  extras+=( --extra "condor_slot=${_CONDOR_SLOT:-}" )
+  extras+=( --extra "condor_scratch=${_CONDOR_SCRATCH_DIR:-}" )
+
+  # --- Job tag / paths ---
+  extras+=( --extra "jobtag=${JOBTAG}" )
+  extras+=( --extra "condor_job=1" )
+  extras+=( --extra "infile=${INFILE}" )
+  extras+=( --extra "infile_xrd=${INFILE_XRD:-}" )
+  extras+=( --extra "out_eos=${OUT_EOS_XRD:-}" )
+  extras+=( --extra "outdir=${OUTDIR}" )
+  extras+=( --extra "eta_dir=${ETA_DIR:-}" )
+
+  # --- Runtime + versions ---
+  extras+=( --extra "k4rel=${K4REL}" )
+  extras+=( --extra "k4setup=${K4SETUP}" )
+  extras+=( --extra "root_version=$(root-config --version 2>/dev/null || true)" )
+  extras+=( --extra "hostname=$(hostname -f 2>/dev/null || hostname)" )
+
+  # --- Geometry/model actually used ---
+  extras+=( --extra "compact_xml_arg=${COMPACT_XML}" )
+  extras+=( --extra "local_compact_xml=${LOCAL_COMPACT_XML:-}" )
+  extras+=( --extra "dd4hep_xmlpath=${DD4hep_XMLPATH:-}" )
+  extras+=( --extra "tgeo_file_arg=${TGEO_FILE:-}" )
+  extras+=( --extra "local_tgeo=${LOCAL_TGEO:-}" )
+  extras+=( --extra "onnx_model=${MODEL:-}" )
+
+  # --- Also capture ALL knob vars (same selection logic as local_chain) ---
+  local v
+  while IFS= read -r v; do
+    [[ "$v" == "_" ]] && continue
+    [[ "$v" == "PWD" || "$v" == "OLDPWD" || "$v" == "SHLVL" ]] && continue
+    local val="${!v-}"
+    extras+=( --extra "${v}=${val}" )
+  done < <(
+    compgen -v \
+      | LC_ALL=C sort \
+      | awk '
+          /^(DCH_|GGTF_|GF_)/ {print; next}
+          /^(STAGE|SKIP_DIGI|FITTER|FIT_OUT|GGTF_TRACKS_OUT|GGTF_LOG|FITTER_LOG|MAX_HITS|TIMEOUT_K4RUN|TBETA|TD|ONNX_CHUNK|TGEO_FILE)$/ {print; next}
+        '
+  )
+
+  printf '%s\n' "${extras[@]}"
+}
+
+mapfile -t STAMP_EXTRAS < <(build_stamp_extras)
+
+stamp_root () {
+  local stage="$1"; shift
+  local outfile="$1"; shift
+  local cmdline="$1"; shift
+
+  if [[ -z "$STAMPER" || ! -f "$STAMPER" ]]; then
+    echo "[meta][WARN] stamper not found in runtime (skipping metadata stamp)"
+    return 0
+  fi
+  if [[ -z "$outfile" || ! -f "$outfile" ]]; then
+    echo "[meta][WARN] output missing for stage '$stage': '$outfile' (skipping stamp)"
+    return 0
+  fi
+
+  local -a SARGS
+  SARGS+=( --root "$outfile" --stage "$stage" --cmd "$cmdline" --workdir "$PWD" --key "$STAMP_KEY" )
+
+  # Optional "configs" list (helps provenance a lot)
+  if [[ "${STAMP_CONFIGS}" == "1" ]]; then
+    [[ -n "${LOCAL_COMPACT_XML:-}" ]] && SARGS+=( --config "$LOCAL_COMPACT_XML" )
+    [[ -n "${MODEL:-}"            ]] && SARGS+=( --config "$MODEL" )
+    [[ -n "${LOCAL_TGEO:-}"       ]] && SARGS+=( --config "$LOCAL_TGEO" )
+    SARGS+=( --config "$RTPFX/runDCHTestTrackFinder.py" )
+  fi
+
+  python3 "$STAMPER" "${SARGS[@]}" "${STAMP_EXTRAS[@]}" "$@" \
+    >/dev/null 2>&1 || echo "[meta][WARN] stamp failed for stage '$stage' (non-fatal)"
+}
+
+# If intermediate stage files are produced locally, try to find them (optional)
+guess_stage_file () {
+  local stage="$1"
+  local out="$2"
+  local dir base stem ext
+  dir="$(dirname "$out")"
+  base="$(basename "$out")"
+  ext="${base##*.}"
+  stem="${base%.*}"
+
+  case "$stage" in
+    digi)
+      for cand in \
+        "${dir}/${stem}_digi.${ext}" \
+        "${dir}/${stem}.digi.${ext}" \
+        "${dir}/digi_${base}" \
+        "${dir}/digi.root" \
+        "${out}"
+      do
+        [[ -f "$cand" ]] && { echo "$cand"; return 0; }
+      done
+      ;;
+    ggtf)
+      for cand in \
+        "${dir}/${stem}_ggtf.${ext}" \
+        "${dir}/${stem}.ggtf.${ext}" \
+        "${dir}/ggtf_${base}" \
+        "${dir}/ggtf.root" \
+        "${out}"
+      do
+        [[ -f "$cand" ]] && { echo "$cand"; return 0; }
+      done
+      ;;
+    fit|final|reco|*)
+      [[ -f "$out" ]] && { echo "$out"; return 0; }
+      ;;
+  esac
+  echo ""
+}
+
+
+
+
 
 # Env for bundled libs/plugins/python
 export LD_LIBRARY_PATH="$RTPFX/lib64:$RTPFX/lib:${LD_LIBRARY_PATH:-}"
@@ -682,14 +836,16 @@ fi
 
 if [[ $NEED_LOG -eq 1 ]]; then
   echo "[log] issues detected -> copying full log to EOS: $LOG_EOS_XRD"
-  # show a short tail in the condor .out for quick triage
   echo "---- tail(full log) ----"
   tail -n 120 "$FULLLOG" || true
-  xrdcp -f "$FULLLOG" "$LOG_EOS_XRD" || true
+
+  # If you don't want to upload it to EOS, DO NOT leave it behind
+  #xrdcp -f "$FULLLOG" "$LOG_EOS_XRD" || true
+  rm -f "$FULLLOG" || true
 else
-  # keep condor .out small; delete full log
   rm -f "$FULLLOG" || true
 fi
+
 
 
 # Verify required collection exists (match your older reco_job behavior)
@@ -721,6 +877,23 @@ if [[ $VER_RC -ne 0 ]]; then
   exit $VER_RC
 fi
 
+
+# ----------------- stamp metadata into ROOT output(s) BEFORE staging to EOS -----------------
+K4_CMD="k4run ${K4_ARGS[*]}"
+
+# Always stamp the final output we are about to copy
+stamp_root "final" "$OUT_LOCAL" "$K4_CMD" --input "$INFILE_XRD"
+
+# Optional: if your python writes separate digi/ggtf files locally, stamp them too
+DIGI_FILE="$(guess_stage_file digi "$OUT_LOCAL")"
+GGTF_FILE="$(guess_stage_file ggtf "$OUT_LOCAL")"
+
+if [[ -n "$DIGI_FILE" && -f "$DIGI_FILE" && "$DIGI_FILE" != "$OUT_LOCAL" ]]; then
+  stamp_root "digi" "$DIGI_FILE" "$K4_CMD" --input "$INFILE_XRD"
+fi
+if [[ -n "$GGTF_FILE" && -f "$GGTF_FILE" && "$GGTF_FILE" != "$OUT_LOCAL" ]]; then
+  stamp_root "ggtf" "$GGTF_FILE" "$K4_CMD" --input "$INFILE_XRD"
+fi
 
 echo "[stage] xrdcp -> $OUT_EOS_XRD"
 xrdcp -f "$OUT_LOCAL" "$OUT_EOS_XRD"

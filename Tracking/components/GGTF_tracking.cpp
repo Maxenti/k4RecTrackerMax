@@ -318,7 +318,14 @@ struct GGTF_tracking final
     };
 
     // -------- optional: build wire->PDG map for truth gating --------
-    std::unordered_map<uint64_t, int> sw_pdg;
+    struct TruthSummary {
+      int  nLinks = 0;
+      int  firstPdg = 0;
+      bool allKeep = true;   // stays true only if every linked PDG matches keep PDG condition
+    };
+    
+    std::unordered_map<uint64_t, TruthSummary> sw_truth;
+    
     bool doTruthGate = m_filterInputWiresByTruthPdg.value();
     if (doTruthGate) {
       StepTimer t_map;
@@ -327,7 +334,7 @@ struct GGTF_tracking final
         for (const auto& link : *lcoll) {
           const auto sw = link.getFrom();
           const auto sh = link.getTo();
-
+      
           int pdg = 0;
           try {
             const auto mcp = sh.getParticle();
@@ -335,31 +342,49 @@ struct GGTF_tracking final
           } catch (...) {
             pdg = 0;
           }
-
+      
           const uint64_t key = oid_key(sw.getObjectID());
-          if (sw_pdg.find(key) == sw_pdg.end()) sw_pdg.emplace(key, pdg);
+          auto& info = sw_truth[key];
+          info.nLinks++;
+          if (info.firstPdg == 0) info.firstPdg = pdg;
+      
+          // Decide keep condition:
+          // If you want mu+/mu- both, compare abs(pdg) to abs(keepTruthPdg).
+          // If you truly want only PDG==13 (mu- only), use (pdg == keepTruthPdg).
+          const bool isKeep = (std::abs(pdg) == std::abs(m_keepTruthPdg.value()));
+          info.allKeep = info.allKeep && isKeep;
         }
       }
+      
 
-      if (sw_pdg.empty()) {
+      if (sw_truth.empty()) {
         warning() << "[evt " << m_evt
-                  << "] FilterInputWiresByTruthPdg=true but no wire->PDG links found "
-                     "(InputWireSimLinkCollections empty/missing?). Disabling truth gate for this event."
+                  << "] FilterInputWiresByTruthPdg=true but no wire->truth links found. "
+                     "Will drop all wire hits for this event (fail-closed)."
                   << endmsg;
-        doTruthGate = false;
-      } else {
-        info() << "[evt " << m_evt << "] truth gate map: wire->PDG entries=" << sw_pdg.size()
+        // Keep doTruthGate=true, but since nothing is linked, keep_wire_truth() will drop everything
+      }
+       else {
+        info() << "[evt " << m_evt << "] truth gate map: wire->PDG entries=" << sw_truth.size()
                << " in " << t_map.ms() << " ms" << endmsg;
       }
     }
 
     auto keep_wire_truth = [&](const extension::SenseWireHit& hw) -> bool {
       if (!doTruthGate) return true;
+    
       const uint64_t key = oid_key(hw.getObjectID());
-      auto it = sw_pdg.find(key);
-      if (it == sw_pdg.end()) return !m_dropWireIfUnlinked.value();
-      return (it->second == m_keepTruthPdg.value());
+      auto it = sw_truth.find(key);
+    
+      // Unlinked hit
+      if (it == sw_truth.end()) {
+        return !m_dropWireIfUnlinked.value();  // for strict mode keep this = true so unlinked are dropped
+      }
+    
+      // Strict: keep only if *all* linked PDGs match keep PDG condition
+      return it->second.allKeep;
     };
+    
 
     // -------- count inputs --------
     int64_t nPlanar = 0, nWire = 0;

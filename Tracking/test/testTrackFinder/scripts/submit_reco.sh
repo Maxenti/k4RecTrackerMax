@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # -------- EDIT/OVERRIDE VIA ENV --------
-IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples/1_19_2026/CF}"
-OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples2/1_21_2026/CFmat}"
-COMPACT_XML="${COMPACT_XML:-/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml}"
+IN_DIR="${IN_DIR:-/eos/user/c/cglenn/gun_samples/1_22_2026/W}"
+OUT_DIR="${OUT_DIR:-/eos/user/c/cglenn/reco_samples2/1_22_2026/Wmat}"
+COMPACT_XML="${COMPACT_XML:-/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03W.xml}"
 
 FITTER="${FITTER:-genfit2}"             # genfit2 | simple | threepoint
 FIT_OUT="${FIT_OUT:-auto}"              # auto | <collection name>
@@ -15,7 +15,7 @@ EXTRA="${EXTRA:---fitterLog INFO}"      # any additional flags (NO quotes)
 
 # Key4hep nightly to use inside jobs
 K4REL="${K4REL:-2026-01-11}"
-TGEOFILE="${TGEOFILE:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root}"
+TGEOFILE="${TGEOFILE:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root}"
 
 # --------------------------------------
 

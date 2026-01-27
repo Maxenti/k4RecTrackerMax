@@ -1,4 +1,4 @@
-# scripts
+# test/testTrackFinder/scripts
 
 This README is auto-generated from per-file `DOC:` blocks (preferred) plus heuristics.
 Improve accuracy by adding a `DOC:` header to important glue files, then re-run:
@@ -10,7 +10,8 @@ python3 scripts/autoreadme.py --root . --write
 ## Files
 | File | Summary | Usage | Connects-To | Inferred |
 |---|---|---|---|---|
-| ⚠️ `analyze_pt_resolution_grid.py` | analyze_pt_resolution_grid.py |  |  | gaudi:topalg:GenFitTracks<br>import:ROOT<br>import:argparse<br>import:array<br>import:ctypes<br>import:math<br>import:os<br>import:random<br>import:re<br>import:scan_pt_time_by_event |
+| ⚠️ `analyze_job.sh` | !/usr/bin/env bash |  |  | calls:analyze_pt_resolution_grid.py |
+| ⚠️ `analyze_pt_resolution_grid.py` | DOC |  |  | gaudi:topalg:GenFitTracks<br>import:ROOT<br>import:argparse<br>import:array<br>import:ctypes<br>import:math<br>import:os<br>import:random<br>import:re<br>import:scan_pt_time_by_event |
 | ✅ `autoreadme.py` | ... | ... | ... | gaudi:topalg:track<br>import:__future__<br>import:argparse<br>import:dataclasses<br>import:pathlib<br>import:re<br>import:typing<br>uses:k4run |
 | ⚠️ `cglenn.cc` |  |  |  |  |
 | ⚠️ `compact_path.txt` |  |  |  |  |
@@ -25,6 +26,7 @@ python3 scripts/autoreadme.py --root . --write
 | ⚠️ `make_runtime.sh` | !/usr/bin/env bash |  |  | gaudi:imports:Configurables<br>gaudi:topalg:GenFit2DCHFitter<br>gaudi:topalg:HelixFitter<br>gaudi:topalg:SimpleFitDCHFitter<br>gaudi:topalg:SimpleFitterAlg<br>gaudi:topalg:SimpleTrackFitterAlg<br>gaudi:topalg:TrackingConf<br>gaudi:topalg:libDCHdigi<br>gaudi:topalg:libTracking<br>import:Configurables |
 | ⚠️ `mk_ddsim_grid.py` | !/usr/bin/env python3 |  |  | import:os |
 | ⚠️ `plot_mcparticles_pt.py` | pt_diagnostics_to_root.py |  |  | gaudi:topalg:GenFit<br>gaudi:topalg:GenFitTracks<br>gaudi:topalg:TrackStates<br>gaudi:topalg:trackState<br>gaudi:topalg:trackStates<br>import:argparse<br>import:awkward<br>import:numpy<br>import:uproot |
+| ⚠️ `plot_pt_from_trackstate_time.py` | plot_pt_from_trackstate_time.py |  |  | calls:plot_pt_from_trackstate_time.py<br>gaudi:topalg:GenFitTracks<br>gaudi:topalg:TrackStates<br>gaudi:topalg:trackStates<br>import:ROOT<br>import:argparse<br>import:math<br>import:matplotlib<br>import:matplotlib.pyplot<br>import:numpy |
 | ⚠️ `prepare_and_submit.sh` | !/usr/bin/env bash |  |  | calls:scripts/mk_ddsim_grid.py<br>uses:condor |
 | ⚠️ `print_metadata.py` | !/usr/bin/env python3 |  |  | import:ROOT<br>import:os<br>import:sys |
 | ⚠️ `queue_items.txt` |  |  |  |  |
@@ -34,7 +36,7 @@ python3 scripts/autoreadme.py --root . --write
 | ⚠️ `stamp_pipeline_metadata.py` | !/usr/bin/env python3 |  |  | import:ROOT<br>import:argparse<br>uses:k4run |
 | ⚠️ `submit_reco.sh` | !/usr/bin/env bash |  |  | calls:make_filelist.sh<br>uses:condor |
 | ⚠️ `sweep_pt.sh` | !/usr/bin/env bash |  |  | calls:local_chain.sh |
-| ⚠️ `view_simhits_event.py` | view_tracks_event_simhits.py |  |  | calls:view_tracks_event_simhits.py<br>gaudi:topalg:DCHCollection<br>gaudi:topalg:GenFitTracks<br>gaudi:topalg:TrackStates_begin<br>gaudi:topalg:TrackStates_end<br>gaudi:topalg:n_states_in_track<br>gaudi:topalg:no_trackstate_prefix<br>gaudi:topalg:no_trackstates<br>gaudi:topalg:trackStates_begin<br>gaudi:topalg:trackStates_end |
+| ⚠️ `view_simhits_event.py` | view_tracks_event_simhits.py |  |  | gaudi:topalg:DCHCollection<br>gaudi:topalg:GenFitTracks<br>gaudi:topalg:TrackStates_begin<br>gaudi:topalg:TrackStates_end<br>gaudi:topalg:n_states_in_track<br>gaudi:topalg:no_trackstate_prefix<br>gaudi:topalg:no_trackstates<br>gaudi:topalg:trackStates_begin<br>gaudi:topalg:trackStates_end<br>gaudi:topalg:track_collection |
 | ⚠️ `view_tracks_event.py` | view_tracks_event.py |  |  | calls:view_tracks_event.py<br>gaudi:topalg:DCHDigi2Collection<br>gaudi:topalg:GenFitTracks<br>gaudi:topalg:TrackStates_begin<br>gaudi:topalg:TrackStates_end<br>gaudi:topalg:n_states_in_track<br>gaudi:topalg:trackStates_begin<br>gaudi:topalg:trackStates_end<br>gaudi:topalg:track_collection<br>gaudi:topalg:track_index |
 
 ## Inputs / Outputs / Collections

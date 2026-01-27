@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # Base directory on EOS where the gun sample subdirs live
-BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_19_2026/CF}"
+BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_22_2026/W}"
 
 # Output file (in CWD unless you pass a second arg)
 OUT_FILE="${2:-filelist.txt}"
 
 # The eta values you want to include
-ETAS=(0 0.1 0.5 1.0 1.5 2.0 2.5)
+ETAS=(0 0.1 0.5 1.0 1.5 2.0)
 
 to_xrd() {
   local p="$1"

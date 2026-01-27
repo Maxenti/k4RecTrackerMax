@@ -1,16 +1,4 @@
 flowchart LR
-  __DCHLooperEventFilter__optional_["* DCHLooperEventFilter (optional)"]
-  __DCHdigi_v02___DCHdigi_v01["* DCHdigi_v02 / DCHdigi_v01"]
-  __EDM4hepCollectionSizePrinter__optional_QA_["* EDM4hepCollectionSizePrinter (optional QA)"]
-  __GGTF_tracking["* GGTF_tracking"]
-  __GenFit2DCHFitter___SimpleFitDCHFitter___ThreePointFitter["* GenFit2DCHFitter / SimpleFitDCHFitter / ThreePointFitter"]
-  __local_chain_sh__recommended_driver_["* local_chain.sh (recommended driver)"]
-  __scripts_stamp_pipeline_metadata_py__ROOT_metadata_stamping_used_by_local_chain_sh_["* scripts/stamp_pipeline_metadata.py (ROOT metadata stamping used by local_chain.sh)"]
-  __For__all_hits__studies_ensure___maxHitsPerEvent_0__default__and_watch_the_GGTF_caps__max3DHitsPerEvent_max3DPerTrack__["- For “all hits” studies ensure --maxHitsPerEvent=0 (default) and watch the GGTF caps (max3DHitsPerEvent/max3DPerTrack)."]
-  __Pipeline_components_configured_["- Pipeline components configured:"]
-  __Property_names_differ_across_nightlies__this_script_uses_hasattr___fallback_names_and_prints_configured_values_always_check_["- Property names differ across nightlies; this script uses hasattr()+fallback names and prints configured values—always check:"]
-  __Truth_PDG_gating_requires_wire_digi___truth_link_collections_to_exist_and_be_populated__otherwise_gating_may_be_ineffective_["- Truth-PDG gating requires wire digi → truth link collections to exist and be populated; otherwise gating may be ineffective."]
-  __Wrapper___provenance_["- Wrapper + provenance:"]
   ___["..."]
   Alg__CDCHHits["Alg::CDCHHits"]
   Alg__CDCHTracks["Alg::CDCHTracks"]
@@ -21,7 +9,8 @@ flowchart LR
   Alg__DCHDigiCollection["Alg::DCHDigiCollection"]
   Alg__DCHDigiSimLink["Alg::DCHDigiSimLink"]
   Alg__DCHDigiSimLinkCollection["Alg::DCHDigiSimLinkCollection"]
-  Alg__DCHLooperEventFilter["Alg::DCHLooperEventFilter"]
+  Alg__DCHName["Alg::DCHName"]
+  Alg__DCHSimHits["Alg::DCHSimHits"]
   Alg__DCH_DigiCollection["Alg::DCH_DigiCollection"]
   Alg__DCH_ID_Encoding["Alg::DCH_ID_Encoding"]
   Alg__DCH_gas_Lhalf["Alg::DCH_gas_Lhalf"]
@@ -37,15 +26,16 @@ flowchart LR
   Alg__DCHsimpleDigitizer["Alg::DCHsimpleDigitizer"]
   Alg__DC_simTrackerHits["Alg::DC_simTrackerHits"]
   Alg__DchName["Alg::DchName"]
+  Alg__DiagEveryNTracks["Alg::DiagEveryNTracks"]
   Alg__FitTanLambda["Alg::FitTanLambda"]
-  Alg__FittedTracks["Alg::FittedTracks"]
   Alg__GGTF_tracking["Alg::GGTF_tracking"]
   Alg__GGTF_trackingConfig["Alg::GGTF_trackingConfig"]
   Alg__Geant4SimpleTrackerAction["Alg::Geant4SimpleTrackerAction"]
   Alg__Geant4TestTrackAction["Alg::Geant4TestTrackAction"]
   Alg__Geant4TrackerWeightedAction["Alg::Geant4TrackerWeightedAction"]
+  Alg__GenFit["Alg::GenFit"]
   Alg__GenFit2DCHFitter["Alg::GenFit2DCHFitter"]
-  Alg__GenFit2DCHFitterConfig["Alg::GenFit2DCHFitterConfig"]
+  Alg__GenFit2DCHFitter_props["Alg::GenFit2DCHFitter_props"]
   Alg__GenFitFieldSvc["Alg::GenFitFieldSvc"]
   Alg__GenFitMaterialSvc["Alg::GenFitMaterialSvc"]
   Alg__GenFitTracks["Alg::GenFitTracks"]
@@ -61,14 +51,18 @@ flowchart LR
   Alg__GenFitter["Alg::GenFitter"]
   Alg__HelixFitter["Alg::HelixFitter"]
   Alg__InputSimTrackerHits["Alg::InputSimTrackerHits"]
+  Alg__InputTracks["Alg::InputTracks"]
   Alg__InputTracksFromGenParticlesAssociation["Alg::InputTracksFromGenParticlesAssociation"]
   Alg__Max3DPerTrack["Alg::Max3DPerTrack"]
+  Alg__MinFittedPointsWithFI["Alg::MinFittedPointsWithFI"]
+  Alg__MinHitsPerTrack["Alg::MinHitsPerTrack"]
+  Alg__MinMeasurementsToFit["Alg::MinMeasurementsToFit"]
   Alg__Noddsim_track_test["Alg::Noddsim_track_test"]
-  Alg__OutTracks["Alg::OutTracks"]
   Alg__OutputMCRecoTrackParticleAssociation["Alg::OutputMCRecoTrackParticleAssociation"]
   Alg__OutputTracks["Alg::OutputTracks"]
   Alg__OutputTracksGGTF["Alg::OutputTracksGGTF"]
   Alg__PlotTrackHitDistances["Alg::PlotTrackHitDistances"]
+  Alg__PreFitOutlierVeto["Alg::PreFitOutlierVeto"]
   Alg__RetryIfNoFitterInfo["Alg::RetryIfNoFitterInfo"]
   Alg__SimTrackerHits["Alg::SimTrackerHits"]
   Alg__SimpleFitDCHFitter["Alg::SimpleFitDCHFitter"]
@@ -76,18 +70,17 @@ flowchart LR
   Alg__SimpleFitterAlg["Alg::SimpleFitterAlg"]
   Alg__SimpleTrackFitterAlg["Alg::SimpleTrackFitterAlg"]
   Alg__SimpleTracks["Alg::SimpleTracks"]
-  Alg__ThreePointFitter["Alg::ThreePointFitter"]
   Alg__ThreePointTracks["Alg::ThreePointTracks"]
   Alg__TrackMCParticleLinks["Alg::TrackMCParticleLinks"]
+  Alg__TrackStates["Alg::TrackStates"]
   Alg__TrackStates_begin["Alg::TrackStates_begin"]
   Alg__TrackStates_end["Alg::TrackStates_end"]
-  Alg__TrackStates_time["Alg::TrackStates_time"]
   Alg__TrackerIDs["Alg::TrackerIDs"]
   Alg__TrackingConf["Alg::TrackingConf"]
   Alg__Tracks["Alg::Tracks"]
   Alg__TracksFromGenParticles["Alg::TracksFromGenParticles"]
   Alg__TracksFromGenParticlesAssociation["Alg::TracksFromGenParticlesAssociation"]
-  Alg__TracksOut["Alg::TracksOut"]
+  Alg__UseKFPreFit["Alg::UseKFPreFit"]
   Alg__VTXD_simTrackerHits["Alg::VTXD_simTrackerHits"]
   Alg__VTXIB_simTrackerHits["Alg::VTXIB_simTrackerHits"]
   Alg__VTXOB_simTrackerHits["Alg::VTXOB_simTrackerHits"]
@@ -95,13 +88,12 @@ flowchart LR
   Alg__dch_deadtime_ns["Alg::dch_deadtime_ns"]
   Alg__dch_drift_um_ns["Alg::dch_drift_um_ns"]
   Alg__dch_gas_type["Alg::dch_gas_type"]
-  Alg__dch_rin_m["Alg::dch_rin_m"]
-  Alg__dch_ring_z_mm["Alg::dch_ring_z_mm"]
-  Alg__dch_rout_m["Alg::dch_rout_m"]
   Alg__dch_sig_mm_ns["Alg::dch_sig_mm_ns"]
-  Alg__fallbackIfNoGenFit2["Alg::fallbackIfNoGenFit2"]
   Alg__genfit2["Alg::genfit2"]
   Alg__genfit_tracks["Alg::genfit_tracks"]
+  Alg__gf_prefitOutlierVeto["Alg::gf_prefitOutlierVeto"]
+  Alg__gf_useKFPreFit["Alg::gf_useKFPreFit"]
+  Alg__inputTracks["Alg::inputTracks"]
   Alg__libDCHdigi["Alg::libDCHdigi"]
   Alg__libTracking["Alg::libTracking"]
   Alg__max3DPerTrack["Alg::max3DPerTrack"]
@@ -109,12 +101,21 @@ flowchart LR
   Alg__nTracksPerEvent["Alg::nTracksPerEvent"]
   Alg__n_states_in_track["Alg::n_states_in_track"]
   Alg__n_tracks["Alg::n_tracks"]
+  Alg__n_tracks_evt["Alg::n_tracks_evt"]
+  Alg__no_trackstate_prefix["Alg::no_trackstate_prefix"]
+  Alg__no_trackstates["Alg::no_trackstates"]
+  Alg__nstates_per_track_max["Alg::nstates_per_track_max"]
+  Alg__nstates_per_track_med["Alg::nstates_per_track_med"]
+  Alg__nstates_per_track_min["Alg::nstates_per_track_min"]
   Alg__outputTracks["Alg::outputTracks"]
+  Alg__primary_track_index["Alg::primary_track_index"]
+  Alg__primary_track_nstates["Alg::primary_track_nstates"]
   Alg__saveDCHsimHitTool["Alg::saveDCHsimHitTool"]
   Alg__test_TrackFinder["Alg::test_TrackFinder"]
   Alg__test_TracksFromGenParticles["Alg::test_TracksFromGenParticles"]
-  Alg__tp_fitTanLambda["Alg::tp_fitTanLambda"]
   Alg__track["Alg::track"]
+  Alg__trackState["Alg::trackState"]
+  Alg__trackStates["Alg::trackStates"]
   Alg__trackStates_begin["Alg::trackStates_begin"]
   Alg__trackStates_end["Alg::trackStates_end"]
   Alg__track_collection["Alg::track_collection"]
@@ -122,9 +123,12 @@ flowchart LR
   Alg__track_index["Alg::track_index"]
   Alg__track_style["Alg::track_style"]
   Alg__tracker["Alg::tracker"]
+  Alg__trackerHits_begin["Alg::trackerHits_begin"]
+  Alg__trackerHits_end["Alg::trackerHits_end"]
   Alg__view_tracks_metadata["Alg::view_tracks_metadata"]
+  Alg__view_tracks_metadata_global["Alg::view_tracks_metadata_global"]
   CMakeLists_txt["CMakeLists.txt"]
-  Gotchas___verification_["Gotchas / verification:"]
+  compare_pt_resolution_outputs_py["compare_pt_resolution_outputs.py"]
   components_DCHLooperEventFilter_cpp["components/DCHLooperEventFilter.cpp"]
   components_GGTF_tracking_cpp["components/GGTF_tracking.cpp"]
   components_GenFit2DCHFitter_cpp["components/GenFit2DCHFitter.cpp"]
@@ -145,23 +149,30 @@ flowchart LR
   src_GenFitter_cpp["src/GenFitter.cpp"]
   src_utils_cpp["src/utils.cpp"]
   test_runGenFitTrackingOnSimplifiedDriftChamber_py["test/runGenFitTrackingOnSimplifiedDriftChamber.py"]
-  test_testTrackFinder_Noddsim_track_test_sh["test/testTrackFinder/Noddsim_track_test.sh"]
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py["test/testTrackFinder/SimplerunDCHTestTrackFinder.py"]
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03_py["test/testTrackFinder/SteeringFile_IDEA_o1_v03.py"]
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py["test/testTrackFinder/SteeringFile_IDEA_o1_v03DCH.py"]
+  test_testTrackFinder____afs724E["test/testTrackFinder/.__afs724E"]
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py["test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py"]
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03_py["test/testTrackFinder/Archive/SteeringFile_IDEA_o1_v03.py"]
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py["test/testTrackFinder/Archive/SteeringFile_IDEA_o1_v03DCH.py"]
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py["test/testTrackFinder/Archive/compare_pt_trackstate_vs_hitcircle.py"]
+  test_testTrackFinder_Archive_ddsim_local_sh["test/testTrackFinder/Archive/ddsim_local.sh"]
+  test_testTrackFinder_Archive_filetest_sh["test/testTrackFinder/Archive/filetest.sh"]
+  test_testTrackFinder_Archive_generate_joblist_py["test/testTrackFinder/Archive/generate_joblist.py"]
+  test_testTrackFinder_Archive_local_chain_all_sh["test/testTrackFinder/Archive/local_chain_all.sh"]
+  test_testTrackFinder_Archive_make_ptres_py["test/testTrackFinder/Archive/make_ptres.py"]
+  test_testTrackFinder_Archive_make_sigma_pt_plot_py["test/testTrackFinder/Archive/make_sigma_pt_plot.py"]
+  test_testTrackFinder_Archive_pt_resolution_plot_pyroot_py["test/testTrackFinder/Archive/pt_resolution_plot_pyroot.py"]
+  test_testTrackFinder_Archive_ptres_from_edm4hep_py["test/testTrackFinder/Archive/ptres_from_edm4hep.py"]
+  test_testTrackFinder_Archive_reco_all_sh["test/testTrackFinder/Archive/reco_all.sh"]
+  test_testTrackFinder_Archive_reco_scan_sh["test/testTrackFinder/Archive/reco_scan.sh"]
+  test_testTrackFinder_Archive_run_dch_chain_sh["test/testTrackFinder/Archive/run_dch_chain.sh"]
+  test_testTrackFinder_Archive_simple_local_chain_sh["test/testTrackFinder/Archive/simple_local_chain.sh"]
+  test_testTrackFinder_Archive_skim_edm4hep_py["test/testTrackFinder/Archive/skim_edm4hep.py"]
+  test_testTrackFinder_Archive_test_trackFinder_1_sh["test/testTrackFinder/Archive/test_trackFinder_1.sh"]
+  test_testTrackFinder_Archive_testcondor_sh["test/testTrackFinder/Archive/testcondor.sh"]
   test_testTrackFinder_cglenn_cc["test/testTrackFinder/cglenn.cc"]
-  test_testTrackFinder_compare_pt_trackstate_vs_hitcircle_py["test/testTrackFinder/compare_pt_trackstate_vs_hitcircle.py"]
-  test_testTrackFinder_ddsim_local_sh["test/testTrackFinder/ddsim_local.sh"]
-  test_testTrackFinder_debug_z_spur_event_py["test/testTrackFinder/debug_z_spur_event.py"]
-  test_testTrackFinder_docker_stderror["test/testTrackFinder/docker_stderror"]
+  test_testTrackFinder_dd4hep2root_py["test/testTrackFinder/dd4hep2root.py"]
   test_testTrackFinder_filelist_txt["test/testTrackFinder/filelist.txt"]
-  test_testTrackFinder_generate_joblist_py["test/testTrackFinder/generate_joblist.py"]
-  test_testTrackFinder_inspect_events_pt_pathology_py["test/testTrackFinder/inspect_events_pt_pathology.py"]
-  test_testTrackFinder_k4rt_env_sh["test/testTrackFinder/k4rt_env.sh"]
   test_testTrackFinder_local_chain_sh["test/testTrackFinder/local_chain.sh"]
-  test_testTrackFinder_local_chain_all_sh["test/testTrackFinder/local_chain_all.sh"]
-  test_testTrackFinder_make_ptres_py["test/testTrackFinder/make_ptres.py"]
-  test_testTrackFinder_pack_k4rt_runtime_sh["test/testTrackFinder/pack_k4rt_runtime.sh"]
   test_testTrackFinder_params_job_0_json["test/testTrackFinder/params/job_0.json"]
   test_testTrackFinder_params_job_1_json["test/testTrackFinder/params/job_1.json"]
   test_testTrackFinder_params_job_10_json["test/testTrackFinder/params/job_10.json"]
@@ -462,48 +473,39 @@ flowchart LR
   test_testTrackFinder_params_job_97_json["test/testTrackFinder/params/job_97.json"]
   test_testTrackFinder_params_job_98_json["test/testTrackFinder/params/job_98.json"]
   test_testTrackFinder_params_job_99_json["test/testTrackFinder/params/job_99.json"]
-  test_testTrackFinder_print_metadata_py["test/testTrackFinder/print_metadata.py"]
-  test_testTrackFinder_pt_resolution_plot_pyroot_py["test/testTrackFinder/pt_resolution_plot_pyroot.py"]
-  test_testTrackFinder_ptres_from_edm4hep_py["test/testTrackFinder/ptres_from_edm4hep.py"]
-  test_testTrackFinder_reco_all_sh["test/testTrackFinder/reco_all.sh"]
-  test_testTrackFinder_reco_filelist_txt["test/testTrackFinder/reco_filelist.txt"]
-  test_testTrackFinder_reco_scan_sh["test/testTrackFinder/reco_scan.sh"]
   test_testTrackFinder_runDCHTestTrackFinder_py["test/testTrackFinder/runDCHTestTrackFinder.py"]
   test_testTrackFinder_runTestTrackFinder_py["test/testTrackFinder/runTestTrackFinder.py"]
-  test_testTrackFinder_run_dch_chain_sh["test/testTrackFinder/run_dch_chain.sh"]
-  test_testTrackFinder_scan_pt_resolution_py["test/testTrackFinder/scan_pt_resolution.py"]
-  test_testTrackFinder_scan_pt_time_by_event_py["test/testTrackFinder/scan_pt_time_by_event.py"]
-  test_testTrackFinder_scripts_analyze_pt_resolution_py["test/testTrackFinder/scripts/analyze_pt_resolution.py"]
+  test_testTrackFinder_scripts_analyze_job_sh["test/testTrackFinder/scripts/analyze_job.sh"]
+  test_testTrackFinder_scripts_analyze_pt_resolution_grid_py["test/testTrackFinder/scripts/analyze_pt_resolution_grid.py"]
   test_testTrackFinder_scripts_autoreadme_py["test/testTrackFinder/scripts/autoreadme.py"]
+  test_testTrackFinder_scripts_cglenn_cc["test/testTrackFinder/scripts/cglenn.cc"]
   test_testTrackFinder_scripts_compact_path_txt["test/testTrackFinder/scripts/compact_path.txt"]
+  test_testTrackFinder_scripts_compare_pt_resolution_grid_py["test/testTrackFinder/scripts/compare_pt_resolution_grid.py"]
   test_testTrackFinder_scripts_condor_ddsim_sh["test/testTrackFinder/scripts/condor_ddsim.sh"]
   test_testTrackFinder_scripts_condor_reco_sh["test/testTrackFinder/scripts/condor_reco.sh"]
+  test_testTrackFinder_scripts_debug_z_spur_event_py["test/testTrackFinder/scripts/debug_z_spur_event.py"]
+  test_testTrackFinder_scripts_dump_covmatrix_one_event_py["test/testTrackFinder/scripts/dump_covmatrix_one_event.py"]
   test_testTrackFinder_scripts_filelist_txt["test/testTrackFinder/scripts/filelist.txt"]
-  test_testTrackFinder_scripts_filetest_sh["test/testTrackFinder/scripts/filetest.sh"]
+  test_testTrackFinder_scripts_inspect_events_pt_pathology_py["test/testTrackFinder/scripts/inspect_events_pt_pathology.py"]
   test_testTrackFinder_scripts_make_filelist_sh["test/testTrackFinder/scripts/make_filelist.sh"]
   test_testTrackFinder_scripts_make_runtime_sh["test/testTrackFinder/scripts/make_runtime.sh"]
-  test_testTrackFinder_scripts_make_sigma_pt_plot_py["test/testTrackFinder/scripts/make_sigma_pt_plot.py"]
   test_testTrackFinder_scripts_mk_ddsim_grid_py["test/testTrackFinder/scripts/mk_ddsim_grid.py"]
-  test_testTrackFinder_scripts_out_dir_txt["test/testTrackFinder/scripts/out_dir.txt"]
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py["test/testTrackFinder/scripts/plot_mcparticles_pt.py"]
+  test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py["test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py"]
   test_testTrackFinder_scripts_prepare_and_submit_sh["test/testTrackFinder/scripts/prepare_and_submit.sh"]
+  test_testTrackFinder_scripts_print_metadata_py["test/testTrackFinder/scripts/print_metadata.py"]
   test_testTrackFinder_scripts_queue_items_txt["test/testTrackFinder/scripts/queue_items.txt"]
-  test_testTrackFinder_scripts_reco_inputs_txt["test/testTrackFinder/scripts/reco_inputs.txt"]
   test_testTrackFinder_scripts_reco_job_sh["test/testTrackFinder/scripts/reco_job.sh"]
-  test_testTrackFinder_scripts_reco_queue_txt["test/testTrackFinder/scripts/reco_queue.txt"]
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py["test/testTrackFinder/scripts/scan_pt_time_by_event.py"]
   test_testTrackFinder_scripts_stamp_ddsim_metadata_py["test/testTrackFinder/scripts/stamp_ddsim_metadata.py"]
   test_testTrackFinder_scripts_stamp_pipeline_metadata_py["test/testTrackFinder/scripts/stamp_pipeline_metadata.py"]
   test_testTrackFinder_scripts_submit_reco_sh["test/testTrackFinder/scripts/submit_reco.sh"]
   test_testTrackFinder_scripts_sweep_pt_sh["test/testTrackFinder/scripts/sweep_pt.sh"]
-  test_testTrackFinder_simple_local_chain_sh["test/testTrackFinder/simple_local_chain.sh"]
-  test_testTrackFinder_skim_edm4hep_py["test/testTrackFinder/skim_edm4hep.py"]
+  test_testTrackFinder_scripts_view_simhits_event_py["test/testTrackFinder/scripts/view_simhits_event.py"]
+  test_testTrackFinder_scripts_view_tracks_event_py["test/testTrackFinder/scripts/view_tracks_event.py"]
   test_testTrackFinder_test_trackFinder_sh["test/testTrackFinder/test_trackFinder.sh"]
-  test_testTrackFinder_test_trackFinder_1_sh["test/testTrackFinder/test_trackFinder_1.sh"]
-  test_testTrackFinder_testcondor_sh["test/testTrackFinder/testcondor.sh"]
-  test_testTrackFinder_view_simhits_event_py["test/testTrackFinder/view_simhits_event.py"]
-  test_testTrackFinder_view_tracks_event_py["test/testTrackFinder/view_tracks_event.py"]
   test_testTracksFromGenParticles_runTracksFromGenParticles_py["test/testTracksFromGenParticles/runTracksFromGenParticles.py"]
   test_testTracksFromGenParticles_test_TracksFromGenParticles_sh["test/testTracksFromGenParticles/test_TracksFromGenParticles.sh"]
-  __digitizer__set_______GGTF__configured_____and___fitter__set____lines_in_logs_["“[digitizer] set …”, “[GGTF] configured …”, and “[fitter] set …” lines in logs."]
   CMakeLists_txt --> Alg__Noddsim_track_test
   CMakeLists_txt --> Alg__test_TrackFinder
   CMakeLists_txt --> Alg__test_TracksFromGenParticles
@@ -511,11 +513,16 @@ flowchart LR
   components_GGTF_tracking_cpp --> Alg__DCH_v2
   components_GGTF_tracking_cpp --> Alg__DchName
   components_GGTF_tracking_cpp --> Alg__GGTF_trackingConfig
-  components_GGTF_tracking_cpp --> Alg__Max3DPerTrack
   components_GGTF_tracking_cpp --> Alg__OutputTracksGGTF
-  components_GenFit2DCHFitter_cpp --> Alg__GenFit2DCHFitterConfig
+  components_GenFit2DCHFitter_cpp --> Alg__DiagEveryNTracks
   components_GenFit2DCHFitter_cpp --> Alg__GenFitTracks
-  components_GenFit2DCHFitter_cpp --> Alg__RetryIfNoFitterInfo
+  components_GenFit2DCHFitter_cpp --> Alg__MinFittedPointsWithFI
+  components_GenFit2DCHFitter_cpp --> Alg__MinHitsPerTrack
+  components_GenFit2DCHFitter_cpp --> Alg__MinMeasurementsToFit
+  components_GenFit2DCHFitter_cpp --> Alg__OutputTracksGGTF
+  components_GenFit2DCHFitter_cpp --> Alg__PreFitOutlierVeto
+  components_GenFit2DCHFitter_cpp --> Alg__UseKFPreFit
+  components_GenFit2DCHFitter_cpp --> Alg__inputTracks
   components_GenFit2DCHFitter_cpp --> Alg__outputTracks
   components_PlotTrackHitResiduals_cpp --> Alg__DCHCollection
   components_PlotTrackHitResiduals_cpp --> Alg__InputSimTrackerHits
@@ -567,68 +574,68 @@ flowchart LR
   test_runGenFitTrackingOnSimplifiedDriftChamber_py --> Alg__VTXOB_simTrackerHits
   test_runGenFitTrackingOnSimplifiedDriftChamber_py --> Alg__genfit_tracks
   test_runGenFitTrackingOnSimplifiedDriftChamber_py --> Alg__saveDCHsimHitTool
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__CDCHTracks
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__DCHCollection
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__DCH_DigiCollection
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__DCH_v2
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__DCHdigi
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__GGTF_tracking
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__GenFit2DCHFitter
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__GenFitFieldSvc
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__GenFitMaterialSvc
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__GenFitTracks
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__RetryIfNoFitterInfo
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__genfit2
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__max3DPerTrack
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__minHitsOnTrack
-  test_testTrackFinder_SimplerunDCHTestTrackFinder_py --> Alg__outputTracks
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03_py --> Alg__Geant4TestTrackAction
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03_py --> Alg__Geant4TrackerWeightedAction
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03_py --> Alg__tracker
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py --> Alg__DCH_ID_Encoding
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py --> Alg__DCH_v2
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py --> Alg__Geant4SimpleTrackerAction
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py --> Alg__Geant4TrackerWeightedAction
-  test_testTrackFinder_SteeringFile_IDEA_o1_v03DCH_py --> Alg__tracker
-  test_testTrackFinder_compare_pt_trackstate_vs_hitcircle_py --> Alg__GenFitTracks
-  test_testTrackFinder_debug_z_spur_event_py --> Alg__DCHDigi2Collection
-  test_testTrackFinder_debug_z_spur_event_py --> Alg__DCHDigi2SimLinkCollection
-  test_testTrackFinder_debug_z_spur_event_py --> Alg__DCHDigiCollection
-  test_testTrackFinder_debug_z_spur_event_py --> Alg__DCHDigiSimLinkCollection
-  test_testTrackFinder_debug_z_spur_event_py --> Alg__DCH_DigiCollection
-  test_testTrackFinder_inspect_events_pt_pathology_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__CDCHTracks
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__DCHCollection
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__DCH_DigiCollection
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__DCH_v2
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__DCHdigi
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__GGTF_tracking
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__GenFit2DCHFitter
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__GenFitFieldSvc
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__GenFitMaterialSvc
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__RetryIfNoFitterInfo
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__genfit2
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__max3DPerTrack
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__minHitsOnTrack
+  test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py --> Alg__outputTracks
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03_py --> Alg__Geant4TestTrackAction
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03_py --> Alg__Geant4TrackerWeightedAction
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03_py --> Alg__tracker
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py --> Alg__DCH_ID_Encoding
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py --> Alg__DCH_v2
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py --> Alg__Geant4SimpleTrackerAction
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py --> Alg__Geant4TrackerWeightedAction
+  test_testTrackFinder_Archive_SteeringFile_IDEA_o1_v03DCH_py --> Alg__tracker
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> Alg__TrackStates_begin
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> Alg__TrackStates_end
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> Alg__trackStates_begin
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> Alg__trackStates_end
+  test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py --> test_testTrackFinder_Archive_compare_pt_trackstate_vs_hitcircle_py
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_omega
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_phi
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_qOverP
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_tanLambda
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_trackStates_theta
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_tracks_omega
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_tracks_qOverP
+  test_testTrackFinder_Archive_filetest_sh --> Alg__GenFitTracks_tracks_theta
+  test_testTrackFinder_Archive_filetest_sh --> Alg___GenFitTracks_trackStates
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__CDCHTracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__SimpleFitTracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__SimpleTracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__ThreePointTracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__Tracks
+  test_testTrackFinder_Archive_make_ptres_py --> Alg__genfit2
+  test_testTrackFinder_Archive_make_sigma_pt_plot_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_pt_resolution_plot_pyroot_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_ptres_from_edm4hep_py --> Alg__GenFitTracks
+  test_testTrackFinder_Archive_ptres_from_edm4hep_py --> Alg__n_tracks
+  test_testTrackFinder_Archive_reco_all_sh --> Alg__genfit2
+  test_testTrackFinder_Archive_reco_scan_sh --> Alg__genfit2
+  test_testTrackFinder_Archive_reco_scan_sh --> test_testTrackFinder_runDCHTestTrackFinder_py
+  test_testTrackFinder_Archive_simple_local_chain_sh --> Alg__DCHCollection
+  test_testTrackFinder_Archive_simple_local_chain_sh --> Alg__DCH_v2
+  test_testTrackFinder_Archive_simple_local_chain_sh --> test_testTrackFinder_Archive_SimplerunDCHTestTrackFinder_py
+  test_testTrackFinder_Archive_skim_edm4hep_py --> Alg__DCHCollection
   test_testTrackFinder_local_chain_sh --> Alg__DCHCollection
   test_testTrackFinder_local_chain_sh --> Alg__DCH_v2
   test_testTrackFinder_local_chain_sh --> Alg__GenFitTracks
-  test_testTrackFinder_local_chain_sh --> Alg__SimpleFitTracks
-  test_testTrackFinder_local_chain_sh --> Alg__ThreePointTracks
   test_testTrackFinder_local_chain_sh --> Alg__Tracks
   test_testTrackFinder_local_chain_sh --> test_testTrackFinder_runDCHTestTrackFinder_py
-  test_testTrackFinder_make_ptres_py --> Alg__CDCHTracks
-  test_testTrackFinder_make_ptres_py --> Alg__GenFitTracks
-  test_testTrackFinder_make_ptres_py --> Alg__SimpleFitTracks
-  test_testTrackFinder_make_ptres_py --> Alg__SimpleTracks
-  test_testTrackFinder_make_ptres_py --> Alg__ThreePointTracks
-  test_testTrackFinder_make_ptres_py --> Alg__Tracks
-  test_testTrackFinder_make_ptres_py --> Alg__genfit2
-  test_testTrackFinder_pt_resolution_plot_pyroot_py --> Alg__GenFitTracks
-  test_testTrackFinder_ptres_from_edm4hep_py --> Alg__GenFitTracks
-  test_testTrackFinder_ptres_from_edm4hep_py --> Alg__n_tracks
-  test_testTrackFinder_reco_all_sh --> Alg__genfit2
-  test_testTrackFinder_reco_scan_sh --> Alg__genfit2
-  test_testTrackFinder_reco_scan_sh --> test_testTrackFinder_runDCHTestTrackFinder_py
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __DCHLooperEventFilter__optional_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __DCHdigi_v02___DCHdigi_v01
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __EDM4hepCollectionSizePrinter__optional_QA_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __GGTF_tracking
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __GenFit2DCHFitter___SimpleFitDCHFitter___ThreePointFitter
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __local_chain_sh__recommended_driver_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __scripts_stamp_pipeline_metadata_py__ROOT_metadata_stamping_used_by_local_chain_sh_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __For__all_hits__studies_ensure___maxHitsPerEvent_0__default__and_watch_the_GGTF_caps__max3DHitsPerEvent_max3DPerTrack__
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __Pipeline_components_configured_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __Property_names_differ_across_nightlies__this_script_uses_hasattr___fallback_names_and_prints_configured_values_always_check_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __Truth_PDG_gating_requires_wire_digi___truth_link_collections_to_exist_and_be_populated__otherwise_gating_may_be_ineffective_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __Wrapper___provenance_
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__CDCHTracks
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHCollection
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHDigi2Collection
@@ -636,67 +643,61 @@ flowchart LR
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHDigi2SimLinkCollection
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHDigiSimLink
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHDigiSimLinkCollection
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHLooperEventFilter
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHName
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHSimHits
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCH_DigiCollection
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCH_name
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCH_simhits
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCH_v2
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHdigi
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHdigiConf
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHdigi_v01
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DCHdigi_v02
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__FitTanLambda
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DchName
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__DiagEveryNTracks
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GGTF_tracking
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GenFit2DCHFitter
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GenFit2DCHFitter_props
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GenFitFieldSvc
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GenFitMaterialSvc
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__GenFitTracks
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__Max3DPerTrack
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__OutTracks
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__RetryIfNoFitterInfo
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__SimpleFitDCHFitter
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__ThreePointFitter
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__InputTracks
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__MinFittedPointsWithFI
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__MinHitsPerTrack
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__MinMeasurementsToFit
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__OutputTracks
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__OutputTracksGGTF
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__PreFitOutlierVeto
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__TrackingConf
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__TracksOut
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__UseKFPreFit
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__dch_deadtime_ns
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__dch_drift_um_ns
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__dch_gas_type
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__dch_sig_mm_ns
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__fallbackIfNoGenFit2
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__genfit2
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__gf_prefitOutlierVeto
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__gf_useKFPreFit
+  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__inputTracks
   test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__outputTracks
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Alg__tp_fitTanLambda
-  test_testTrackFinder_runDCHTestTrackFinder_py --> Gotchas___verification_
-  test_testTrackFinder_runDCHTestTrackFinder_py --> __digitizer__set_______GGTF__configured_____and___fitter__set____lines_in_logs_
   test_testTrackFinder_runTestTrackFinder_py --> Alg__CDCHTracks
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCHCollection
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCH_DigiCollection
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCH_v2
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCHdigi
   test_testTrackFinder_runTestTrackFinder_py --> Alg__GGTF_tracking
-  test_testTrackFinder_scan_pt_resolution_py --> Alg__FittedTracks
-  test_testTrackFinder_scan_pt_resolution_py --> Alg__TrackStates_time
-  test_testTrackFinder_scan_pt_time_by_event_py --> Alg__GenFitTracks
-  test_testTrackFinder_scan_pt_time_by_event_py --> Alg__TrackStates_begin
-  test_testTrackFinder_scan_pt_time_by_event_py --> Alg__TrackStates_end
-  test_testTrackFinder_scan_pt_time_by_event_py --> Alg__trackStates_begin
-  test_testTrackFinder_scan_pt_time_by_event_py --> Alg__trackStates_end
-  test_testTrackFinder_scan_pt_time_by_event_py --> test_testTrackFinder_scan_pt_time_by_event_py
-  test_testTrackFinder_scripts_analyze_pt_resolution_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_analyze_job_sh --> test_testTrackFinder_scripts_analyze_pt_resolution_grid_py
+  test_testTrackFinder_scripts_analyze_pt_resolution_grid_py --> Alg__GenFitTracks
   test_testTrackFinder_scripts_autoreadme_py --> ___
   test_testTrackFinder_scripts_autoreadme_py --> Alg__track
+  test_testTrackFinder_scripts_compare_pt_resolution_grid_py --> compare_pt_resolution_outputs_py
   test_testTrackFinder_scripts_condor_reco_sh --> Alg__genfit2
   test_testTrackFinder_scripts_condor_reco_sh --> test_testTrackFinder_runDCHTestTrackFinder_py
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_omega
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_phi
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_qOverP
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_tanLambda
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_trackStates_theta
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_tracks_omega
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_tracks_qOverP
-  test_testTrackFinder_scripts_filetest_sh --> Alg__GenFitTracks_tracks_theta
-  test_testTrackFinder_scripts_filetest_sh --> Alg___GenFitTracks_trackStates
+  test_testTrackFinder_scripts_debug_z_spur_event_py --> Alg__DCHDigi2Collection
+  test_testTrackFinder_scripts_debug_z_spur_event_py --> Alg__DCHDigi2SimLinkCollection
+  test_testTrackFinder_scripts_debug_z_spur_event_py --> Alg__DCHDigiCollection
+  test_testTrackFinder_scripts_debug_z_spur_event_py --> Alg__DCHDigiSimLinkCollection
+  test_testTrackFinder_scripts_debug_z_spur_event_py --> Alg__DCH_DigiCollection
+  test_testTrackFinder_scripts_dump_covmatrix_one_event_py --> test_testTrackFinder_scripts_dump_covmatrix_one_event_py
+  test_testTrackFinder_scripts_inspect_events_pt_pathology_py --> Alg__GenFitTracks
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__GenFit2DCHFitter
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__HelixFitter
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__SimpleFitDCHFitter
@@ -705,39 +706,62 @@ flowchart LR
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__TrackingConf
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__libDCHdigi
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__libTracking
-  test_testTrackFinder_scripts_make_sigma_pt_plot_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__GenFit
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__TrackStates
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__trackState
+  test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__trackStates
+  test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py --> Alg__TrackStates
+  test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py --> Alg__trackStates
+  test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py --> test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py
   test_testTrackFinder_scripts_prepare_and_submit_sh --> test_testTrackFinder_scripts_mk_ddsim_grid_py
+  test_testTrackFinder_scripts_reco_job_sh --> Alg__DCHCollection
+  test_testTrackFinder_scripts_reco_job_sh --> Alg__DCH_v2
   test_testTrackFinder_scripts_reco_job_sh --> Alg__GenFitTracks
-  test_testTrackFinder_scripts_reco_job_sh --> Alg__SimpleFitTracks
-  test_testTrackFinder_scripts_reco_job_sh --> Alg__ThreePointTracks
   test_testTrackFinder_scripts_reco_job_sh --> Alg__Tracks
-  test_testTrackFinder_scripts_reco_job_sh --> Alg__genfit2
-  test_testTrackFinder_scripts_reco_job_sh --> Alg__libDCHdigi
-  test_testTrackFinder_scripts_reco_job_sh --> Alg__libTracking
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__TrackStates_begin
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__TrackStates_end
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__n_tracks_evt
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__nstates_per_track_max
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__nstates_per_track_med
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__nstates_per_track_min
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__primary_track_index
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__primary_track_nstates
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__trackStates_begin
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__trackStates_end
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__trackerHits_begin
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> Alg__trackerHits_end
+  test_testTrackFinder_scripts_scan_pt_time_by_event_py --> test_testTrackFinder_scripts_scan_pt_time_by_event_py
+  test_testTrackFinder_scripts_submit_reco_sh --> test_testTrackFinder_scripts_make_filelist_sh
   test_testTrackFinder_scripts_sweep_pt_sh --> test_testTrackFinder_local_chain_sh
-  test_testTrackFinder_simple_local_chain_sh --> Alg__DCHCollection
-  test_testTrackFinder_simple_local_chain_sh --> Alg__DCH_v2
-  test_testTrackFinder_simple_local_chain_sh --> test_testTrackFinder_SimplerunDCHTestTrackFinder_py
-  test_testTrackFinder_skim_edm4hep_py --> Alg__DCHCollection
-  test_testTrackFinder_view_simhits_event_py --> Alg__DCHCollection
-  test_testTrackFinder_view_simhits_event_py --> Alg__GenFitTracks
-  test_testTrackFinder_view_simhits_event_py --> Alg__dch_rin_m
-  test_testTrackFinder_view_simhits_event_py --> Alg__dch_ring_z_mm
-  test_testTrackFinder_view_simhits_event_py --> Alg__dch_rout_m
-  test_testTrackFinder_view_simhits_event_py --> Alg__track_collection
-  test_testTrackFinder_view_simhits_event_py --> Alg__track_style
-  test_testTrackFinder_view_simhits_event_py --> Alg__view_tracks_metadata
-  test_testTrackFinder_view_tracks_event_py --> Alg__DCHDigi2Collection
-  test_testTrackFinder_view_tracks_event_py --> Alg__GenFitTracks
-  test_testTrackFinder_view_tracks_event_py --> Alg__TrackStates_begin
-  test_testTrackFinder_view_tracks_event_py --> Alg__TrackStates_end
-  test_testTrackFinder_view_tracks_event_py --> Alg__n_states_in_track
-  test_testTrackFinder_view_tracks_event_py --> Alg__trackStates_begin
-  test_testTrackFinder_view_tracks_event_py --> Alg__trackStates_end
-  test_testTrackFinder_view_tracks_event_py --> Alg__track_collection
-  test_testTrackFinder_view_tracks_event_py --> Alg__track_index
-  test_testTrackFinder_view_tracks_event_py --> Alg__track_style
-  test_testTrackFinder_view_tracks_event_py --> Alg__view_tracks_metadata
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__DCHCollection
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__TrackStates_begin
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__TrackStates_end
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__n_states_in_track
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__no_trackstate_prefix
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__no_trackstates
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__trackStates_begin
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__trackStates_end
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__track_collection
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__track_index
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__track_style
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__view_tracks_metadata
+  test_testTrackFinder_scripts_view_simhits_event_py --> Alg__view_tracks_metadata_global
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__DCHDigi2Collection
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__TrackStates_begin
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__TrackStates_end
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__n_states_in_track
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__trackStates_begin
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__trackStates_end
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__track_collection
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__track_index
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__track_style
+  test_testTrackFinder_scripts_view_tracks_event_py --> Alg__view_tracks_metadata
+  test_testTrackFinder_scripts_view_tracks_event_py --> test_testTrackFinder_scripts_view_tracks_event_py
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__DCHCollection
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__PlotTrackHitDistances
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__TracksFromGenParticles

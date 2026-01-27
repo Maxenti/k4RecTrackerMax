@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+
+DOC
 analyze_pt_resolution_grid.py
 
 Batch analysis of reco gun samples organized as:
@@ -24,6 +26,8 @@ Writes an output ROOT file with:
 IMPORTANT PyROOT stability rules used here:
   - Always directory.cd() before calling Write()
   - ROOT.SetOwnership(obj, False) to prevent Python GC deleting objects held by TMultiGraph/TLegend/TCanvas
+
+  DOC_END
 """
 
 import argparse
@@ -222,12 +226,9 @@ def style_graph(g, color, mstyle):
     g.SetMarkerColor(color)
     g.SetMarkerStyle(mstyle)
     g.SetMarkerSize(0.9)
-
-    # Error bars use line attributes → DO NOT set width to 0
     g.SetLineColor(color)
-    g.SetLineWidth(1)
+    g.SetLineWidth(0)
     g.SetLineStyle(1)
-
 
 def make_multigraph(name, title):
     mg = ROOT.TMultiGraph()
@@ -664,7 +665,7 @@ def main():
         mg = make_multigraph("mg_methods", f"{eta_dirname}: resolution estimators; pT [GeV]; resolution")
         leg = make_legend("legend_methods")
         for (mkey, _, _) in METHODS:
-            mg.Add(graphs[mkey], "PE")
+            mg.Add(graphs[mkey], "P")
             leg.AddEntry(graphs[mkey], mkey, "p")
 
         write_obj(eta_out, mg)
@@ -683,7 +684,7 @@ def main():
             mg.SetMinimum(1e-6)
             mg.SetMaximum(1.0)
 
-        mg.Draw("APE")
+        mg.Draw("A")
         mg.GetXaxis().SetTitle("p_{T}^{true} [GeV]")
         mg.GetYaxis().SetTitle("resolution")
         leg.Draw()
@@ -735,10 +736,10 @@ def main():
 
         for k in keys_overlay:
             if k in diag_graphs:
-                mgd.Add(diag_graphs[k], "PE")
+                mgd.Add(diag_graphs[k], "P")
                 legd.AddEntry(diag_graphs[k], k, "p")
 
-        mgd.Draw("APE")
+        mgd.Draw("A")
         mgd.GetXaxis().SetTitle("p_{T}^{true} [GeV]")
         mgd.GetYaxis().SetTitle("fraction")
         legd.Draw()
@@ -764,7 +765,7 @@ def main():
             g = g0.Clone(f"{eta_dirname}_gr_{mkey}")
             ROOT.SetOwnership(g, False)
             style_graph(g, colors[ie % len(colors)], mstyles[ie % len(mstyles)])
-            mg.Add(g, "PE")
+            mg.Add(g, "P")
             leg.AddEntry(g, eta_dirname, "p")
             clones.append(g)
 
@@ -786,7 +787,7 @@ def main():
             mg.SetMinimum(1e-6)
             mg.SetMaximum(1.0)
 
-        mg.Draw("APE")
+        mg.Draw("A")
         mg.GetXaxis().SetTitle("p_{T}^{true} [GeV]")
         mg.GetYaxis().SetTitle("resolution")
         leg.Draw()
