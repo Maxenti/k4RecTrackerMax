@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+
+DOC
 compare_pt_resolution_outputs.py
 
 Compare two ROOT outputs from analyze_pt_resolution_grid.py (e.g. CF vs W).
@@ -29,6 +31,8 @@ Optional knobs:
   --diagRelTolPassFrac 0.10   (relative tolerance on pass fraction ratio-1)
   --diagAbsTolFrac     0.05   (abs tol for frac_* diagnostics)
   --diagRelTolMed      0.25   (rel tol for med_* diagnostics)
+
+DOC_END
 """
 
 import argparse

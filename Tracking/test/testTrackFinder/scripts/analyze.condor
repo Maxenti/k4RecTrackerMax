@@ -5,9 +5,9 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 # ---- Resources (tune if needed) ----
-request_cpus   = 1
-request_memory = 6 GB
-request_disk   = 3 GB
+request_cpus   = 2
+request_memory = 8 GB
+request_disk   = 6 GB
 
 +JobFlavour = "workday"
 
@@ -25,12 +25,12 @@ log    = logs/analyze_$(ClusterId).log
 arguments = $(INPUTDIR) $(EOSOUT) $(TRACKCOLL) $(HITCOLL) $(QCUT) $(MINPHI) $(MINCHORD) $(MAXCOND) $(CENTFRAC)
 
 # ---- Your campaign values ----
-INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_22_2026/CFmat   
+INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_22_2026/Wmat   
 # <- usually you want the BASE dir containing eta_* subdirs
 # better example:
 # INPUTDIR = /eos/user/c/cglenn/reco_samples2/1_18_2026/
 
-EOSOUT    = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/analyze_pt_gridscanCFmat.root
+EOSOUT    = /eos/user/c/cglenn/analyze_mat_gridscan/analyze_pt_gridscanWmat.root
 
 TRACKCOLL = GenFitTracks
 HITCOLL   = OutputWireHitsGGTF

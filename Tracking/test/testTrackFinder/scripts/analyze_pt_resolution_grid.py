@@ -27,7 +27,7 @@ IMPORTANT PyROOT stability rules used here:
   - Always directory.cd() before calling Write()
   - ROOT.SetOwnership(obj, False) to prevent Python GC deleting objects held by TMultiGraph/TLegend/TCanvas
 
-  DOC_END
+DOC_END
 """
 
 import argparse

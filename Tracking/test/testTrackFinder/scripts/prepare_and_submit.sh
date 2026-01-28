@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
+#DOC
 # prepare_and_submit.sh
 # - Generates a JSONL grid of (pt, eta) points
 # - Splits into per-job JSON files under params/
@@ -13,6 +14,7 @@ set -euo pipefail
 # - Uses a stable tag for this production (date or custom) without changing behavior
 # - Keeps TRANSFER_COMPACT logic, but avoids relying on "scripts/" being in transfer list
 # - No behavior changes to mk_ddsim_grid.py usage; just safer plumbing + clearer logging
+#DOC_END
 # -----------------------------------------------------------------------------
 
 # ---- EDIT THESE ----

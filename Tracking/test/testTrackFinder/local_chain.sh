@@ -1,4 +1,5 @@
 #!/bin/bash
+#DOC
 # local_chain.sh — run locally (digi → ggtf → fit) + stamp provenance metadata
 # Updated for: runDCHTestTrackFinder.py (Jan 18 2026) + GenFit2DCHFitter (Jan 11 2026 nightly)
 #
@@ -11,7 +12,7 @@
 #
 # Usage:
 #   ./local_chain.sh [INPUT] [OUTPUT] [MODEL_SPEC] [COMPACT_XML] [DCH_SIMHITS] [DCH_NAME] [TGEO_FILE]
-#
+#DOC_END
 set -euo pipefail
 
 ########## defaults  ##########

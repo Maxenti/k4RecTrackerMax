@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+
+DOC
 pt_diagnostics_to_root.py
 
 - Reads MCParticles momentum branches (flattened EDM4hep style)
@@ -17,6 +19,8 @@ Key fixes vs earlier version:
 New:
   - --pdg (default 13) to filter MCParticles by PDG
   - --pdg-abs (default True) to match abs(PDG)
+
+DOC_END
 """
 
 import argparse

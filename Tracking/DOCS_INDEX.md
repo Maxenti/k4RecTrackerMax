@@ -378,29 +378,29 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/scripts/autoreadme.py` | ... | yes | ... |
 | `test/testTrackFinder/scripts/cglenn.cc` |  | no |  |
 | `test/testTrackFinder/scripts/compact_path.txt` |  | no |  |
-| `test/testTrackFinder/scripts/compare_pt_resolution_grid.py` | compare_pt_resolution_outputs.py | no |  |
+| `test/testTrackFinder/scripts/compare_pt_resolution_grid.py` | DOC | no |  |
 | `test/testTrackFinder/scripts/condor_ddsim.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/condor_reco.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/debug_z_spur_event.py` | debug_z_spur_event.py | no |  |
-| `test/testTrackFinder/scripts/dump_covmatrix_one_event.py` | dump_covmatrix_one_event.py | no |  |
+| `test/testTrackFinder/scripts/debug_z_spur_event.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/dump_covmatrix_one_event.py` | DOC | no |  |
 | `test/testTrackFinder/scripts/filelist.txt` |  | no |  |
 | `test/testTrackFinder/scripts/inspect_events_pt_pathology.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/make_filelist.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/make_runtime.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/mk_ddsim_grid.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/scripts/plot_mcparticles_pt.py` | pt_diagnostics_to_root.py | no |  |
-| `test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py` | plot_pt_from_trackstate_time.py | no |  |
+| `test/testTrackFinder/scripts/plot_mcparticles_pt.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py` | DOC | no |  |
 | `test/testTrackFinder/scripts/prepare_and_submit.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/print_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/queue_items.txt` |  | no |  |
 | `test/testTrackFinder/scripts/reco_job.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/scan_pt_time_by_event.py` | scan_pt_time_by_event.py | no |  |
+| `test/testTrackFinder/scripts/scan_pt_time_by_event.py` | DOC | no |  |
 | `test/testTrackFinder/scripts/stamp_ddsim_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/stamp_pipeline_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/submit_reco.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/sweep_pt.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/view_simhits_event.py` | view_tracks_event_simhits.py | no |  |
-| `test/testTrackFinder/scripts/view_tracks_event.py` | view_tracks_event.py | no |  |
+| `test/testTrackFinder/scripts/view_simhits_event.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/view_tracks_event.py` | DOC | no |  |
 | `test/testTrackFinder/test_trackFinder.sh` | !/bin/bash | no |  |
 | `test/testTracksFromGenParticles/runTracksFromGenParticles.py` | Loading the output of the SIM step | no |  |
 | `test/testTracksFromGenParticles/test_TracksFromGenParticles.sh` | !/bin/bash | no |  |

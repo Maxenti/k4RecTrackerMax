@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+DOC
 dump_covmatrix_one_event.py
 
 Dump EDM4hep TrackState covMatrix for ONE event, correctly handling
@@ -17,6 +18,8 @@ Usage:
   python3 scripts/dump_covmatrix_one_event.py file.root --event 0
   python3 scripts/dump_covmatrix_one_event.py file.root --event 0 --prefix _GenFitTracks_trackStates.
   python3 scripts/dump_covmatrix_one_event.py file.root --event 0 --raw
+
+DOC_END
 """
 
 import argparse

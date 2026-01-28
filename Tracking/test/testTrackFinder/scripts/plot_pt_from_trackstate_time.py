@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+
+DOC
 plot_pt_from_trackstate_time.py
 
 Read pT from EDM4hep TrackState.time (your convention: time = pT [GeV])
@@ -21,6 +23,9 @@ python3 plot_pt_from_trackstate_time.py -i reco.root --bins 0:200:200 --logy -o 
 
 # Keep only one pT per event (e.g. median of all trackstates in that event):
 python3 plot_pt_from_trackstate_time.py -i reco.root --per-event median --bins 0:200:200 -o pt_event_median.png
+
+
+DOC_END
 """
 
 import argparse

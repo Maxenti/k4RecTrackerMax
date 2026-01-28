@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+DOC
 view_tracks_event.py
 
 Visualize DCH wire-hits (GGTF SenseWireHits), optional raw DCH digis, and GenFit2 tracks
@@ -36,6 +37,7 @@ Examples:
   python3 view_tracks_event.py --input reco.root --event 12
   python3 view_tracks_event.py --input reco.root --hitsCollection GGTF_SenseWireHits
   python3 view_tracks_event.py --input reco.root --hitsCollection OutputTracksGGTF --hitSource trackhits
+DOC_END
 """
 
 import math

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+DOC
 autoreadme.py (v2)
 
 Generates:
@@ -25,6 +26,7 @@ Also adds heuristic "Inferred" links:
   - bash/python calls
   - k4run / condor usage
   - Gaudi configuration patterns (TopAlg, Configurables)
+  DOC_END
 """
 
 from __future__ import annotations

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+DOC
 scan_pt_time_by_event.py
 
 UPDATED:
@@ -19,6 +20,8 @@ FIX (this update):
 
 Usage:
   python3 scan_pt_time_by_event.py --input reco.root --expectedPt 53.183 --stdout
+
+DOC_END
 """
 
 import argparse

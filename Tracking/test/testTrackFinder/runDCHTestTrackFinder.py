@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#DOC
 # runDCHTestTrackFinder.py
 #
 # Robust configuration for:
@@ -16,7 +17,8 @@
 #
 # IMPORTANT robustness rule:
 #   Do NOT pass version-dependent properties as constructor kwargs.
-#   Instantiate configurables with minimal args, then set properties via _set_any.
+#   Instantiate configurables with minimal args, then set properties via _set_any.'
+#DOC_END
 
 import os
 import subprocess

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
+
+DOC
 debug_z_spur_event.py
 
 Small EDM4hep inspection script to debug "z-spur" events.
+
+DOC_END
 """
 
 import argparse

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+DOC
 view_tracks_event_simhits.py
 
 Multi-event visualizer for:
@@ -21,6 +22,8 @@ NEW (requested): Per-event digihit -> nearest simhit diagnostics saved into outp
         - TTree "hit_match"
         - TH1F  "h_minDist3D", "h_minDistXY", "h_dZ"
         - TNamed "hit_match_json" with top offenders + summary stats
+
+DOC_END
 """
 
 import math
