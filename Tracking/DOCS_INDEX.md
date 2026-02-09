@@ -34,7 +34,7 @@ python3 scripts/autoreadme.py --root . --write
 | `components/backup/ThreePointFitter.txt` | ====================================================================== | no |  |
 | `components/DCHLooperEventFilter.cpp` | include "GaudiKernel/Algorithm.h" | no |  |
 | `components/fit_ggtf_tracks.cpp` | fit_ggtf_tracks.cpp — Podio Frames (ROOTReader) backend | no |  |
-| `components/GenFit2DCHFitter.cpp` | ====================================================================== | no |  |
+| `components/GenFit2DCHFitter.cpp` | Gaudi/k4FWCore Transformer that fits IDEA drift-chamber GGTF track candidates using GenFit2 wire measurements (WireMeasurementNew), producing physics-clean EDM4hep TrackStates at the IP with robust publish-state selection, observability gating, optional TGeo material effects, and per-event robust pT summary metadata. | yes | DAF, FCCee, Gaudi, GenFit2, IDEA, Kalman, TGeo, WireMeasurementNew, drift-chamber, k4FWCore, key4hep, material-effects, metadata, pT-resolution, robust-stats, tracking |
 | `components/GGTF_tracking.cpp` | ====================================================================== | no |  |
 | `components/PlotTrackHitResiduals.cpp` | Gaudi | no |  |
 | `components/SimpleFitDCHFitter.cpp` | ====================================================================== | no |  |
@@ -42,6 +42,7 @@ python3 scripts/autoreadme.py --root . --write
 | `components/TrackdNdxDelphesBased.cpp` | include "TrackdNdxDelphesBased.h" | no |  |
 | `components/TrackdNdxDelphesBased.h` | pragma once | no |  |
 | `components/TracksFromGenParticles.cpp` | include "Gaudi/Property.h" | no |  |
+| `config_Tracking.yaml` |  | no |  |
 | `include/GenFitter.h` | pragma once | no |  |
 | `include/utils.hpp` | ifndef UTILS_HPP | no |  |
 | `src/GenFitter.cpp` | include "GenFitter.h" | no |  |
@@ -70,7 +71,7 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/cglenn.cc` |  | no |  |
 | `test/testTrackFinder/dd4hep2root.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/filelist.txt` |  | no |  |
-| `test/testTrackFinder/local_chain.sh` | !/bin/bash | no |  |
+| `test/testTrackFinder/local_chain.sh` |  | yes |  |
 | `test/testTrackFinder/params/job_0.json` |  | no |  |
 | `test/testTrackFinder/params/job_1.json` |  | no |  |
 | `test/testTrackFinder/params/job_10.json` |  | no |  |
@@ -96,204 +97,24 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/params/job_118.json` |  | no |  |
 | `test/testTrackFinder/params/job_119.json` |  | no |  |
 | `test/testTrackFinder/params/job_12.json` |  | no |  |
-| `test/testTrackFinder/params/job_120.json` |  | no |  |
-| `test/testTrackFinder/params/job_121.json` |  | no |  |
-| `test/testTrackFinder/params/job_122.json` |  | no |  |
-| `test/testTrackFinder/params/job_123.json` |  | no |  |
-| `test/testTrackFinder/params/job_124.json` |  | no |  |
-| `test/testTrackFinder/params/job_125.json` |  | no |  |
-| `test/testTrackFinder/params/job_126.json` |  | no |  |
-| `test/testTrackFinder/params/job_127.json` |  | no |  |
-| `test/testTrackFinder/params/job_128.json` |  | no |  |
-| `test/testTrackFinder/params/job_129.json` |  | no |  |
 | `test/testTrackFinder/params/job_13.json` |  | no |  |
-| `test/testTrackFinder/params/job_130.json` |  | no |  |
-| `test/testTrackFinder/params/job_131.json` |  | no |  |
-| `test/testTrackFinder/params/job_132.json` |  | no |  |
-| `test/testTrackFinder/params/job_133.json` |  | no |  |
-| `test/testTrackFinder/params/job_134.json` |  | no |  |
-| `test/testTrackFinder/params/job_135.json` |  | no |  |
-| `test/testTrackFinder/params/job_136.json` |  | no |  |
-| `test/testTrackFinder/params/job_137.json` |  | no |  |
-| `test/testTrackFinder/params/job_138.json` |  | no |  |
-| `test/testTrackFinder/params/job_139.json` |  | no |  |
 | `test/testTrackFinder/params/job_14.json` |  | no |  |
-| `test/testTrackFinder/params/job_140.json` |  | no |  |
-| `test/testTrackFinder/params/job_141.json` |  | no |  |
-| `test/testTrackFinder/params/job_142.json` |  | no |  |
-| `test/testTrackFinder/params/job_143.json` |  | no |  |
-| `test/testTrackFinder/params/job_144.json` |  | no |  |
-| `test/testTrackFinder/params/job_145.json` |  | no |  |
-| `test/testTrackFinder/params/job_146.json` |  | no |  |
-| `test/testTrackFinder/params/job_147.json` |  | no |  |
-| `test/testTrackFinder/params/job_148.json` |  | no |  |
-| `test/testTrackFinder/params/job_149.json` |  | no |  |
 | `test/testTrackFinder/params/job_15.json` |  | no |  |
-| `test/testTrackFinder/params/job_150.json` |  | no |  |
-| `test/testTrackFinder/params/job_151.json` |  | no |  |
-| `test/testTrackFinder/params/job_152.json` |  | no |  |
-| `test/testTrackFinder/params/job_153.json` |  | no |  |
-| `test/testTrackFinder/params/job_154.json` |  | no |  |
-| `test/testTrackFinder/params/job_155.json` |  | no |  |
-| `test/testTrackFinder/params/job_156.json` |  | no |  |
-| `test/testTrackFinder/params/job_157.json` |  | no |  |
-| `test/testTrackFinder/params/job_158.json` |  | no |  |
-| `test/testTrackFinder/params/job_159.json` |  | no |  |
 | `test/testTrackFinder/params/job_16.json` |  | no |  |
-| `test/testTrackFinder/params/job_160.json` |  | no |  |
-| `test/testTrackFinder/params/job_161.json` |  | no |  |
-| `test/testTrackFinder/params/job_162.json` |  | no |  |
-| `test/testTrackFinder/params/job_163.json` |  | no |  |
-| `test/testTrackFinder/params/job_164.json` |  | no |  |
-| `test/testTrackFinder/params/job_165.json` |  | no |  |
-| `test/testTrackFinder/params/job_166.json` |  | no |  |
-| `test/testTrackFinder/params/job_167.json` |  | no |  |
-| `test/testTrackFinder/params/job_168.json` |  | no |  |
-| `test/testTrackFinder/params/job_169.json` |  | no |  |
 | `test/testTrackFinder/params/job_17.json` |  | no |  |
-| `test/testTrackFinder/params/job_170.json` |  | no |  |
-| `test/testTrackFinder/params/job_171.json` |  | no |  |
-| `test/testTrackFinder/params/job_172.json` |  | no |  |
-| `test/testTrackFinder/params/job_173.json` |  | no |  |
-| `test/testTrackFinder/params/job_174.json` |  | no |  |
-| `test/testTrackFinder/params/job_175.json` |  | no |  |
-| `test/testTrackFinder/params/job_176.json` |  | no |  |
-| `test/testTrackFinder/params/job_177.json` |  | no |  |
-| `test/testTrackFinder/params/job_178.json` |  | no |  |
-| `test/testTrackFinder/params/job_179.json` |  | no |  |
 | `test/testTrackFinder/params/job_18.json` |  | no |  |
-| `test/testTrackFinder/params/job_180.json` |  | no |  |
-| `test/testTrackFinder/params/job_181.json` |  | no |  |
-| `test/testTrackFinder/params/job_182.json` |  | no |  |
-| `test/testTrackFinder/params/job_183.json` |  | no |  |
-| `test/testTrackFinder/params/job_184.json` |  | no |  |
-| `test/testTrackFinder/params/job_185.json` |  | no |  |
-| `test/testTrackFinder/params/job_186.json` |  | no |  |
-| `test/testTrackFinder/params/job_187.json` |  | no |  |
-| `test/testTrackFinder/params/job_188.json` |  | no |  |
-| `test/testTrackFinder/params/job_189.json` |  | no |  |
 | `test/testTrackFinder/params/job_19.json` |  | no |  |
-| `test/testTrackFinder/params/job_190.json` |  | no |  |
-| `test/testTrackFinder/params/job_191.json` |  | no |  |
-| `test/testTrackFinder/params/job_192.json` |  | no |  |
-| `test/testTrackFinder/params/job_193.json` |  | no |  |
-| `test/testTrackFinder/params/job_194.json` |  | no |  |
-| `test/testTrackFinder/params/job_195.json` |  | no |  |
-| `test/testTrackFinder/params/job_196.json` |  | no |  |
-| `test/testTrackFinder/params/job_197.json` |  | no |  |
-| `test/testTrackFinder/params/job_198.json` |  | no |  |
-| `test/testTrackFinder/params/job_199.json` |  | no |  |
 | `test/testTrackFinder/params/job_2.json` |  | no |  |
 | `test/testTrackFinder/params/job_20.json` |  | no |  |
-| `test/testTrackFinder/params/job_200.json` |  | no |  |
-| `test/testTrackFinder/params/job_201.json` |  | no |  |
-| `test/testTrackFinder/params/job_202.json` |  | no |  |
-| `test/testTrackFinder/params/job_203.json` |  | no |  |
-| `test/testTrackFinder/params/job_204.json` |  | no |  |
-| `test/testTrackFinder/params/job_205.json` |  | no |  |
-| `test/testTrackFinder/params/job_206.json` |  | no |  |
-| `test/testTrackFinder/params/job_207.json` |  | no |  |
-| `test/testTrackFinder/params/job_208.json` |  | no |  |
-| `test/testTrackFinder/params/job_209.json` |  | no |  |
 | `test/testTrackFinder/params/job_21.json` |  | no |  |
-| `test/testTrackFinder/params/job_210.json` |  | no |  |
-| `test/testTrackFinder/params/job_211.json` |  | no |  |
-| `test/testTrackFinder/params/job_212.json` |  | no |  |
-| `test/testTrackFinder/params/job_213.json` |  | no |  |
-| `test/testTrackFinder/params/job_214.json` |  | no |  |
-| `test/testTrackFinder/params/job_215.json` |  | no |  |
-| `test/testTrackFinder/params/job_216.json` |  | no |  |
-| `test/testTrackFinder/params/job_217.json` |  | no |  |
-| `test/testTrackFinder/params/job_218.json` |  | no |  |
-| `test/testTrackFinder/params/job_219.json` |  | no |  |
 | `test/testTrackFinder/params/job_22.json` |  | no |  |
-| `test/testTrackFinder/params/job_220.json` |  | no |  |
-| `test/testTrackFinder/params/job_221.json` |  | no |  |
-| `test/testTrackFinder/params/job_222.json` |  | no |  |
-| `test/testTrackFinder/params/job_223.json` |  | no |  |
-| `test/testTrackFinder/params/job_224.json` |  | no |  |
-| `test/testTrackFinder/params/job_225.json` |  | no |  |
-| `test/testTrackFinder/params/job_226.json` |  | no |  |
-| `test/testTrackFinder/params/job_227.json` |  | no |  |
-| `test/testTrackFinder/params/job_228.json` |  | no |  |
-| `test/testTrackFinder/params/job_229.json` |  | no |  |
 | `test/testTrackFinder/params/job_23.json` |  | no |  |
-| `test/testTrackFinder/params/job_230.json` |  | no |  |
-| `test/testTrackFinder/params/job_231.json` |  | no |  |
-| `test/testTrackFinder/params/job_232.json` |  | no |  |
-| `test/testTrackFinder/params/job_233.json` |  | no |  |
-| `test/testTrackFinder/params/job_234.json` |  | no |  |
-| `test/testTrackFinder/params/job_235.json` |  | no |  |
-| `test/testTrackFinder/params/job_236.json` |  | no |  |
-| `test/testTrackFinder/params/job_237.json` |  | no |  |
-| `test/testTrackFinder/params/job_238.json` |  | no |  |
-| `test/testTrackFinder/params/job_239.json` |  | no |  |
 | `test/testTrackFinder/params/job_24.json` |  | no |  |
-| `test/testTrackFinder/params/job_240.json` |  | no |  |
-| `test/testTrackFinder/params/job_241.json` |  | no |  |
-| `test/testTrackFinder/params/job_242.json` |  | no |  |
-| `test/testTrackFinder/params/job_243.json` |  | no |  |
-| `test/testTrackFinder/params/job_244.json` |  | no |  |
-| `test/testTrackFinder/params/job_245.json` |  | no |  |
-| `test/testTrackFinder/params/job_246.json` |  | no |  |
-| `test/testTrackFinder/params/job_247.json` |  | no |  |
-| `test/testTrackFinder/params/job_248.json` |  | no |  |
-| `test/testTrackFinder/params/job_249.json` |  | no |  |
 | `test/testTrackFinder/params/job_25.json` |  | no |  |
-| `test/testTrackFinder/params/job_250.json` |  | no |  |
-| `test/testTrackFinder/params/job_251.json` |  | no |  |
-| `test/testTrackFinder/params/job_252.json` |  | no |  |
-| `test/testTrackFinder/params/job_253.json` |  | no |  |
-| `test/testTrackFinder/params/job_254.json` |  | no |  |
-| `test/testTrackFinder/params/job_255.json` |  | no |  |
-| `test/testTrackFinder/params/job_256.json` |  | no |  |
-| `test/testTrackFinder/params/job_257.json` |  | no |  |
-| `test/testTrackFinder/params/job_258.json` |  | no |  |
-| `test/testTrackFinder/params/job_259.json` |  | no |  |
 | `test/testTrackFinder/params/job_26.json` |  | no |  |
-| `test/testTrackFinder/params/job_260.json` |  | no |  |
-| `test/testTrackFinder/params/job_261.json` |  | no |  |
-| `test/testTrackFinder/params/job_262.json` |  | no |  |
-| `test/testTrackFinder/params/job_263.json` |  | no |  |
-| `test/testTrackFinder/params/job_264.json` |  | no |  |
-| `test/testTrackFinder/params/job_265.json` |  | no |  |
-| `test/testTrackFinder/params/job_266.json` |  | no |  |
-| `test/testTrackFinder/params/job_267.json` |  | no |  |
-| `test/testTrackFinder/params/job_268.json` |  | no |  |
-| `test/testTrackFinder/params/job_269.json` |  | no |  |
 | `test/testTrackFinder/params/job_27.json` |  | no |  |
-| `test/testTrackFinder/params/job_270.json` |  | no |  |
-| `test/testTrackFinder/params/job_271.json` |  | no |  |
-| `test/testTrackFinder/params/job_272.json` |  | no |  |
-| `test/testTrackFinder/params/job_273.json` |  | no |  |
-| `test/testTrackFinder/params/job_274.json` |  | no |  |
-| `test/testTrackFinder/params/job_275.json` |  | no |  |
-| `test/testTrackFinder/params/job_276.json` |  | no |  |
-| `test/testTrackFinder/params/job_277.json` |  | no |  |
-| `test/testTrackFinder/params/job_278.json` |  | no |  |
-| `test/testTrackFinder/params/job_279.json` |  | no |  |
 | `test/testTrackFinder/params/job_28.json` |  | no |  |
-| `test/testTrackFinder/params/job_280.json` |  | no |  |
-| `test/testTrackFinder/params/job_281.json` |  | no |  |
-| `test/testTrackFinder/params/job_282.json` |  | no |  |
-| `test/testTrackFinder/params/job_283.json` |  | no |  |
-| `test/testTrackFinder/params/job_284.json` |  | no |  |
-| `test/testTrackFinder/params/job_285.json` |  | no |  |
-| `test/testTrackFinder/params/job_286.json` |  | no |  |
-| `test/testTrackFinder/params/job_287.json` |  | no |  |
-| `test/testTrackFinder/params/job_288.json` |  | no |  |
-| `test/testTrackFinder/params/job_289.json` |  | no |  |
 | `test/testTrackFinder/params/job_29.json` |  | no |  |
-| `test/testTrackFinder/params/job_290.json` |  | no |  |
-| `test/testTrackFinder/params/job_291.json` |  | no |  |
-| `test/testTrackFinder/params/job_292.json` |  | no |  |
-| `test/testTrackFinder/params/job_293.json` |  | no |  |
-| `test/testTrackFinder/params/job_294.json` |  | no |  |
-| `test/testTrackFinder/params/job_295.json` |  | no |  |
-| `test/testTrackFinder/params/job_296.json` |  | no |  |
-| `test/testTrackFinder/params/job_297.json` |  | no |  |
-| `test/testTrackFinder/params/job_298.json` |  | no |  |
-| `test/testTrackFinder/params/job_299.json` |  | no |  |
 | `test/testTrackFinder/params/job_3.json` |  | no |  |
 | `test/testTrackFinder/params/job_30.json` |  | no |  |
 | `test/testTrackFinder/params/job_31.json` |  | no |  |
@@ -371,36 +192,40 @@ python3 scripts/autoreadme.py --root . --write
 | `test/testTrackFinder/params/job_97.json` |  | no |  |
 | `test/testTrackFinder/params/job_98.json` |  | no |  |
 | `test/testTrackFinder/params/job_99.json` |  | no |  |
-| `test/testTrackFinder/runDCHTestTrackFinder.py` | Return a set of property names, or None if not introspectable. | no |  |
+| `test/testTrackFinder/runDCHTestTrackFinder.py` |  | yes |  |
 | `test/testTrackFinder/runTestTrackFinder.py` | ################# Parser | no |  |
 | `test/testTrackFinder/scripts/analyze_job.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/analyze_pt_resolution_grid.py` | DOC | no |  |
-| `test/testTrackFinder/scripts/autoreadme.py` | ... | yes | ... |
+| `test/testTrackFinder/scripts/analyze_pt_resolution_grid.py` |  | yes |  |
+| `test/testTrackFinder/scripts/autoreadme.py` |  | yes |  |
+| `test/testTrackFinder/scripts/Calculate_Aucoating_thickness.py` | Calculate_Aucoating_thickness.py | no |  |
 | `test/testTrackFinder/scripts/cglenn.cc` |  | no |  |
 | `test/testTrackFinder/scripts/compact_path.txt` |  | no |  |
-| `test/testTrackFinder/scripts/compare_pt_resolution_grid.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/compare_pt_resolution_grid.py` |  | yes |  |
 | `test/testTrackFinder/scripts/condor_ddsim.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/condor_reco.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/debug_z_spur_event.py` | DOC | no |  |
-| `test/testTrackFinder/scripts/dump_covmatrix_one_event.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/DelphesParamsOutput.py` | extract_delphes_tracker_params.py | no |  |
+| `test/testTrackFinder/scripts/dump_covmatrix_one_event.py` |  | yes |  |
 | `test/testTrackFinder/scripts/filelist.txt` |  | no |  |
 | `test/testTrackFinder/scripts/inspect_events_pt_pathology.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/make_filelist.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/make_runtime.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/mk_ddsim_grid.py` | !/usr/bin/env python3 | no |  |
-| `test/testTrackFinder/scripts/plot_mcparticles_pt.py` | DOC | no |  |
-| `test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/patch_trkCov_match_dch_material.py` | Example: | no |  |
+| `test/testTrackFinder/scripts/plot_mcparticles_pt.py` |  | yes |  |
+| `test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py` |  | yes |  |
 | `test/testTrackFinder/scripts/prepare_and_submit.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/print_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/queue_items.txt` |  | no |  |
 | `test/testTrackFinder/scripts/reco_job.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/scan_pt_time_by_event.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/scan_pt_time_by_event.py` |  | yes |  |
 | `test/testTrackFinder/scripts/stamp_ddsim_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/stamp_pipeline_metadata.py` | !/usr/bin/env python3 | no |  |
 | `test/testTrackFinder/scripts/submit_reco.sh` | !/usr/bin/env bash | no |  |
 | `test/testTrackFinder/scripts/sweep_pt.sh` | !/usr/bin/env bash | no |  |
-| `test/testTrackFinder/scripts/view_simhits_event.py` | DOC | no |  |
-| `test/testTrackFinder/scripts/view_tracks_event.py` | DOC | no |  |
+| `test/testTrackFinder/scripts/view_simhits_event.py` |  | yes |  |
+| `test/testTrackFinder/scripts/view_tracks_event.py` |  | yes |  |
 | `test/testTrackFinder/test_trackFinder.sh` | !/bin/bash | no |  |
+| `test/testTrackFinder/tracker_params.json` |  | no |  |
 | `test/testTracksFromGenParticles/runTracksFromGenParticles.py` | Loading the output of the SIM step | no |  |
 | `test/testTracksFromGenParticles/test_TracksFromGenParticles.sh` | !/bin/bash | no |  |

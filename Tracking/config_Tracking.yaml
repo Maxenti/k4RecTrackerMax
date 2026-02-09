@@ -1,0 +1,4457 @@
+__meta__:
+  module: Tracking
+  generated_by: compile_config.py sub
+seed:
+  positional:
+    INPUT:
+      index: 1
+      default_from: INPUT
+      default: /eos/user/c/cglenn/gun_samples/1_16_2026/eta_+1.00/gun_eta+1.00_pt14.142.root
+      value: /eos/user/c/cglenn/gun_samples/1_16_2026/eta_+1.00/gun_eta+1.00_pt14.142.root
+    OUTPUT:
+      index: 2
+      default_from: OUTPUT
+      default: /eos/user/c/cglenn/reco_samples2/Debugging/1_20_2026/CF/eta_+1.00/reco_eta+1.00_pt14.142_13_22.root
+      value: /eos/user/c/cglenn/reco_samples2/Debugging/1_20_2026/CF/eta_+1.00/reco_eta+1.00_pt14.142_13_22.root
+    MODEL_SPEC:
+      index: 3
+      default_from: MODEL_SPEC
+      default: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx
+      value: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx
+    COMPACT_XML:
+      index: 4
+      default_from: COMPACT_XML
+      default: /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
+      value: /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
+    DCH_SIMHITS:
+      index: 5
+      default_from: DCH_SIMHITS
+      default: DCHCollection
+      value: DCHCollection
+    DCH_NAME:
+      index: 6
+      default_from: DCH_NAME
+      default: DCH_v2
+      value: DCH_v2
+    TGEO_FILE:
+      index: 7
+      default_from: TGEO_FILE
+      default: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root
+      value: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root
+  env:
+    FIT_OUT:
+      default: auto
+      value: auto
+    TBETA:
+      default: '0.6'
+      value: '0.6'
+    TD:
+      default: '0.3'
+      value: '0.3'
+    GGTF_ZERO_MIN:
+      default: '8'
+      value: '8'
+    GGTF_WIRE_FRAC:
+      default: '0.60'
+      value: '0.60'
+    GGTF_PROMOTE_ZERO:
+      default: '1'
+      value: '1'
+    GGTF_SKIP_ZERO_SMALL:
+      default: '1'
+      value: '1'
+    GGTF_SKIP_ZERO_ALWAYS:
+      default: '0'
+      value: '0'
+    GGTF_KEEP_PDG:
+      default: '13'
+      value: '13'
+    GGTF_DROP_UNLINKED:
+      default: '1'
+      value: '1'
+    GGTF_TRACKS_OUT:
+      default: CDCHTracks
+      value: CDCHTracks
+    GF_DISABLE_ALL_MAT:
+      default: '0'
+      value: '0'
+    GF_HARD_DISABLE_MAT_IF_NO_GEO:
+      default: '1'
+      value: '1'
+    GF_BZ:
+      default: '2.0'
+      value: '2.0'
+    GF_PDG:
+      default: '13'
+      value: '13'
+    GF_SORT_HITS:
+      default: '1'
+      value: '1'
+    GF_DEDUP:
+      default: '1'
+      value: '1'
+    GF_MIN_HITS_PER_TRACK:
+      default: '8'
+      value: '8'
+    GF_MIN_MEASUREMENTS_TO_FIT:
+      default: '6'
+      value: '6'
+    GF_MIN_FITTED_POINTS_WITH_FI:
+      default: '0'
+      value: '0'
+    GF_MAX_CHI2_NDF:
+      default: '10.0'
+      value: '10.0'
+    GF_USE_KF_PREFIT:
+      default: '1'
+      value: '1'
+    GF_KF_MAX_ITERS:
+      default: '16'
+      value: '16'
+    GF_TRY_BOTH_MOM_DIRS:
+      default: '1'
+      value: '1'
+    GF_USE_DAF:
+      default: '1'
+      value: '1'
+    GF_DAF_MAX_ITERS:
+      default: '12'
+      value: '12'
+    GF_FALLBACK_TO_KF_IF_DAF_FAILS:
+      default: '1'
+      value: '1'
+    GF_USE_BIASED_STATE_FOR_PUBLISH:
+      default: '1'
+      value: '1'
+    GF_PUBLISH_STATE_CENTRAL_FRAC:
+      default: '0.30'
+      value: '0.30'
+    GF_PUBLISH_PT_MAX_GEV:
+      default: '300.0'
+      value: '300.0'
+    GF_INVALID_PT_SENTINEL:
+      default: '-1.0'
+      value: '-1.0'
+    GF_OMEGA_VAR_GOOD:
+      default: 1e-4
+      value: 1e-4
+    GF_OMEGA_VAR_BAD:
+      default: '1.0'
+      value: '1.0'
+    GF_MAX_DRIFT_MM:
+      default: '7.0'
+      value: '7.0'
+    GF_MAX_DRIFT_MM_FOR_HIT:
+      default: '8.0'
+      value: '8.0'
+    GF_MIN_DRIFT_ERR_MM:
+      default: '0.10'
+      value: '0.10'
+    GF_MAX_DRIFT_ERR_MM:
+      default: '1.0'
+      value: '1.0'
+    GF_MIN_HITS_FOR_OBS:
+      default: '10'
+      value: '10'
+    GF_OBS_SIGMA_EFF_MM:
+      default: '0.025'
+      value: '0.025'
+    GF_OBS_MIN_PHISPAN_RAD:
+      default: '0.006'
+      value: '0.006'
+    GF_OBS_MIN_CHORD_MM:
+      default: '20.0'
+      value: '20.0'
+    GF_OBS_MIN_SAGITTA_MM:
+      default: '0.015'
+      value: '0.015'
+    GF_OBS_SCORE_MIN:
+      default: '1.0'
+      value: '1.0'
+    GF_SEED_ENDPOINT_K:
+      default: '6'
+      value: '6'
+    GF_SEED_TANGENT_K:
+      default: '10'
+      value: '10'
+    GF_SEED_POS_SIGMA_MM:
+      default: '80.0'
+      value: '80.0'
+    GF_SEED_MOM_SIGMA_GEV:
+      default: '10.0'
+      value: '10.0'
+    GF_USE_SAGITTA_SEED:
+      default: '1'
+      value: '1'
+    GF_MIN_SAGITTA_FOR_SEED_MM:
+      default: '0.20'
+      value: '0.20'
+    GF_SEED_PT_FALLBACK_GEV:
+      default: '50.0'
+      value: '50.0'
+    GF_SEED_PT_MIN_GEV:
+      default: '0.20'
+      value: '0.20'
+    GF_SEED_PT_MAX_GEV:
+      default: '200.0'
+      value: '200.0'
+    GF_SEED_P_MIN_GEV:
+      default: '0.05'
+      value: '0.05'
+    GF_PREFIT_OUTLIER_VETO:
+      default: '0'
+      value: '0'
+    GF_OUTLIER_MAX_DROP:
+      default: '1'
+      value: '1'
+    GF_OUTLIER_CIRCLE_RESIDUAL_MM:
+      default: '0.8'
+      value: '0.8'
+    GF_OUTLIER_CHORD_RESIDUAL_MM:
+      default: '2.0'
+      value: '2.0'
+    GF_OUTLIER_MIN_KEEP:
+      default: '10'
+      value: '10'
+    GF_MIN_COV_EIGENVALUE:
+      default: '0'
+      value: '0'
+    GF_STATS_TRUNC_CENTRAL_FRAC:
+      default: '0.80'
+      value: '0.80'
+    GF_DIAG_EVERY_N_TRACKS:
+      default: '1'
+      value: '1'
+    STAMPER:
+      default: ./scripts/stamp_pipeline_metadata.py
+      value: ./scripts/stamp_pipeline_metadata.py
+    STAMP_KEY:
+      default: pipeline_metadata_json
+      value: pipeline_metadata_json
+    JOBTAG:
+      default: ''
+      value: ''
+    STAMP_CONFIGS:
+      default: '1'
+      value: '1'
+  pipeline:
+    k4_entry: ./runDCHTestTrackFinder.py
+    args_map:
+      --compactXML: $COMPACT_XML
+      --dch-deadtime-ns: $DCH_DEADTIME_NS
+      --dch-drift-vel-um-ns: $DCH_DRIFT_VEL_UM_NS
+      --dch-gas-type: $DCH_GAS_TYPE
+      --dch-signal-vel-mm-ns: $DCH_SIGNAL_VEL_MM_NS
+      --dchDigiVersion: $DCH_DIGI_VERSION
+      --dchName: $DCH_NAME
+      --dchSimHits: $DCH_SIMHITS
+      --fitOut: $FIT_OUT
+      --fitter: $FITTER
+      --fitterLog: $FITTER_LOG
+      --gf-bz: $GF_BZ
+      --gf-dafMaxIters: $GF_DAF_MAX_ITERS
+      --gf-dedupTolMM: $GF_DEDUP_TOL
+      --gf-diagEveryNTracks: $GF_DIAG_EVERY_N_TRACKS
+      --gf-invalidPTSentinel: $GF_INVALID_PT_SENTINEL
+      --gf-kfMaxIters: $GF_KF_MAX_ITERS
+      --gf-maxChi2Ndf: $GF_MAX_CHI2_NDF
+      --gf-maxDriftErrMM: $GF_MAX_DRIFT_ERR_MM
+      --gf-maxDriftMM: $GF_MAX_DRIFT_MM
+      --gf-maxDriftMMForHit: $GF_MAX_DRIFT_MM_FOR_HIT
+      --gf-minCovEigenvalue: $GF_MIN_COV_EIGENVALUE
+      --gf-minDriftErrMM: $GF_MIN_DRIFT_ERR_MM
+      --gf-minFittedPointsWithFI: $GF_MIN_FITTED_POINTS_WITH_FI
+      --gf-minHitsForObs: $GF_MIN_HITS_FOR_OBS
+      --gf-minHitsPerTrack: $GF_MIN_HITS_PER_TRACK
+      --gf-minMeasurementsToFit: $GF_MIN_MEASUREMENTS_TO_FIT
+      --gf-minSagittaForSeedMM: $GF_MIN_SAGITTA_FOR_SEED_MM
+      --gf-obsMinChordMM: $GF_OBS_MIN_CHORD_MM
+      --gf-obsMinPhiSpanRad: $GF_OBS_MIN_PHISPAN_RAD
+      --gf-obsMinSagittaMM: $GF_OBS_MIN_SAGITTA_MM
+      --gf-obsMinScore: $GF_OBS_SCORE_MIN
+      --gf-obsSigmaEffMM: $GF_OBS_SIGMA_EFF_MM
+      --gf-omegaVarBad: $GF_OMEGA_VAR_BAD
+      --gf-omegaVarGood: $GF_OMEGA_VAR_GOOD
+      --gf-outlierChordResidualMM: $GF_OUTLIER_CHORD_RESIDUAL_MM
+      --gf-outlierCircleResidualMM: $GF_OUTLIER_CIRCLE_RESIDUAL_MM
+      --gf-outlierMaxDrop: $GF_OUTLIER_MAX_DROP
+      --gf-outlierMinKeep: $GF_OUTLIER_MIN_KEEP
+      --gf-pdg: $GF_PDG
+      --gf-positionUnitScale: $GF_POSITION_UNIT_SCALE
+      --gf-publishPTMaxGeV: $GF_PUBLISH_PT_MAX_GEV
+      --gf-publishStateCentralFrac: $GF_PUBLISH_STATE_CENTRAL_FRAC
+      --gf-seedEndpointK: $GF_SEED_ENDPOINT_K
+      --gf-seedMomSigmaGeV: $GF_SEED_MOM_SIGMA_GEV
+      --gf-seedPMinGeV: $GF_SEED_P_MIN_GEV
+      --gf-seedPTFallbackGeV: $GF_SEED_PT_FALLBACK_GEV
+      --gf-seedPTMaxGeV: $GF_SEED_PT_MAX_GEV
+      --gf-seedPTMinGeV: $GF_SEED_PT_MIN_GEV
+      --gf-seedPosSigmaMM: $GF_SEED_POS_SIGMA_MM
+      --gf-seedTangentK: $GF_SEED_TANGENT_K
+      --gf-statsTruncCentralFrac: $GF_STATS_TRUNC_CENTRAL_FRAC
+      --gf-wireHalfLengthMM: $GF_WIRE_HALF_LENGTH_MM
+      --ggtfLog: $GGTF_LOG
+      --ggtfTracksOut: $GGTF_TRACKS_OUT
+      --inputFile: $INPUT
+      --modelPath: $MODEL_SPEC
+      --onnxChunk: $ONNX_CHUNK
+      --outputFile: $OUTPUT
+      --rw-duration-ns: $DCH_READOUT_DUR_NS
+      --rw-start-ns: $DCH_READOUT_START_NS
+      --stage: $STAGE
+      --tbeta: $TBETA
+      --td: $TD
+      --xyResolution_mm: $DCH_XY_MM
+      --zResolution_mm: $DCH_Z_MM
+    toggles:
+      SKIP_DIGI:
+        when_1:
+        - --skipDigi
+        when_0: []
+      GGTF_DROP_WIRE_IF_ABS_D_TOO_LARGE:
+        when_1:
+        - --ggtf-dropWireIfAbsDTooLarge
+        when_0:
+        - --no-ggtf-dropWireIfAbsDTooLarge
+      GGTF_TRUTH_GATE:
+        when_1:
+        - --ggtf-filterInputWiresByTruthPdg
+        when_0:
+        - --no-ggtf-filterInputWiresByTruthPdg
+      GGTF_DROP_UNLINKED:
+        when_1:
+        - --ggtf-dropWireIfUnlinked
+        when_0:
+        - --no-ggtf-dropWireIfUnlinked
+      GF_USE_MAT:
+        when_1:
+        - --gf-useMat
+        when_0:
+        - --no-gf-useMat
+      GF_DISABLE_ELOSS:
+        when_1:
+        - --gf-disableEloss
+        when_0:
+        - --no-gf-disableEloss
+      GF_DISABLE_ALL_MAT:
+        when_1:
+        - --gf-disableAllMat
+        when_0:
+        - --no-gf-disableAllMat
+      GF_HARD_DISABLE_MAT_IF_NO_GEO:
+        when_1:
+        - --gf-hardDisableMatIfNoGeo
+        when_0:
+        - --no-gf-hardDisableMatIfNoGeo
+      GF_REJECT_NEGATIVE_LABELS:
+        when_1:
+        - --gf-rejectNegativeLabels
+        when_0:
+        - --no-gf-rejectNegativeLabels
+      GF_SORT_HITS:
+        when_1:
+        - --gf-sortHits
+        when_0:
+        - --no-gf-sortHits
+      GF_DEDUP:
+        when_1:
+        - --gf-dedup
+        when_0:
+        - --no-gf-dedup
+      GF_USE_KF_PREFIT:
+        when_1:
+        - --gf-useKFPreFit
+        when_0:
+        - --no-gf-useKFPreFit
+      GF_TRY_BOTH_MOM_DIRS:
+        when_1:
+        - --gf-tryBothMomDirs
+        when_0:
+        - --no-gf-tryBothMomDirs
+      GF_USE_DAF:
+        when_1:
+        - --gf-useDAF
+        when_0:
+        - --no-gf-useDAF
+      GF_FALLBACK_TO_KF_IF_DAF_FAILS:
+        when_1:
+        - --gf-fallbackToKFIfDAFFails
+        when_0:
+        - --no-gf-fallbackToKFIfDAFFails
+      GF_SKIP_IF_OBS_TOO_LOW:
+        when_1:
+        - --gf-skipIfObsTooLow
+        when_0:
+        - --no-gf-skipIfObsTooLow
+      GF_USE_SAGITTA_SEED:
+        when_1:
+        - --gf-useSagittaSeed
+        when_0:
+        - --no-gf-useSagittaSeed
+      GF_USE_BIASED_STATE_FOR_PUBLISH:
+        when_1:
+        - --gf-useBiasedStateForPublish
+        when_0:
+        - --no-gf-useBiasedStateForPublish
+      GF_PREFIT_OUTLIER_VETO:
+        when_1:
+        - --gf-prefitOutlierVeto
+        when_0:
+        - --no-gf-prefitOutlierVeto
+      GF_WIRE_ANGLES_DEGREES:
+        when_1:
+        - --gf-wireAnglesAreDegrees
+        when_0:
+        - --gf-wireAnglesAreRadians
+  defaults:
+    INPUT: /eos/user/c/cglenn/gun_samples/1_16_2026/eta_+1.00/gun_eta+1.00_pt14.142.root
+    OUTPUT: /eos/user/c/cglenn/reco_samples2/Debugging/1_20_2026/CF/eta_+1.00/reco_eta+1.00_pt14.142_13_22.root
+    MODEL_SPEC: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/model.onnx
+    COMPACT_XML: /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03CF_2umAu.xml
+    DCH_SIMHITS: DCHCollection
+    DCH_NAME: DCH_v2
+    TGEO_FILE: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root
+cpp_properties:
+  components/DCHLooperEventFilter.cpp:
+    TmaxNs:
+      type: double
+      default: '450.0'
+      value: '450.0'
+      help: Keep event if max(hit.time) <= this [ns]
+    NHitsMax:
+      type: int
+      default: '30000'
+      value: '30000'
+      help: Keep event if nHits <= this (<=0 disables)
+    KeepEmpty:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: If true, keep events with 0 hits
+  components/GGTF_tracking.cpp:
+    ModelPath:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: Path to ONNX model
+    Tbeta:
+      type: double
+      default: '0.6'
+      value: '0.6'
+      help: clustering beta threshold
+    Td:
+      type: double
+      default: '0.3'
+      value: '0.3'
+      help: clustering distance threshold
+    MaxHitsPerEvent:
+      type: int
+      default: '0'
+      value: '0'
+      help: Cap input hits per event (0=off)
+    OnnxChunk:
+      type: int
+      default: '4096'
+      value: '4096'
+      help: Chunk size for ONNX inference
+    DropWireIfAbsDTooLarge:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Drop wire digi from GGTF processing if |d| > MaxAbsDMM
+    MaxAbsDMM:
+      type: double
+      default: '30.0'
+      value: '30.0'
+      help: Maximum allowed |distanceToWire| [mm] before dropping (if enabled)
+    ZeroMinSizeKeep:
+      type: int
+      default: '8'
+      value: '8'
+      help: Min hits for a label=0 group to be considered (else dropped)
+    MinWireFracKeep:
+      type: double
+      default: '0.60'
+      value: '0.60'
+      help: Min fraction of wire hits to keep a zero-label group
+    PromoteZeroIfGood:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: If a zero-label group passes checks, treat it as a normal cluster
+    SkipZeroIfSmall:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: If label=0 group smaller than ZeroMinSizeKeep, drop it
+    SkipZeroAlways:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: If true, never build tracks from label=0
+    FilterInputWiresByTruthPdg:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: If true, exclude wire digis whose linked MCParticle PDG != KeepTruthPdg from GGTF processing.
+    KeepTruthPdg:
+      type: int
+      default: '13'
+      value: '13'
+      help: PDG code to keep when FilterInputWiresByTruthPdg is enabled (default 13=mu).
+    DropWireIfUnlinked:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'When filtering enabled: if a wire digi has no truth link, drop it (true) or keep it (false).'
+    GeoSvcName:
+      type: std::string
+      default: '"GeoSvc"'
+      value: '"GeoSvc"'
+      help: GeoSvc name
+    DchName:
+      type: std::string
+      default: '"DCH_v2"'
+      value: '"DCH_v2"'
+      help: Drift chamber detector name
+    JobTag:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: Optional free-form tag (e.g. steering script name, input file, run label) stored in metadata
+  components/GenFit2DCHFitter.cpp:
+    RejectNegativeLabels:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Skip GGTF tracks with track.type < 0 (debug labels).
+    MinHitsPerTrack:
+      type: unsigned
+      default: 8u
+      value: 8u
+      help: Minimum SenseWireHits per GGTF track to attempt fit (after pruning/dedup).
+    MinMeasurementsToFit:
+      type: unsigned
+      default: 6u
+      value: 6u
+      help: Minimum WireMeasurementNew inserted into GenFit track to attempt fit.
+    MinFittedPointsWithFI:
+      type: unsigned
+      default: 10u
+      value: 10u
+      help: Minimum number of TrackPoints with FitterInfo before accepting/publishing.
+    SortHits:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Sort SenseWireHits along PCA axis computed from on-wire positions.
+    DeduplicateHits:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Drop nearly-identical on-wire positions.
+    DedupTolMM:
+      type: double
+      default: '0.05'
+      value: '0.05'
+      help: Dedup tolerance on on-wire XYZ distance (mm).
+    PreFitOutlierVeto:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Deterministic pre-fit outlier veto (circle-fit in XY + chord fallback).
+    OutlierMaxDrop:
+      type: unsigned
+      default: 2u
+      value: 2u
+      help: Max number of hits to drop in pre-fit outlier veto.
+    OutlierCircleResidualMM:
+      type: double
+      default: '8.0'
+      value: '8.0'
+      help: Drop worst hit if |r-R| exceeds this in circle-fit pruning (mm).
+    OutlierChordResidualMM:
+      type: double
+      default: '20.0'
+      value: '20.0'
+      help: Fallback drop worst hit if chord-perp distance exceeds this (mm).
+    OutlierMinKeep:
+      type: unsigned
+      default: 10u
+      value: 10u
+      help: Never prune below this number of hits.
+    SeedEndpointK:
+      type: unsigned
+      default: 6u
+      value: 6u
+      help: Mean of first/last K hits (after sorting/pruning) used as seed endpoints.
+    SeedTangentK:
+      type: unsigned
+      default: 10u
+      value: 10u
+      help: Window size for tangent estimation at each end (PCA direction over first/last K hits).
+    UseKFPreFit:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true: run KalmanFitterRefTrack first as a prefit, then run DAF (if enabled).'
+    UseDAF:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true: run DAF after prefit (recommended for wire left/right ambiguity).'
+    FallbackToKFIfDAFFails:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true and UseDAF=true: if DAF throws/fails, keep KF result (if good).'
+    KFMaxIters:
+      type: unsigned
+      default: 12u
+      value: 12u
+      help: KF max iterations.
+    DAFMaxIters:
+      type: unsigned
+      default: 8u
+      value: 8u
+      help: DAF max iterations.
+    TryBothMomentumDirections:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Try mom0 and -mom0; keep best fit.
+    Bz:
+      type: double
+      default: '2.0'
+      value: '2.0'
+      help: Bz field [T]
+    PDG:
+      type: int
+      default: '13'
+      value: '13'
+      help: PDG hypothesis.
+    UseBiasedStateForPublish:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Use AbsFitterInfo::getFittedState(biased=true) for publishing. If false, use unbiased.
+    PublishStateCentralFrac:
+      type: double
+      default: '0.60'
+      value: '0.60'
+      help: Fraction of track points (by index) to consider around the middle for publish-state selection.
+    UseMaterialEffects:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Use TGeoMaterialInterface for GenFit MaterialEffects
+    TGeoFile:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: Optional ROOT geometry file to import if gGeoManager is null (e.g. detector.root).
+    TGeoTopVolume:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: 'Optional: if importing, set a specific top volume name (usually leave empty).'
+    DisableEnergyLoss:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Disable energy loss (keep MS) when material effects enabled
+    DisableAllMaterialEffects:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: Disable all GenFit material effects
+    HardDisableMaterialIfNoGeo:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true and gGeoManager is null: force MaterialEffects::setNoEffects(true).'
+    PositionUnitScale:
+      type: double
+      default: '0.1'
+      value: '0.1'
+      help: 'Multiply positions (0.1: mm->cm) for GenFit internal units.'
+    WireHalfLengthMM:
+      type: double
+      default: '2250.0'
+      value: '2250.0'
+      help: Half wire length used to synthesize endpoints (mm).
+    MaxDriftMM:
+      type: double
+      default: '30.0'
+      value: '30.0'
+      help: Max drift distance (mm) used for WireMeasurementNew setMaxDistance.
+    MaxDriftMMForHit:
+      type: double
+      default: '35.0'
+      value: '35.0'
+      help: 'Hard hit-level cut: drop hits with |drift| > this (mm). (Should be >= MaxDriftMM).'
+    MinDriftErrMM:
+      type: double
+      default: '0.10'
+      value: '0.10'
+      help: Floor for drift distance error (mm).
+    MaxDriftErrMM:
+      type: double
+      default: '5.0'
+      value: '5.0'
+      help: Ceiling for drift distance error (mm). Hits above are clamped (not dropped).
+    MinCovEigenvalue:
+      type: double
+      default: 1e-8
+      value: 1e-8
+      help: Minimum eigenvalue for PD-guarding covariance matrices.
+    SeedPosSigmaMM:
+      type: double
+      default: '80.0'
+      value: '80.0'
+      help: Seed pos sigma [mm]
+    SeedMomSigmaGeV:
+      type: double
+      default: '5.0'
+      value: '5.0'
+      help: Seed mom sigma [GeV]
+    SeedPTFallbackGeV:
+      type: double
+      default: '50.0'
+      value: '50.0'
+      help: Fallback seed pT when curvature is unobservable (GeV).
+    SeedPTMinGeV:
+      type: double
+      default: '0.20'
+      value: '0.20'
+      help: Min seed pT [GeV]
+    SeedPTMaxGeV:
+      type: double
+      default: '200.0'
+      value: '200.0'
+      help: Max seed pT [GeV]
+    SeedPMinGeV:
+      type: double
+      default: '0.05'
+      value: '0.05'
+      help: Min |p| [GeV] floor
+    MinHitsForObs:
+      type: unsigned
+      default: 10u
+      value: 10u
+      help: Minimum hits to compute observability metrics (phiSpan/chord/sagitta).
+    ObsSigmaEffMM:
+      type: double
+      default: '0.25'
+      value: '0.25'
+      help: Effective transverse sigma (mm) used to convert sagitta->dimensionless obsScore.
+    ObsMinPhiSpanRad:
+      type: double
+      default: '0.06'
+      value: '0.06'
+      help: Require phi-span >= this for curvature observability (rad).
+    ObsMinChordMM:
+      type: double
+      default: '200.0'
+      value: '200.0'
+      help: Require chord length >= this for observability (mm).
+    ObsMinSagittaMM:
+      type: double
+      default: '0.15'
+      value: '0.15'
+      help: Require sagitta >= this for observability (mm).
+    ObsMinScore:
+      type: double
+      default: '1.0'
+      value: '1.0'
+      help: Require obsScore = sagitta/sigmaEff >= this for publishing pT (dimensionless).
+    SkipIfObsTooLow:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: 'If true: drop tracks that fail observability cuts. If false: keep track but publish invalid pT.'
+    UseSagittaSeed:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true: compute a sagitta-based pT seed when sagitta is measurable.'
+    MinSagittaForSeedMM:
+      type: double
+      default: '0.20'
+      value: '0.20'
+      help: Only use sagitta-based pT seed if sagitta >= this (mm).
+    MaxChi2Ndf:
+      type: double
+      default: '20.0'
+      value: '20.0'
+      help: Hard cut on chi2/ndf for accepting/publishing a track.
+    PublishPTMaxGeV:
+      type: double
+      default: '300.0'
+      value: '300.0'
+      help: 'Hard maximum pT to publish in TrackState.time. Above: invalid.'
+    InvalidPTSentinel:
+      type: float
+      default: -1.0f
+      value: -1.0f
+      help: TrackState.time when pT is not published.
+    OmegaVarGood:
+      type: float
+      default: 1e-4f
+      value: 1e-4f
+      help: (GeV^-1)^2 covariance for omega when pT valid.
+    OmegaVarBad:
+      type: float
+      default: 1.0f
+      value: 1.0f
+      help: (GeV^-1)^2 covariance for omega when pT invalid.
+    StatsTruncCentralFrac:
+      type: double
+      default: '0.95'
+      value: '0.95'
+      help: Central fraction for truncated RMS over published pT values (robust metric).
+    DetId:
+      type: int
+      default: '0'
+      value: '0'
+      help: detId passed to WireMeasurementNew (recommended constant).
+    UseLabelAsDetId:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: 'If true: use GGTF input track label as detId (not recommended).'
+    WireAnglesAreDegrees:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: 'If true: interpret SenseWireHit angles in degrees and convert to radians.'
+    JobTag:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: Optional job tag string recorded in metadata.
+    DiagEveryNTracks:
+      type: unsigned
+      default: 1u
+      value: 1u
+      help: Print DEBUG diagnostics every N tracks when OutputLevel<=DEBUG.
+  components/PlotTrackHitResiduals.cpp:
+    Bz:
+      type: float
+      default: '2.'
+      value: '2.'
+      help: Z component of the (assumed constant) magnetic field in Tesla.
+  components/SimpleFitDCHFitter.cpp:
+    Bz:
+      type: double
+      default: '2.0'
+      value: '2.0'
+      help: Uniform Bz [T] (for pT conversion/logging)
+    PDG:
+      type: int
+      default: '13'
+      value: '13'
+      help: PDG hypothesis (charge sign)
+    MinGroupSize:
+      type: unsigned
+      default: 6u
+      value: 6u
+      help: Minimum hits per cluster to fit
+    DBSCAN_EpsMM:
+      type: double
+      default: '20.0'
+      value: '20.0'
+      help: DBSCAN epsilon [mm]
+    DBSCAN_MinPts:
+      type: unsigned
+      default: 6u
+      value: 6u
+      help: DBSCAN minPts
+    DeduplicateHits:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Drop consecutive near-duplicates
+    DedupTolMM:
+      type: double
+      default: '0.25'
+      value: '0.25'
+      help: Dedup tolerance [mm]
+    HistStream:
+      type: std::string
+      default: '"simple"'
+      value: '"simple"'
+      help: THistSvc stream (file logical name)
+    MaxEventsY:
+      type: int
+      default: '2000'
+      value: '2000'
+      help: Y span for 2D 'vs event' plots
+    PtBins:
+      type: unsigned
+      default: 100u
+      value: 100u
+      help: pT bins
+    PtMax:
+      type: double
+      default: '100.0'
+      value: '100.0'
+      help: pT max [GeV]
+    EtaMax:
+      type: double
+      default: '3.0'
+      value: '3.0'
+      help: '|eta| max'
+    UseMaterialEffects:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: If true, estimate X/X0 per cluster and inflate covariances
+    UseTGeoPath:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: If true and gGeoManager present, estimate X/X0 via TGeo midpoints
+    FallbackXOverX0:
+      type: double
+      default: '0.02'
+      value: '0.02'
+      help: Fallback integrated material (X/X0) if TGeo not available
+    MS_K_GeV:
+      type: double
+      default: '0.0136'
+      value: '0.0136'
+      help: Highland constant (13.6 MeV) in GeV
+    MS_Scale:
+      type: double
+      default: '1.0'
+      value: '1.0'
+      help: Extra scale factor on MS variance additions
+    BaseVar_d0:
+      type: float
+      default: 1.0f
+      value: 1.0f
+      help: base var(d0) [mm^2]
+    BaseVar_phi:
+      type: float
+      default: 1e-3f
+      value: 1e-3f
+      help: base var(phi) [rad^2]
+    BaseVar_omega:
+      type: float
+      default: 1e-8f
+      value: 1e-8f
+      help: base var(omega) [(GeV^-1)^2] (placeholder)
+    BaseVar_z0:
+      type: float
+      default: 1.0f
+      value: 1.0f
+      help: base var(z0) [mm^2]
+    BaseVar_tanLambda:
+      type: float
+      default: 1e-2f
+      value: 1e-2f
+      help: base var(tanLambda) [1]
+  components/ThreePointFitter.cpp:
+    Bz:
+      type: double
+      default: '2.0'
+      value: '2.0'
+      help: Uniform B [Tesla] for pT conversion
+    PDG:
+      type: int
+      default: '13'
+      value: '13'
+      help: PDG hypothesis (charge sign only)
+    MinHitsPerGroup:
+      type: unsigned
+      default: 3u
+      value: 3u
+      help: Minimum hits per GGTF label to fit
+    MinChordMM:
+      type: double
+      default: '5.0'
+      value: '5.0'
+      help: Min chord length among the 3 picked points [mm]
+    MinRadiusMM:
+      type: double
+      default: '100.0'
+      value: '100.0'
+      help: Reject tiny circles R < this [mm]
+    MinDeltaPhi:
+      type: double
+      default: '0.10'
+      value: '0.10'
+      help: Require φ_max-φ_min >= this [rad] (about origin)
+    FitTanLambda:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Estimate tanLambda from z(phi) linear fit
+    PrintDiagnostics:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Print per-track geometry diagnostics
+    DiagEveryN:
+      type: int
+      default: '1'
+      value: '1'
+      help: Print every N-th track (per event grouping)
+  components/TrackdNdxDelphesBased.h:
+    ZmaxParameterName:
+      type: std::string
+      default: '{"DCH_gas_Lhalf"}'
+      value: '{"DCH_gas_Lhalf"}'
+      help: Name of XML file parameter describing the z extent of the active volume (max value in +z direction)
+    RminParameterName:
+      type: std::string
+      default: '{"DCH_gas_inner_cyl_R"}'
+      value: '{"DCH_gas_inner_cyl_R"}'
+      help: Name of XML file parameter describing the inner radius of the active volume.
+    RmaxParameterName:
+      type: std::string
+      default: '{"DCH_gas_outer_cyl_R"}'
+      value: '{"DCH_gas_outer_cyl_R"}'
+      help: Name of XML file parameter describing the outer radius of the active volume.
+    GasSel:
+      type: int
+      default: '{0}'
+      value: '{0}'
+      help: 'Gas selection: 0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar.'
+  components/TracksFromGenParticles.cpp:
+    ExtrapolateToECal:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: Calculate track state at ECal inner face or not
+    KeepOnlyBestExtrapolation:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: Keep only extrapolation with shortest time or not
+    MinimumParticleMomentum:
+      type: float
+      default: '0.010'
+      value: '0.010'
+      help: Keep only particles with momentum (in GeV) greater than MinimumParticleMomentum
+    SystemEncoding:
+      type: std::string
+      default: '"system:5"'
+      value: '"system:5"'
+      help: System encoding string
+argparse:
+  test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py:
+    inputFile:
+      flags:
+      - --inputFile
+      dest: inputFile
+      required: false
+      action: null
+      default: '"ddsim_output_edm4hep.root"'
+      value: '"ddsim_output_edm4hep.root"'
+      help: null
+    outputFile:
+      flags:
+      - --outputFile
+      dest: outputFile
+      required: false
+      action: null
+      default: '"output_digi_tracks.root"'
+      value: '"output_digi_tracks.root"'
+      help: Output EDM4hep file
+    modelPath:
+      flags:
+      - --modelPath
+      dest: modelPath
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    tbeta:
+      flags:
+      - --tbeta
+      dest: tbeta
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: GGTF beta threshold
+    td:
+      flags:
+      - --td
+      dest: td
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: GGTF distance threshold
+    dchSimHits:
+      flags:
+      - --dchSimHits
+      dest: dchSimHits
+      required: false
+      action: null
+      default: '"DCHCollection"'
+      value: '"DCHCollection"'
+      help: Name of DCH sim-hit collection in the input file
+    compactXML:
+      flags:
+      - --compactXML
+      dest: compactXML
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    dchName:
+      flags:
+      - --dchName
+      dest: dchName
+      required: false
+      action: null
+      default: '"DCH_v2"'
+      value: '"DCH_v2"'
+      help: null
+    produce3DHits:
+      flags:
+      - --produce3DHits
+      dest: produce3DHits
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    ggtfLog:
+      flags:
+      - --ggtfLog
+      dest: ggtfLog
+      required: false
+      action: null
+      default: '"INFO"'
+      value: '"INFO"'
+      help: GGTF_tracking OutputLevel.
+    maxHitsPerEvent:
+      flags:
+      - --maxHitsPerEvent
+      dest: maxHitsPerEvent
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    wireGateMM:
+      flags:
+      - --wireGateMM
+      dest: wireGateMM
+      required: false
+      action: null
+      default: '3.0'
+      value: '3.0'
+      help: null
+    onnxChunk:
+      flags:
+      - --onnxChunk
+      dest: onnxChunk
+      required: false
+      action: null
+      default: '4096'
+      value: '4096'
+      help: null
+    max3DHitsPerEvent:
+      flags:
+      - --max3DHitsPerEvent
+      dest: max3DHitsPerEvent
+      required: false
+      action: null
+      default: '1000000'
+      value: '1000000'
+      help: Hard cap for number of 3D hits created per event.
+    max3DPerTrack:
+      flags:
+      - --max3DPerTrack
+      dest: max3DPerTrack
+      required: false
+      action: null
+      default: '100000'
+      value: '100000'
+      help: Hard cap for number of 3D hits created per reconstructed track.
+    stage:
+      flags:
+      - --stage
+      dest: stage
+      required: false
+      action: null
+      default: '"ggtf"'
+      value: '"ggtf"'
+      help: null
+    fitter:
+      flags:
+      - --fitter
+      dest: fitter
+      required: false
+      action: null
+      default: '"none"'
+      value: '"none"'
+      help: 'Optionally run a fitter after GGTF. '
+    fitOut:
+      flags:
+      - --fitOut
+      dest: fitOut
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    fitterLog:
+      flags:
+      - --fitterLog
+      dest: fitterLog
+      required: false
+      action: null
+      default: '"INFO"'
+      value: '"INFO"'
+      help: GenFit2DCHFitter OutputLevel.
+    gf_useMat:
+      flags:
+      - --no-gf-useMat
+      dest: gf_useMat
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Disable material effects in GenFit.
+    gf_sortHits:
+      flags:
+      - --no-gf-sortHits
+      dest: gf_sortHits
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Do not sort hits.
+    gf_dedup:
+      flags:
+      - --no-gf-dedup
+      dest: gf_dedup
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Do not deduplicate hits.
+    gf_posScale:
+      flags:
+      - --gf-posScale
+      dest: gf_posScale
+      required: false
+      action: null
+      default: '0.1'
+      value: '0.1'
+      help: null
+    gf_len2m:
+      flags:
+      - --gf-len2m
+      dest: gf_len2m
+      required: false
+      action: null
+      default: '0.01'
+      value: '0.01'
+      help: null
+    gf_dedupTol:
+      flags:
+      - --gf-dedupTol
+      dest: gf_dedupTol
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: Deduplication tolerance [mm].
+    gf_hitSigmaXY:
+      flags:
+      - --gf-hitSigmaXY
+      dest: gf_hitSigmaXY
+      required: false
+      action: null
+      default: '0.60'
+      value: '0.60'
+      help: Measurement sigma in X/Y [mm] for spacepoints.
+    gf_hitSigmaZ:
+      flags:
+      - --gf-hitSigmaZ
+      dest: gf_hitSigmaZ
+      required: false
+      action: null
+      default: '3.00'
+      value: '3.00'
+      help: Measurement sigma in Z [mm] for spacepoints.
+    gf_seedPosSigma:
+      flags:
+      - --gf-seedPosSigma
+      dest: gf_seedPosSigma
+      required: false
+      action: null
+      default: '30.0'
+      value: '30.0'
+      help: null
+    gf_seedMomSigma:
+      flags:
+      - --gf-seedMomSigma
+      dest: gf_seedMomSigma
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    gf_seedPTMin:
+      flags:
+      - --gf-seedPTMin
+      dest: gf_seedPTMin
+      required: false
+      action: null
+      default: '0.30'
+      value: '0.30'
+      help: Minimum pT seed [GeV].
+    gf_seedPTMax:
+      flags:
+      - --gf-seedPTMax
+      dest: gf_seedPTMax
+      required: false
+      action: null
+      default: '50.0'
+      value: '50.0'
+      help: Maximum pT seed [GeV].
+    gf_bz:
+      flags:
+      - --gf-bz
+      dest: gf_bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    gf_pdg:
+      flags:
+      - --gf-pdg
+      dest: gf_pdg
+      required: false
+      action: null
+      default: '13'
+      value: '13'
+      help: null
+    gf_minGroup:
+      flags:
+      - --gf-minGroup
+      dest: gf_minGroup
+      required: false
+      action: null
+      default: '6'
+      value: '6'
+      help: Minimum hits per group to attempt a fit.
+    gf_useFallback:
+      flags:
+      - --no-gf-useFallback
+      dest: gf_useFallback
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Disable DBSCAN fallback.
+    gf_fallbackEpsCM:
+      flags:
+      - --gf-fallbackEpsCM
+      dest: gf_fallbackEpsCM
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    gf_fallbackMinPts:
+      flags:
+      - --gf-fallbackMinPts
+      dest: gf_fallbackMinPts
+      required: false
+      action: null
+      default: '6'
+      value: '6'
+      help: DBSCAN minPts for fallback clustering.
+    gf_retry:
+      flags:
+      - --no-gf-retry
+      dest: gf_retry
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Disable retry.
+    gf_retryMeasInfl:
+      flags:
+      - --gf-retryMeasInfl
+      dest: gf_retryMeasInfl
+      required: false
+      action: null
+      default: '4.0'
+      value: '4.0'
+      help: null
+    gf_retrySeedPos:
+      flags:
+      - --gf-retrySeedPos
+      dest: gf_retrySeedPos
+      required: false
+      action: null
+      default: '3.0'
+      value: '3.0'
+      help: Retry seed position sigma multiplier.
+    gf_retrySeedMom:
+      flags:
+      - --gf-retrySeedMom
+      dest: gf_retrySeedMom
+      required: false
+      action: null
+      default: '3.0'
+      value: '3.0'
+      help: Retry seed momentum sigma multiplier.
+    gf_maxMeasPerGroup:
+      flags:
+      - --gf-maxMeasPerGroup
+      dest: gf_maxMeasPerGroup
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    gf_seedPMin:
+      flags:
+      - --gf-seedPMin
+      dest: gf_seedPMin
+      required: false
+      action: null
+      default: '1.2'
+      value: '1.2'
+      help: Minimum absolute momentum seed |p| [GeV].
+  test/testTrackFinder/Archive/compare_pt_trackstate_vs_hitcircle.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Input EDM4hep ROOT file
+    events:
+      flags:
+      - --events
+      dest: events
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Comma-separated event indices, e.g. 718,838,96
+    hits:
+      flags:
+      - --hits
+      dest: hits
+      required: false
+      action: null
+      default: '"GGTF_3DHits"'
+      value: '"GGTF_3DHits"'
+      help: null
+    track:
+      flags:
+      - --track
+      dest: track
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    Bz:
+      flags:
+      - --Bz
+      dest: Bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    expectedPt:
+      flags:
+      - --expectedPt
+      dest: expectedPt
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    sigmaXY:
+      flags:
+      - --sigmaXY
+      dest: sigmaXY
+      required: false
+      action: null
+      default: '0.5'
+      value: '0.5'
+      help: null
+    out:
+      flags:
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '"pt_diagnostic.csv"'
+      value: '"pt_diagnostic.csv"'
+      help: null
+  test/testTrackFinder/Archive/make_ptres.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    tree:
+      flags:
+      - --tree
+      dest: tree
+      required: false
+      action: null
+      default: '"events"'
+      value: '"events"'
+      help: null
+    fitter:
+      flags:
+      - --fitter
+      dest: fitter
+      required: false
+      action: null
+      default: '"auto"'
+      value: '"auto"'
+      help: null
+    Bz:
+      flags:
+      - --Bz
+      dest: Bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    allow_any_location:
+      flags:
+      - --allow-any-location
+      dest: allow_any_location
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Use any TrackState location, not just AtIP
+    emin:
+      flags:
+      - --emin
+      dest: emin
+      required: false
+      action: null
+      default: '0.5'
+      value: '0.5'
+      help: null
+    emax:
+      flags:
+      - --emax
+      dest: emax
+      required: false
+      action: null
+      default: '20.0'
+      value: '20.0'
+      help: null
+    nbins:
+      flags:
+      - --nbins
+      dest: nbins
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    out:
+      flags:
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    csv:
+      flags:
+      - --csv
+      dest: csv
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+  test/testTrackFinder/Archive/pt_resolution_plot_pyroot.py:
+    reco_root:
+      flags:
+      - --reco-root
+      dest: reco_root
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Root folder containing reco outputs grouped by eta±X.XX
+    pdg:
+      flags:
+      - --pdg
+      dest: pdg
+      required: false
+      action: null
+      default: '13'
+      value: '13'
+      help: null
+    out_png:
+      flags:
+      - --out-png
+      dest: out_png
+      required: false
+      action: null
+      default: '"pt_resolution_vs_pt.png"'
+      value: '"pt_resolution_vs_pt.png"'
+      help: null
+    out_csv:
+      flags:
+      - --out-csv
+      dest: out_csv
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: Optional CSV with binned results
+    nbins:
+      flags:
+      - --nbins
+      dest: nbins
+      required: false
+      action: null
+      default: '12'
+      value: '12'
+      help: null
+    pt_min:
+      flags:
+      - --pt-min
+      dest: pt_min
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: null
+    pt_max:
+      flags:
+      - --pt-max
+      dest: pt_max
+      required: false
+      action: null
+      default: '20.0'
+      value: '20.0'
+      help: null
+    tracks_prefix:
+      flags:
+      - --tracks-prefix
+      dest: tracks_prefix
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+  test/testTrackFinder/Archive/ptres_from_edm4hep.py:
+    tracks:
+      flags:
+      - --tracks
+      dest: tracks
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: Track collection name.
+    bz:
+      flags:
+      - --bz
+      dest: bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: Magnetic field [T] used in fit.
+    speciesMass:
+      flags:
+      - --speciesMass
+      dest: speciesMass
+      required: false
+      action: null
+      default: '0.10566'
+      value: '0.10566'
+      help: null
+    png:
+      flags:
+      - --png
+      dest: png
+      required: false
+      action: null
+      default: '"ptres_vs_pt.png"'
+      value: '"ptres_vs_pt.png"'
+      help: Output PNG filename.
+    requireAtIP:
+      flags:
+      - --requireAtIP
+      dest: requireAtIP
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Only accept tracks that have an AtIP state.
+    bootstrap:
+      flags:
+      - --bootstrap
+      dest: bootstrap
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+  test/testTrackFinder/Archive/skim_edm4hep.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    output:
+      flags:
+      - --output
+      dest: output
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    coll:
+      flags:
+      - --coll
+      dest: coll
+      required: false
+      action: null
+      default: '"DCHCollection"'
+      value: '"DCHCollection"'
+      help: null
+    tmax:
+      flags:
+      - --tmax
+      dest: tmax
+      required: false
+      action: null
+      default: '450.0'
+      value: '450.0'
+      help: null
+    nhits_max:
+      flags:
+      - --nhits-max
+      dest: nhits_max
+      required: false
+      action: null
+      default: '30000'
+      value: '30000'
+      help: null
+    keep_empty:
+      flags:
+      - --keep-empty
+      dest: keep_empty
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    force_mode:
+      flags:
+      - --force-mode
+      dest: force_mode
+      required: false
+      action: null
+      default: '"auto"'
+      value: '"auto"'
+      help: 'auto: try ROOT leaves then PODIO. root: only ROOT leaves. podio: only PODIO.'
+  test/testTrackFinder/dd4hep2root.py:
+    compact:
+      flags:
+      - -c
+      - --compact
+      dest: compact
+      required: false
+      action: null
+      default: null
+      value: null
+      help: null
+    out:
+      flags:
+      - -o
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '''detector.root'''
+      value: '''detector.root'''
+      help: Converted file path
+  test/testTrackFinder/runDCHTestTrackFinder.py:
+    inputFile:
+      flags:
+      - --inputFile
+      dest: inputFile
+      required: false
+      action: null
+      default: '"ddsim_output_edm4hep.root"'
+      value: '"ddsim_output_edm4hep.root"'
+      help: null
+    outputFile:
+      flags:
+      - --outputFile
+      dest: outputFile
+      required: false
+      action: null
+      default: '"output_digi_ggtf_fit.root"'
+      value: '"output_digi_ggtf_fit.root"'
+      help: Output EDM4hep file
+    compactXML:
+      flags:
+      - --compactXML
+      dest: compactXML
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    tgeoFile:
+      flags:
+      - --tgeoFile
+      dest: tgeoFile
+      required: false
+      action: null
+      default: '"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root"'
+      value: '"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root"'
+      help: null
+    dchSimHits:
+      flags:
+      - --dchSimHits
+      dest: dchSimHits
+      required: false
+      action: null
+      default: '"DCHCollection"'
+      value: '"DCHCollection"'
+      help: Name of DCH SimTrackerHit collection in the input file
+    dchName:
+      flags:
+      - --dchName
+      dest: dchName
+      required: false
+      action: null
+      default: '"DCH_v2"'
+      value: '"DCH_v2"'
+      help: null
+    modelPath:
+      flags:
+      - --modelPath
+      dest: modelPath
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    stage:
+      flags:
+      - --stage
+      dest: stage
+      required: false
+      action: null
+      default: '"fit"'
+      value: '"fit"'
+      help: null
+    skipDigi:
+      flags:
+      - --skipDigi
+      dest: skipDigi
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    jobTag:
+      flags:
+      - --jobTag
+      dest: jobTag
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: Optional free-form tag stored in metadata. If empty, auto-generated.
+    dchDigiVersion:
+      flags:
+      - --dchDigiVersion
+      dest: dchDigiVersion
+      required: false
+      action: null
+      default: '"v02"'
+      value: '"v02"'
+      help: Choose DCH digitizer implementation
+    xyResolution_mm:
+      flags:
+      - --xyResolution_mm
+      dest: xyResolution_mm
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: null
+    zResolution_mm:
+      flags:
+      - --zResolution_mm
+      dest: zResolution_mm
+      required: false
+      action: null
+      default: '30.0'
+      value: '30.0'
+      help: null
+    dch_deadtime_ns:
+      flags:
+      - --dch-deadtime-ns
+      dest: dch_deadtime_ns
+      required: false
+      action: null
+      default: '450.0'
+      value: '450.0'
+      help: null
+    dch_drift_um_ns:
+      flags:
+      - --dch-drift-vel-um-ns
+      dest: dch_drift_um_ns
+      required: false
+      action: null
+      default: '-1.0'
+      value: '-1.0'
+      help: null
+    dch_sig_mm_ns:
+      flags:
+      - --dch-signal-vel-mm-ns
+      dest: dch_sig_mm_ns
+      required: false
+      action: null
+      default: 2.0/3.0*299792458.0*1e-6
+      value: 2.0/3.0*299792458.0*1e-6
+      help: null
+    dch_gas_type:
+      flags:
+      - --dch-gas-type
+      dest: dch_gas_type
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    rw_start_ns:
+      flags:
+      - --rw-start-ns
+      dest: rw_start_ns
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    rw_dur_ns:
+      flags:
+      - --rw-duration-ns
+      dest: rw_dur_ns
+      required: false
+      action: null
+      default: '900.0'
+      value: '900.0'
+      help: null
+    tbeta:
+      flags:
+      - --tbeta
+      dest: tbeta
+      required: false
+      action: null
+      default: '0.6'
+      value: '0.6'
+      help: GGTF beta threshold
+    td:
+      flags:
+      - --td
+      dest: td
+      required: false
+      action: null
+      default: '0.3'
+      value: '0.3'
+      help: GGTF distance threshold
+    onnxChunk:
+      flags:
+      - --onnxChunk
+      dest: onnxChunk
+      required: false
+      action: null
+      default: '4096'
+      value: '4096'
+      help: ONNX hits per slice
+    maxHitsPerEvent:
+      flags:
+      - --maxHitsPerEvent
+      dest: maxHitsPerEvent
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    ggtf_dropWireIfAbsDTooLarge:
+      flags:
+      - --no-ggtf-dropWireIfAbsDTooLarge
+      dest: ggtf_dropWireIfAbsDTooLarge
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_maxAbsDMM:
+      flags:
+      - --ggtf-maxAbsDMM
+      dest: ggtf_maxAbsDMM
+      required: false
+      action: null
+      default: '30.0'
+      value: '30.0'
+      help: null
+    ggtf_zeroMinSizeKeep:
+      flags:
+      - --ggtf-zeroMinSizeKeep
+      dest: ggtf_zeroMinSizeKeep
+      required: false
+      action: null
+      default: '8'
+      value: '8'
+      help: null
+    ggtf_minWireFracKeep:
+      flags:
+      - --ggtf-minWireFracKeep
+      dest: ggtf_minWireFracKeep
+      required: false
+      action: null
+      default: '0.60'
+      value: '0.60'
+      help: null
+    ggtf_promoteZeroIfGood:
+      flags:
+      - --no-ggtf-promoteZeroIfGood
+      dest: ggtf_promoteZeroIfGood
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_skipZeroIfSmall:
+      flags:
+      - --no-ggtf-skipZeroIfSmall
+      dest: ggtf_skipZeroIfSmall
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_skipZeroAlways:
+      flags:
+      - --no-ggtf-skipZeroAlways
+      dest: ggtf_skipZeroAlways
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_filterInputWiresByTruthPdg:
+      flags:
+      - --no-ggtf-filterInputWiresByTruthPdg
+      dest: ggtf_filterInputWiresByTruthPdg
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_keepTruthPdg:
+      flags:
+      - --ggtf-keepTruthPdg
+      dest: ggtf_keepTruthPdg
+      required: false
+      action: null
+      default: '13'
+      value: '13'
+      help: null
+    ggtf_dropWireIfUnlinked:
+      flags:
+      - --no-ggtf-dropWireIfUnlinked
+      dest: ggtf_dropWireIfUnlinked
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    ggtf_wireSimLinkColl:
+      flags:
+      - --ggtf-wireSimLinkColl
+      dest: ggtf_wireSimLinkColl
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: 'Override wire->SimTrackerHit link collection name for GGTF truth gating. '
+    ggtfTracksOut:
+      flags:
+      - --ggtfTracksOut
+      dest: ggtfTracksOut
+      required: false
+      action: null
+      default: '"CDCHTracks"'
+      value: '"CDCHTracks"'
+      help: Name of GGTF output track collection.
+    ggtfLog:
+      flags:
+      - --ggtfLog
+      dest: ggtfLog
+      required: false
+      action: null
+      default: '"INFO"'
+      value: '"INFO"'
+      help: null
+    fitter:
+      flags:
+      - --fitter
+      dest: fitter
+      required: false
+      action: null
+      default: '"genfit2"'
+      value: '"genfit2"'
+      help: null
+    fitOut:
+      flags:
+      - --fitOut
+      dest: fitOut
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    fitterLog:
+      flags:
+      - --fitterLog
+      dest: fitterLog
+      required: false
+      action: null
+      default: '"INFO"'
+      value: '"INFO"'
+      help: null
+    gf_useMat:
+      flags:
+      - --no-gf-useMat
+      dest: gf_useMat
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_bz:
+      flags:
+      - --gf-bz
+      dest: gf_bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    gf_pdg:
+      flags:
+      - --gf-pdg
+      dest: gf_pdg
+      required: false
+      action: null
+      default: '13'
+      value: '13'
+      help: null
+    gf_disableEloss:
+      flags:
+      - --no-gf-disableEloss
+      dest: gf_disableEloss
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_disableAllMat:
+      flags:
+      - --no-gf-disableAllMat
+      dest: gf_disableAllMat
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_hardDisableMatIfNoGeo:
+      flags:
+      - --no-gf-hardDisableMatIfNoGeo
+      dest: gf_hardDisableMatIfNoGeo
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_sortHits:
+      flags:
+      - --no-gf-sortHits
+      dest: gf_sortHits
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_dedup:
+      flags:
+      - --no-gf-dedup
+      dest: gf_dedup
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_dedupTolMM:
+      flags:
+      - --gf-dedupTolMM
+      dest: gf_dedupTolMM
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: null
+    gf_rejectNegativeLabels:
+      flags:
+      - --no-gf-rejectNegativeLabels
+      dest: gf_rejectNegativeLabels
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_minHitsPerTrack:
+      flags:
+      - --gf-minHitsPerTrack
+      dest: gf_minHitsPerTrack
+      required: false
+      action: null
+      default: '8'
+      value: '8'
+      help: null
+    gf_minMeasurementsToFit:
+      flags:
+      - --gf-minMeasurementsToFit
+      dest: gf_minMeasurementsToFit
+      required: false
+      action: null
+      default: '6'
+      value: '6'
+      help: null
+    gf_minFittedPointsWithFI:
+      flags:
+      - --gf-minFittedPointsWithFI
+      dest: gf_minFittedPointsWithFI
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    gf_maxChi2Ndf:
+      flags:
+      - --gf-maxChi2Ndf
+      dest: gf_maxChi2Ndf
+      required: false
+      action: null
+      default: '20.0'
+      value: '20.0'
+      help: null
+    gf_useKFPreFit:
+      flags:
+      - --no-gf-useKFPreFit
+      dest: gf_useKFPreFit
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_kfMaxIters:
+      flags:
+      - --gf-kfMaxIters
+      dest: gf_kfMaxIters
+      required: false
+      action: null
+      default: '12'
+      value: '12'
+      help: null
+    gf_useDAF:
+      flags:
+      - --no-gf-useDAF
+      dest: gf_useDAF
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_dafMaxIters:
+      flags:
+      - --gf-dafMaxIters
+      dest: gf_dafMaxIters
+      required: false
+      action: null
+      default: '8'
+      value: '8'
+      help: null
+    gf_fallbackToKFIfDAFFails:
+      flags:
+      - --no-gf-fallbackToKFIfDAFFails
+      dest: gf_fallbackToKFIfDAFFails
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_tryBothMomDirs:
+      flags:
+      - --no-gf-tryBothMomDirs
+      dest: gf_tryBothMomDirs
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_useBiasedStateForPublish:
+      flags:
+      - --no-gf-useBiasedStateForPublish
+      dest: gf_useBiasedStateForPublish
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_publishStateCentralFrac:
+      flags:
+      - --gf-publishStateCentralFrac
+      dest: gf_publishStateCentralFrac
+      required: false
+      action: null
+      default: '0.60'
+      value: '0.60'
+      help: null
+    gf_publishPTMaxGeV:
+      flags:
+      - --gf-publishPTMaxGeV
+      dest: gf_publishPTMaxGeV
+      required: false
+      action: null
+      default: '300.0'
+      value: '300.0'
+      help: null
+    gf_invalidPTSentinel:
+      flags:
+      - --gf-invalidPTSentinel
+      dest: gf_invalidPTSentinel
+      required: false
+      action: null
+      default: '-1.0'
+      value: '-1.0'
+      help: null
+    gf_omegaVarGood:
+      flags:
+      - --gf-omegaVarGood
+      dest: gf_omegaVarGood
+      required: false
+      action: null
+      default: 1e-4
+      value: 1e-4
+      help: null
+    gf_omegaVarBad:
+      flags:
+      - --gf-omegaVarBad
+      dest: gf_omegaVarBad
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    gf_positionUnitScale:
+      flags:
+      - --gf-positionUnitScale
+      dest: gf_positionUnitScale
+      required: false
+      action: null
+      default: '0.1'
+      value: '0.1'
+      help: null
+    gf_wireHalfLengthMM:
+      flags:
+      - --gf-wireHalfLengthMM
+      dest: gf_wireHalfLengthMM
+      required: false
+      action: null
+      default: '2250.0'
+      value: '2250.0'
+      help: null
+    gf_maxDriftMM:
+      flags:
+      - --gf-maxDriftMM
+      dest: gf_maxDriftMM
+      required: false
+      action: null
+      default: '30.0'
+      value: '30.0'
+      help: null
+    gf_maxDriftMMForHit:
+      flags:
+      - --gf-maxDriftMMForHit
+      dest: gf_maxDriftMMForHit
+      required: false
+      action: null
+      default: '35.0'
+      value: '35.0'
+      help: null
+    gf_minDriftErrMM:
+      flags:
+      - --gf-minDriftErrMM
+      dest: gf_minDriftErrMM
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: null
+    gf_maxDriftErrMM:
+      flags:
+      - --gf-maxDriftErrMM
+      dest: gf_maxDriftErrMM
+      required: false
+      action: null
+      default: '5.0'
+      value: '5.0'
+      help: null
+    gf_seedEndpointK:
+      flags:
+      - --gf-seedEndpointK
+      dest: gf_seedEndpointK
+      required: false
+      action: null
+      default: '6'
+      value: '6'
+      help: Mean of first/last K hits used as seed endpoints.
+    gf_seedTangentK:
+      flags:
+      - --gf-seedTangentK
+      dest: gf_seedTangentK
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    gf_seedPosSigmaMM:
+      flags:
+      - --gf-seedPosSigmaMM
+      dest: gf_seedPosSigmaMM
+      required: false
+      action: null
+      default: '80.0'
+      value: '80.0'
+      help: null
+    gf_seedMomSigmaGeV:
+      flags:
+      - --gf-seedMomSigmaGeV
+      dest: gf_seedMomSigmaGeV
+      required: false
+      action: null
+      default: '5.0'
+      value: '5.0'
+      help: null
+    gf_seedPTFallbackGeV:
+      flags:
+      - --gf-seedPTFallbackGeV
+      dest: gf_seedPTFallbackGeV
+      required: false
+      action: null
+      default: '50.0'
+      value: '50.0'
+      help: null
+    gf_seedPTMinGeV:
+      flags:
+      - --gf-seedPTMinGeV
+      dest: gf_seedPTMinGeV
+      required: false
+      action: null
+      default: '0.20'
+      value: '0.20'
+      help: null
+    gf_seedPTMaxGeV:
+      flags:
+      - --gf-seedPTMaxGeV
+      dest: gf_seedPTMaxGeV
+      required: false
+      action: null
+      default: '200.0'
+      value: '200.0'
+      help: null
+    gf_seedPMinGeV:
+      flags:
+      - --gf-seedPMinGeV
+      dest: gf_seedPMinGeV
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: null
+    gf_useSagittaSeed:
+      flags:
+      - --no-gf-useSagittaSeed
+      dest: gf_useSagittaSeed
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_minSagittaForSeedMM:
+      flags:
+      - --gf-minSagittaForSeedMM
+      dest: gf_minSagittaForSeedMM
+      required: false
+      action: null
+      default: '0.20'
+      value: '0.20'
+      help: null
+    gf_minHitsForObs:
+      flags:
+      - --gf-minHitsForObs
+      dest: gf_minHitsForObs
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    gf_obsSigmaEffMM:
+      flags:
+      - --gf-obsSigmaEffMM
+      dest: gf_obsSigmaEffMM
+      required: false
+      action: null
+      default: '0.25'
+      value: '0.25'
+      help: null
+    gf_obsMinPhiSpanRad:
+      flags:
+      - --gf-obsMinPhiSpanRad
+      dest: gf_obsMinPhiSpanRad
+      required: false
+      action: null
+      default: '0.06'
+      value: '0.06'
+      help: null
+    gf_obsMinChordMM:
+      flags:
+      - --gf-obsMinChordMM
+      dest: gf_obsMinChordMM
+      required: false
+      action: null
+      default: '200.0'
+      value: '200.0'
+      help: null
+    gf_obsMinSagittaMM:
+      flags:
+      - --gf-obsMinSagittaMM
+      dest: gf_obsMinSagittaMM
+      required: false
+      action: null
+      default: '0.15'
+      value: '0.15'
+      help: null
+    gf_obsMinScore:
+      flags:
+      - --gf-obsMinScore
+      dest: gf_obsMinScore
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    gf_skipIfObsTooLow:
+      flags:
+      - --no-gf-skipIfObsTooLow
+      dest: gf_skipIfObsTooLow
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_prefitOutlierVeto:
+      flags:
+      - --no-gf-prefitOutlierVeto
+      dest: gf_prefitOutlierVeto
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_outlierMaxDrop:
+      flags:
+      - --gf-outlierMaxDrop
+      dest: gf_outlierMaxDrop
+      required: false
+      action: null
+      default: '2'
+      value: '2'
+      help: null
+    gf_outlierCircleResidualMM:
+      flags:
+      - --gf-outlierCircleResidualMM
+      dest: gf_outlierCircleResidualMM
+      required: false
+      action: null
+      default: '8.0'
+      value: '8.0'
+      help: null
+    gf_outlierChordResidualMM:
+      flags:
+      - --gf-outlierChordResidualMM
+      dest: gf_outlierChordResidualMM
+      required: false
+      action: null
+      default: '20.0'
+      value: '20.0'
+      help: null
+    gf_outlierMinKeep:
+      flags:
+      - --gf-outlierMinKeep
+      dest: gf_outlierMinKeep
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    gf_minCovEigenvalue:
+      flags:
+      - --gf-minCovEigenvalue
+      dest: gf_minCovEigenvalue
+      required: false
+      action: null
+      default: 1e-8
+      value: 1e-8
+      help: null
+    gf_statsTruncCentralFrac:
+      flags:
+      - --gf-statsTruncCentralFrac
+      dest: gf_statsTruncCentralFrac
+      required: false
+      action: null
+      default: '0.95'
+      value: '0.95'
+      help: null
+    gf_diagEveryNTracks:
+      flags:
+      - --gf-diagEveryNTracks
+      dest: gf_diagEveryNTracks
+      required: false
+      action: null
+      default: '1'
+      value: '1'
+      help: null
+    gf_detId:
+      flags:
+      - --gf-detId
+      dest: gf_detId
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    gf_useLabelAsDetId:
+      flags:
+      - --no-gf-useLabelAsDetId
+      dest: gf_useLabelAsDetId
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+    gf_wireAnglesAreDegrees:
+      flags:
+      - --gf-wireAnglesAreRadians
+      dest: gf_wireAnglesAreDegrees
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: null
+  test/testTrackFinder/runTestTrackFinder.py:
+    inputFile:
+      flags:
+      - --inputFile
+      dest: inputFile
+      required: false
+      action: null
+      default: '"ddsim_output_edm4hep.root"'
+      value: '"ddsim_output_edm4hep.root"'
+      help: InputFile
+    outputFile:
+      flags:
+      - --outputFile
+      dest: outputFile
+      required: false
+      action: null
+      default: '"output_digi.root"'
+      value: '"output_digi.root"'
+      help: OutputFile
+    modelPath:
+      flags:
+      - --modelPath
+      dest: modelPath
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: model path for the track finder
+    tbeta:
+      flags:
+      - --tbeta
+      dest: tbeta
+      required: false
+      action: null
+      default: '0.6'
+      value: '0.6'
+      help: tbeta clustering parameter
+    td:
+      flags:
+      - --td
+      dest: td
+      required: false
+      action: null
+      default: '0.3'
+      value: '0.3'
+      help: td clustering parameter
+  test/testTrackFinder/scripts/Calculate_Aucoating_thickness.py:
+    cf_d_um:
+      flags:
+      - --cf_d_um
+      dest: cf_d_um
+      required: false
+      action: null
+      default: null
+      value: null
+      help: Carbon fiber core diameter [µm]
+    cf_r_um:
+      flags:
+      - --cf_r_um
+      dest: cf_r_um
+      required: false
+      action: null
+      default: null
+      value: null
+      help: Carbon fiber core radius [µm]
+    sigma_au:
+      flags:
+      - --sigma_au
+      dest: sigma_au
+      required: false
+      action: null
+      default: 4.10e7
+      value: 4.10e7
+      help: null
+    sigma_w:
+      flags:
+      - --sigma_w
+      dest: sigma_w
+      required: false
+      action: null
+      default: 1.79e7
+      value: 1.79e7
+      help: null
+    sigma_cf:
+      flags:
+      - --sigma_cf
+      dest: sigma_cf
+      required: false
+      action: null
+      default: 4.00e4
+      value: 4.00e4
+      help: null
+    sigma_nip:
+      flags:
+      - --sigma_nip
+      dest: sigma_nip
+      required: false
+      action: null
+      default: 1.5e6
+      value: 1.5e6
+      help: null
+    w_d_um:
+      flags:
+      - --w_d_um
+      dest: w_d_um
+      required: false
+      action: null
+      default: '20.0'
+      value: '20.0'
+      help: null
+    au_ref_t_um:
+      flags:
+      - --au_ref_t_um
+      dest: au_ref_t_um
+      required: false
+      action: null
+      default: '0.3'
+      value: '0.3'
+      help: null
+    f_max_GHz:
+      flags:
+      - --f_max_GHz
+      dest: f_max_GHz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    k_skin:
+      flags:
+      - --k_skin
+      dest: k_skin
+      required: false
+      action: null
+      default: '3.0'
+      value: '3.0'
+      help: null
+    mu_r_au:
+      flags:
+      - --mu_r_au
+      dest: mu_r_au
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    mu_r_w:
+      flags:
+      - --mu_r_w
+      dest: mu_r_w
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    mu_r_cf:
+      flags:
+      - --mu_r_cf
+      dest: mu_r_cf
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    mu_r_nip:
+      flags:
+      - --mu_r_nip
+      dest: mu_r_nip
+      required: false
+      action: null
+      default: '1.0'
+      value: '1.0'
+      help: null
+    use_nip:
+      flags:
+      - --use_nip
+      dest: use_nip
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    t_nip_um:
+      flags:
+      - --t_nip_um
+      dest: t_nip_um
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: null
+    tmax_factor:
+      flags:
+      - --tmax_factor
+      dest: tmax_factor
+      required: false
+      action: null
+      default: '50.0'
+      value: '50.0'
+      help: null
+  test/testTrackFinder/scripts/DelphesParamsOutput.py:
+    inputDir:
+      flags:
+      - --inputDir
+      dest: inputDir
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Reco base dir containing eta_* subdirs
+    outJson:
+      flags:
+      - --outJson
+      dest: outJson
+      required: false
+      action: null
+      default: '"tracker_params.json"'
+      value: '"tracker_params.json"'
+      help: JSON report output
+    outCsv:
+      flags:
+      - --outCsv
+      dest: outCsv
+      required: false
+      action: null
+      default: '"tracker_points.csv"'
+      value: '"tracker_points.csv"'
+      help: CSV table output
+    trackCollection:
+      flags:
+      - --trackCollection
+      dest: trackCollection
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    hitCollection:
+      flags:
+      - --hitCollection
+      dest: hitCollection
+      required: false
+      action: null
+      default: '"OutputWireHitsGGTF"'
+      value: '"OutputWireHitsGGTF"'
+      help: null
+    minPhiSpan:
+      flags:
+      - --minPhiSpan
+      dest: minPhiSpan
+      required: false
+      action: null
+      default: '0.06'
+      value: '0.06'
+      help: null
+    minChordXY:
+      flags:
+      - --minChordXY
+      dest: minChordXY
+      required: false
+      action: null
+      default: '500.0'
+      value: '500.0'
+      help: null
+    maxCircleCond:
+      flags:
+      - --maxCircleCond
+      dest: maxCircleCond
+      required: false
+      action: null
+      default: 1e6
+      value: 1e6
+      help: null
+    centralFrac:
+      flags:
+      - --centralFrac
+      dest: centralFrac
+      required: false
+      action: null
+      default: '0.95'
+      value: '0.95'
+      help: null
+    qualityCut:
+      flags:
+      - --qualityCut
+      dest: qualityCut
+      required: false
+      action: null
+      default: '"none"'
+      value: '"none"'
+      help: null
+    method:
+      flags:
+      - --method
+      dest: method
+      required: false
+      action: null
+      default: '"truncrms68"'
+      value: '"truncrms68"'
+      help: Which resolution estimator becomes dpT/pT used for the Delphes fit.
+    ptPlateauMin:
+      flags:
+      - --ptPlateauMin
+      dest: ptPlateauMin
+      required: false
+      action: null
+      default: '5.0'
+      value: '5.0'
+      help: pT threshold used to estimate plateau tracking efficiency
+    effTurnonFrac:
+      flags:
+      - --effTurnonFrac
+      dest: effTurnonFrac
+      required: false
+      action: null
+      default: '0.5'
+      value: '0.5'
+      help: Threshold fraction of plateau used to estimate TRACK_PT_MIN
+    overrideEtaMax:
+      flags:
+      - --overrideEtaMax
+      dest: overrideEtaMax
+      required: false
+      action: null
+      default: float("nan"
+      value: float("nan"
+      help: null
+    fitMode:
+      flags:
+      - --fitMode
+      dest: fitMode
+      required: false
+      action: null
+      default: '"global"'
+      value: '"global"'
+      help: null
+    minFitPt:
+      flags:
+      - --minFitPt
+      dest: minFitPt
+      required: false
+      action: null
+      default: '0.2'
+      value: '0.2'
+      help: null
+  test/testTrackFinder/scripts/analyze_pt_resolution_grid.py:
+    inputDir:
+      flags:
+      - --inputDir
+      dest: inputDir
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Reco base dir containing eta_* subdirs
+    outRoot:
+      flags:
+      - --outRoot
+      dest: outRoot
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Output ROOT file
+    trackCollection:
+      flags:
+      - --trackCollection
+      dest: trackCollection
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    hitCollection:
+      flags:
+      - --hitCollection
+      dest: hitCollection
+      required: false
+      action: null
+      default: '"OutputWireHitsGGTF"'
+      value: '"OutputWireHitsGGTF"'
+      help: null
+    minPhiSpan:
+      flags:
+      - --minPhiSpan
+      dest: minPhiSpan
+      required: false
+      action: null
+      default: '0.06'
+      value: '0.06'
+      help: null
+    minChordXY:
+      flags:
+      - --minChordXY
+      dest: minChordXY
+      required: false
+      action: null
+      default: '500.0'
+      value: '500.0'
+      help: null
+    maxCircleCond:
+      flags:
+      - --maxCircleCond
+      dest: maxCircleCond
+      required: false
+      action: null
+      default: 1e6
+      value: 1e6
+      help: null
+    centralFrac:
+      flags:
+      - --centralFrac
+      dest: centralFrac
+      required: false
+      action: null
+      default: '0.95'
+      value: '0.95'
+      help: null
+    qualityCut:
+      flags:
+      - --qualityCut
+      dest: qualityCut
+      required: false
+      action: null
+      default: '"none"'
+      value: '"none"'
+      help: null
+    maxFilesPerEta:
+      flags:
+      - --maxFilesPerEta
+      dest: maxFilesPerEta
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    diagBootstrap:
+      flags:
+      - --diagBootstrap
+      dest: diagBootstrap
+      required: false
+      action: null
+      default: '200'
+      value: '200'
+      help: Bootstrap samples for median-type error bars
+    diagBootstrapSeed:
+      flags:
+      - --diagBootstrapSeed
+      dest: diagBootstrapSeed
+      required: false
+      action: null
+      default: '12345'
+      value: '12345'
+      help: Seed base for diagnostic bootstrap RNG
+    methodBootstrap:
+      flags:
+      - --methodBootstrap
+      dest: methodBootstrap
+      required: false
+      action: null
+      default: '300'
+      value: '300'
+      help: null
+    methodBootstrapSeed:
+      flags:
+      - --methodBootstrapSeed
+      dest: methodBootstrapSeed
+      required: false
+      action: null
+      default: '54321'
+      value: '54321'
+      help: Seed base for method bootstrap RNG
+    methodBootstrapCap:
+      flags:
+      - --methodBootstrapCap
+      dest: methodBootstrapCap
+      required: false
+      action: null
+      default: '5000'
+      value: '5000'
+      help: null
+    maxRelErrWarn:
+      flags:
+      - --maxRelErrWarn
+      dest: maxRelErrWarn
+      required: false
+      action: null
+      default: '0.5'
+      value: '0.5'
+      help: null
+  test/testTrackFinder/scripts/autoreadme.py:
+    root:
+      flags:
+      - --root
+      dest: root
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    write:
+      flags:
+      - --write
+      dest: write
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Write README.md / DOCS_INDEX.md / docs/chain.mmd
+    no_graph:
+      flags:
+      - --no-graph
+      dest: no_graph
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Skip writing docs/chain.mmd
+    check:
+      flags:
+      - --check
+      dest: check
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Exit non-zero if important files are missing DOC blocks
+    inject_stubs:
+      flags:
+      - --inject-stubs
+      dest: inject_stubs
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+  test/testTrackFinder/scripts/compare_pt_resolution_grid.py:
+    a:
+      flags:
+      - --a
+      dest: a
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    b:
+      flags:
+      - --b
+      dest: b
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    out:
+      flags:
+      - --out
+      dest: out
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Output ROOT comparison file
+    tagA:
+      flags:
+      - --tagA
+      dest: tagA
+      required: false
+      action: null
+      default: '"A"'
+      value: '"A"'
+      help: null
+    tagB:
+      flags:
+      - --tagB
+      dest: tagB
+      required: false
+      action: null
+      default: '"B"'
+      value: '"B"'
+      help: null
+    xRound:
+      flags:
+      - --xRound
+      dest: xRound
+      required: false
+      action: null
+      default: '6'
+      value: '6'
+      help: Rounding digits for matching pT points
+    diagAbsTolPassFrac:
+      flags:
+      - --diagAbsTolPassFrac
+      dest: diagAbsTolPassFrac
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: null
+    diagRelTolPassFrac:
+      flags:
+      - --diagRelTolPassFrac
+      dest: diagRelTolPassFrac
+      required: false
+      action: null
+      default: '0.10'
+      value: '0.10'
+      help: null
+    diagAbsTolFrac:
+      flags:
+      - --diagAbsTolFrac
+      dest: diagAbsTolFrac
+      required: false
+      action: null
+      default: '0.05'
+      value: '0.05'
+      help: Abs tolerance for frac_* diagnostic differences.
+    diagRelTolMed:
+      flags:
+      - --diagRelTolMed
+      dest: diagRelTolMed
+      required: false
+      action: null
+      default: '0.25'
+      value: '0.25'
+      help: Rel tolerance for med_* diagnostic ratios deviation |A/B - 1|.
+  test/testTrackFinder/scripts/debug_z_spur_event.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    event:
+      flags:
+      - --event
+      dest: event
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    wire_coll:
+      flags:
+      - --wire-coll
+      dest: wire_coll
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: 'SenseWireHit collection name '
+    link_coll:
+      flags:
+      - --link-coll
+      dest: link_coll
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: 'SenseWireHitSimTrackerHitLink collection name '
+    mc_coll:
+      flags:
+      - --mc-coll
+      dest: mc_coll
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    z_min:
+      flags:
+      - --z-min
+      dest: z_min
+      required: false
+      action: null
+      default: None
+      value: None
+      help: Optional z-min mm for focusing on spur region
+    z_max:
+      flags:
+      - --z-max
+      dest: z_max
+      required: false
+      action: null
+      default: None
+      value: None
+      help: Optional z-max mm for focusing on spur region
+    png:
+      flags:
+      - --png
+      dest: png
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: 'Output PNG for time-vs-z plot '
+  test/testTrackFinder/scripts/dump_covmatrix_one_event.py:
+    event:
+      flags:
+      - --event
+      dest: event
+      required: false
+      action: null
+      default: '0'
+      value: '0'
+      help: null
+    prefix:
+      flags:
+      - --prefix
+      dest: prefix
+      required: false
+      action: null
+      default: '"AUTO"'
+      value: '"AUTO"'
+      help: null
+    raw:
+      flags:
+      - --raw
+      dest: raw
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Print raw packed values with indices
+    max_states:
+      flags:
+      - --max-states
+      dest: max_states
+      required: false
+      action: null
+      default: '50'
+      value: '50'
+      help: Safety cap if something looks weird
+  test/testTrackFinder/scripts/inspect_events_pt_pathology.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    events:
+      flags:
+      - --events
+      dest: events
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Comma-separated event indices, e.g. 718,838,302
+    hits:
+      flags:
+      - --hits
+      dest: hits
+      required: false
+      action: null
+      default: '"GGTF_3DHits"'
+      value: '"GGTF_3DHits"'
+      help: null
+    track:
+      flags:
+      - --track
+      dest: track
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+  test/testTrackFinder/scripts/mk_ddsim_grid.py:
+    out:
+      flags:
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '"params_ddsim.jsonl"'
+      value: '"params_ddsim.jsonl"'
+      help: Output JSONL of job params
+    pt_min:
+      flags:
+      - --pt-min
+      dest: pt_min
+      required: false
+      action: null
+      default: '0.01'
+      value: '0.01'
+      help: min pT [GeV]
+    pt_max:
+      flags:
+      - --pt-max
+      dest: pt_max
+      required: false
+      action: null
+      default: '200.0'
+      value: '200.0'
+      help: max pT [GeV]
+    pt_n:
+      flags:
+      - --pt-n
+      dest: pt_n
+      required: false
+      action: null
+      default: '30'
+      value: '30'
+      help: null
+    etas:
+      flags:
+      - --etas
+      dest: etas
+      required: false
+      action: null
+      default: '"0.0'
+      value: '"0.0'
+      help: comma list of eta values
+    nev:
+      flags:
+      - --nev
+      dest: nev
+      required: false
+      action: null
+      default: '1000'
+      value: '1000'
+      help: events per point
+    particle:
+      flags:
+      - --particle
+      dest: particle
+      required: false
+      action: null
+      default: '"mu-"'
+      value: '"mu-"'
+      help: gun particle PDG name
+    phi_uniform:
+      flags:
+      - --phi-uniform
+      dest: phi_uniform
+      required: false
+      action: store_true
+      default: 'True'
+      value: 'True'
+      help: null
+    theta_smear:
+      flags:
+      - --theta-smear
+      dest: theta_smear
+      required: false
+      action: null
+      default: '0.0'
+      value: '0.0'
+      help: null
+    seed0:
+      flags:
+      - --seed0
+      dest: seed0
+      required: false
+      action: null
+      default: '1_000_000'
+      value: '1_000_000'
+      help: base RNG seed
+  test/testTrackFinder/scripts/patch_trkCov_match_dch_material.py:
+    base_card:
+      flags:
+      - --base-card
+      dest: base_card
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    g4_cf:
+      flags:
+      - --g4-cf
+      dest: g4_cf
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    g4_w:
+      flags:
+      - --g4-w
+      dest: g4_w
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    outdir:
+      flags:
+      - --outdir
+      dest: outdir
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    npart:
+      flags:
+      - --npart
+      dest: npart
+      required: false
+      action: null
+      default: '12'
+      value: '12'
+      help: null
+    hist:
+      flags:
+      - --hist
+      dest: hist
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    tag:
+      flags:
+      - --tag
+      dest: tag
+      required: false
+      action: null
+      default: '"IDEA_DCH"'
+      value: '"IDEA_DCH"'
+      help: null
+  test/testTrackFinder/scripts/plot_mcparticles_pt.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Input ROOT file
+    out:
+      flags:
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '"pt_diagnostics.root"'
+      value: '"pt_diagnostics.root"'
+      help: Output ROOT file
+    tree:
+      flags:
+      - --tree
+      dest: tree
+      required: false
+      action: null
+      default: '"events"'
+      value: '"events"'
+      help: null
+    mc_prefix:
+      flags:
+      - --mc-prefix
+      dest: mc_prefix
+      required: false
+      action: null
+      default: '"MCParticles/MCParticles"'
+      value: '"MCParticles/MCParticles"'
+      help: null
+    max_events:
+      flags:
+      - --max-events
+      dest: max_events
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    pdg:
+      flags:
+      - --pdg
+      dest: pdg
+      required: false
+      action: null
+      default: '13'
+      value: '13'
+      help: null
+    pdg_abs:
+      flags:
+      - --no-pdg-abs
+      dest: pdg_abs
+      required: false
+      action: store_false
+      default: 'True'
+      value: 'True'
+      help: Match PDG with sign.
+    trackstate_prefix:
+      flags:
+      - --trackstate-prefix
+      dest: trackstate_prefix
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    assume_q:
+      flags:
+      - --assume-q
+      dest: assume_q
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: Charge sign used for pT=|q/omega| if you don
+  test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py:
+    input:
+      flags:
+      - -i
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    tree:
+      flags:
+      - --tree
+      dest: tree
+      required: false
+      action: null
+      default: '"events"'
+      value: '"events"'
+      help: null
+    coll:
+      flags:
+      - --coll
+      dest: coll
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    leaf:
+      flags:
+      - --leaf
+      dest: leaf
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    invalid_sentinel:
+      flags:
+      - --invalid-sentinel
+      dest: invalid_sentinel
+      required: false
+      action: null
+      default: '-1.0'
+      value: '-1.0'
+      help: null
+    include_invalid:
+      flags:
+      - --include-invalid
+      dest: include_invalid
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    xmin:
+      flags:
+      - --min
+      dest: xmin
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    xmax:
+      flags:
+      - --max
+      dest: xmax
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    per_event:
+      flags:
+      - --per-event
+      dest: per_event
+      required: false
+      action: null
+      default: '"all"'
+      value: '"all"'
+      help: 'How to reduce multiple TrackState.time values per event. '
+    max_events:
+      flags:
+      - --max-events
+      dest: max_events
+      required: false
+      action: null
+      default: None
+      value: None
+      help: Only process first N events.
+    events:
+      flags:
+      - --events
+      dest: events
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    bins:
+      flags:
+      - --bins
+      dest: bins
+      required: false
+      action: null
+      default: '"80"'
+      value: '"80"'
+      help: 'Binning: '
+    bin_edges:
+      flags:
+      - --bin-edges
+      dest: bin_edges
+      required: false
+      action: null
+      default: None
+      value: None
+      help: 'Comma-separated custom bin edges, e.g. '
+    logy:
+      flags:
+      - --logy
+      dest: logy
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Log scale on y-axis.
+    title:
+      flags:
+      - --title
+      dest: title
+      required: false
+      action: null
+      default: None
+      value: None
+      help: Plot title.
+    out:
+      flags:
+      - -o
+      - --out
+      dest: out
+      required: false
+      action: null
+      default: '"pt_hist.png"'
+      value: '"pt_hist.png"'
+      help: null
+    dpi:
+      flags:
+      - --dpi
+      dest: dpi
+      required: false
+      action: null
+      default: '160'
+      value: '160'
+      help: null
+    show:
+      flags:
+      - --show
+      dest: show
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    verbose:
+      flags:
+      - --verbose
+      dest: verbose
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: Verbose diagnostics.
+  test/testTrackFinder/scripts/scan_pt_time_by_event.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Input EDM4hep ROOT file
+    trackCollection:
+      flags:
+      - --trackCollection
+      dest: trackCollection
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    hitCollection:
+      flags:
+      - --hitCollection
+      dest: hitCollection
+      required: false
+      action: null
+      default: '"OutputWireHitsGGTF"'
+      value: '"OutputWireHitsGGTF"'
+      help: SenseWireHit collection name
+    expectedPt:
+      flags:
+      - --expectedPt
+      dest: expectedPt
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Expected pT for this sample [GeV]
+    top:
+      flags:
+      - --top
+      dest: top
+      required: false
+      action: null
+      default: '30'
+      value: '30'
+      help: null
+    event:
+      flags:
+      - --event
+      dest: event
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    csv:
+      flags:
+      - --csv
+      dest: csv
+      required: false
+      action: null
+      default: None
+      value: None
+      help: null
+    verbose:
+      flags:
+      - --verbose
+      dest: verbose
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+    invalidTime:
+      flags:
+      - --invalidTime
+      dest: invalidTime
+      required: false
+      action: null
+      default: '-1.0'
+      value: '-1.0'
+      help: null
+    minPhiSpan:
+      flags:
+      - --minPhiSpan
+      dest: minPhiSpan
+      required: false
+      action: null
+      default: '0.06'
+      value: '0.06'
+      help: null
+    minChordXY:
+      flags:
+      - --minChordXY
+      dest: minChordXY
+      required: false
+      action: null
+      default: '500.0'
+      value: '500.0'
+      help: null
+    maxCircleCond:
+      flags:
+      - --maxCircleCond
+      dest: maxCircleCond
+      required: false
+      action: null
+      default: 1e6
+      value: 1e6
+      help: null
+    centralFrac:
+      flags:
+      - --centralFrac
+      dest: centralFrac
+      required: false
+      action: null
+      default: '0.95'
+      value: '0.95'
+      help: null
+    type:
+      flags:
+      - --type
+      dest: type
+      required: false
+      action: null
+      default: '"bad"'
+      value: '"bad"'
+      help: null
+    metric:
+      flags:
+      - --metric
+      dest: metric
+      required: false
+      action: null
+      default: '"abs"'
+      value: '"abs"'
+      help: null
+    log:
+      flags:
+      - --log
+      dest: log
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    stdout:
+      flags:
+      - --stdout
+      dest: stdout
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: null
+  test/testTrackFinder/scripts/stamp_ddsim_metadata.py:
+    root:
+      flags:
+      - --root
+      dest: root
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    params_json:
+      flags:
+      - --params-json
+      dest: params_json
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Per-job params JSON
+    compact_xml:
+      flags:
+      - --compact-xml
+      dest: compact_xml
+      required: true
+      action: null
+      default: null
+      value: null
+      help: Compact XML path/file actually used on worker
+    cmd:
+      flags:
+      - --cmd
+      dest: cmd
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    theta_min:
+      flags:
+      - --theta-min
+      dest: theta_min
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    theta_max:
+      flags:
+      - --theta-max
+      dest: theta_max
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    phi_opts:
+      flags:
+      - --phi-opts
+      dest: phi_opts
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: null
+    out_eos:
+      flags:
+      - --out-eos
+      dest: out_eos
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: EOS_POSIX target
+    out_url:
+      flags:
+      - --out-url
+      dest: out_url
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: EOS_URL target
+    k4_release:
+      flags:
+      - --k4-release
+      dest: k4_release
+      required: false
+      action: null
+      default: '""'
+      value: '""'
+      help: Key4HEP release tag you sourced
+    job_extra:
+      flags:
+      - --job-extra
+      dest: job_extra
+      required: false
+      action: append
+      default: '[]'
+      value: '[]'
+      help: null
+  test/testTrackFinder/scripts/stamp_pipeline_metadata.py:
+    root:
+      flags:
+      - --root
+      dest: root
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    stage:
+      flags:
+      - --stage
+      dest: stage
+      required: true
+      action: null
+      default: null
+      value: null
+      help: 'stage name: ddsim|digi|ggtf|fit|analysis|...'
+    cmd:
+      flags:
+      - --cmd
+      dest: cmd
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    config:
+      flags:
+      - --config
+      dest: config
+      required: false
+      action: append
+      default: '[]'
+      value: '[]'
+      help: null
+    input:
+      flags:
+      - --input
+      dest: input
+      required: false
+      action: append
+      default: '[]'
+      value: '[]'
+      help: null
+    extra:
+      flags:
+      - --extra
+      dest: extra
+      required: false
+      action: append
+      default: '[]'
+      value: '[]'
+      help: null
+    workdir:
+      flags:
+      - --workdir
+      dest: workdir
+      required: false
+      action: null
+      default: '"."'
+      value: '"."'
+      help: directory to use for git info
+    key:
+      flags:
+      - --key
+      dest: key
+      required: false
+      action: null
+      default: '"pipeline_metadata_json"'
+      value: '"pipeline_metadata_json"'
+      help: ROOT key name
+  test/testTrackFinder/scripts/view_simhits_event.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    tree:
+      flags:
+      - --tree
+      dest: tree
+      required: false
+      action: null
+      default: '"events"'
+      value: '"events"'
+      help: null
+    event:
+      flags:
+      - --event
+      dest: event
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    hitsCollection:
+      flags:
+      - --hitsCollection
+      dest: hitsCollection
+      required: false
+      action: null
+      default: '"OutputWireHitsGGTF"'
+      value: '"OutputWireHitsGGTF"'
+      help: Hit collection with position.{x,y,z}. If not found, auto-detect a likely GGTF hit collection.
+    autoDetectHits:
+      flags:
+      - --autoDetectHits
+      dest: autoDetectHits
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: If set, auto-detect hits collection even if --hitsCollection is provided.
+    simhitCollection:
+      flags:
+      - --simhitCollection
+      dest: simhitCollection
+      required: false
+      action: null
+      default: '"DCHCollection"'
+      value: '"DCHCollection"'
+      help: null
+    trackCollection:
+      flags:
+      - --trackCollection
+      dest: trackCollection
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    trackStyle:
+      flags:
+      - --trackStyle
+      dest: trackStyle
+      required: false
+      action: null
+      default: '"helix"'
+      value: '"helix"'
+      help: null
+    Bz:
+      flags:
+      - --Bz
+      dest: Bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: null
+    assumeQ:
+      flags:
+      - --assumeQ
+      dest: assumeQ
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    topN:
+      flags:
+      - --topN
+      dest: topN
+      required: false
+      action: null
+      default: '10'
+      value: '10'
+      help: null
+    expectedPt:
+      flags:
+      - --expectedPt
+      dest: expectedPt
+      required: false
+      action: null
+      default: float("2.5897"
+      value: float("2.5897"
+      help: null
+    scanMaxEvents:
+      flags:
+      - --scanMaxEvents
+      dest: scanMaxEvents
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    rankOrder:
+      flags:
+      - --rankOrder
+      dest: rankOrder
+      required: false
+      action: null
+      default: '"largest"'
+      value: '"largest"'
+      help: null
+    hitMatchTopK:
+      flags:
+      - --hitMatchTopK
+      dest: hitMatchTopK
+      required: false
+      action: null
+      default: '25'
+      value: '25'
+      help: null
+    outRoot:
+      flags:
+      - --outRoot
+      dest: outRoot
+      required: false
+      action: null
+      default: '"tracks_display_simhits_multi.root"'
+      value: '"tracks_display_simhits_multi.root"'
+      help: null
+  test/testTrackFinder/scripts/view_tracks_event.py:
+    input:
+      flags:
+      - --input
+      dest: input
+      required: true
+      action: null
+      default: null
+      value: null
+      help: null
+    tree:
+      flags:
+      - --tree
+      dest: tree
+      required: false
+      action: null
+      default: '"events"'
+      value: '"events"'
+      help: null
+    event:
+      flags:
+      - --event
+      dest: event
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    hitsCollection:
+      flags:
+      - --hitsCollection
+      dest: hitsCollection
+      required: false
+      action: null
+      default: '"OutputWireHitsGGTF"'
+      value: '"OutputWireHitsGGTF"'
+      help: null
+    autoDetectHits:
+      flags:
+      - --autoDetectHits
+      dest: autoDetectHits
+      required: false
+      action: store_true
+      default: 'False'
+      value: 'False'
+      help: If set, auto-detect hits collection even if --hitsCollection is provided.
+    digiCollection:
+      flags:
+      - --digiCollection
+      dest: digiCollection
+      required: false
+      action: null
+      default: '"DCHDigi2Collection"'
+      value: '"DCHDigi2Collection"'
+      help: null
+    trackCollection:
+      flags:
+      - --trackCollection
+      dest: trackCollection
+      required: false
+      action: null
+      default: '"GenFitTracks"'
+      value: '"GenFitTracks"'
+      help: null
+    trackStyle:
+      flags:
+      - --trackStyle
+      dest: trackStyle
+      required: false
+      action: null
+      default: '"helix"'
+      value: '"helix"'
+      help: null
+    Bz:
+      flags:
+      - --Bz
+      dest: Bz
+      required: false
+      action: null
+      default: '2.0'
+      value: '2.0'
+      help: 'B-field along z [T] for helix drawing (default: 2.0; '
+    assumeQ:
+      flags:
+      - --assumeQ
+      dest: assumeQ
+      required: false
+      action: null
+      default: '-1'
+      value: '-1'
+      help: null
+    outRoot:
+      flags:
+      - --outRoot
+      dest: outRoot
+      required: false
+      action: null
+      default: '"tracks_display.root"'
+      value: '"tracks_display.root"'
+      help: Output ROOT file for histos + canvases

@@ -26,7 +26,7 @@ FIT_OUT="${7:-auto}"                  # auto|<name>
 K4REL="${8:-2026-01-11}"              # key4hep nightly tag
 
 
-TGEO_FILE="${9:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03W.root}"   # /eos/... or root://... or local
+TGEO_FILE="${9:-/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03_100umCF_0.313474umAu.root}"   # /eos/... or root://... or local
 LOCAL_TGEO=""
 
 if [[ -n "$TGEO_FILE" ]]; then

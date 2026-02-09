@@ -13,7 +13,7 @@ request_disk   = 6 GB
 
 # ---- Inputs to ship with the job ----
 # Include BOTH python files + (optionally) runtime.tgz if you use it
-transfer_input_files = scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py,runtime.tgz
+transfer_input_files = scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py, runtime.tgz
 
 # ---- Logging ----
 output = logs/analyze_$(ClusterId)_$(ProcId).out
@@ -25,12 +25,12 @@ log    = logs/analyze_$(ClusterId).log
 arguments = $(INPUTDIR) $(EOSOUT) $(TRACKCOLL) $(HITCOLL) $(QCUT) $(MINPHI) $(MINCHORD) $(MAXCOND) $(CENTFRAC)
 
 # ---- Your campaign values ----
-INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_22_2026/Wmat   
+INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_29_2026/25umCF_1.2318umAu   
 # <- usually you want the BASE dir containing eta_* subdirs
 # better example:
 # INPUTDIR = /eos/user/c/cglenn/reco_samples2/1_18_2026/
 
-EOSOUT    = /eos/user/c/cglenn/analyze_mat_gridscan/analyze_pt_gridscanWmat.root
+EOSOUT    = /eos/user/c/cglenn/analyze_mat_gridscan/analyze_pt_gridscan25umCF_1.2318umAu.root
 
 TRACKCOLL = GenFitTracks
 HITCOLL   = OutputWireHitsGGTF

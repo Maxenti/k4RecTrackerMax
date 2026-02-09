@@ -1,0 +1,10 @@
+__meta__:
+  generated_by: compile_config.py sub (bootstrap)
+run:
+  tag: dev
+  events: 100
+  seed: 12345
+paths: {}
+notes:
+- Edit module configs (Tracking/config_Tracking.yaml, DCHdigi/config_DCHdigi.yaml) to change knobs.
+- Run `python3 tools/compile_config.py main` to regenerate config/compiled.yaml.

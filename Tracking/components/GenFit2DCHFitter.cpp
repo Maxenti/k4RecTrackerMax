@@ -1,4 +1,115 @@
 // ======================================================================
+
+// DOC:
+// Summary: Gaudi/k4FWCore Transformer that fits IDEA drift-chamber GGTF track candidates using GenFit2 wire measurements (WireMeasurementNew), producing physics-clean EDM4hep TrackStates at the IP with robust publish-state selection, observability gating, optional TGeo material effects, and per-event robust pT summary metadata.
+// Usage:
+//   - As a Gaudi component in a k4run job (Key4HEP / k4RecTracker):
+//       from Configurables import GenFit2DCHFitter
+//       fitter = GenFit2DCHFitter(
+//         inputTracks   = ["OutputTracksGGTF"],
+//         outputTracks  = ["GenFitTracks"],
+//         Bz            = 2.0,
+//         PDG           = 13,
+//         UseDAF        = True,
+//         UseMaterialEffects = True,
+//         PositionUnitScale  = 0.1,      # mm->cm for GenFit internal units
+//       )
+//       ApplicationMgr(TopAlg=[fitter], EvtSel="NONE", EvtMax=-1)
+//   - Typical CLI wrapper is your existing reco pipeline (e.g., scripts/reco_job.sh + options.py) that runs k4run with this component in TopAlg.
+// Inputs:
+//   - EDM4hep/extension TrackCollection: GGTF-produced track candidates (default: "OutputTracksGGTF").
+//   - Each input extension::Track is expected to have trackerHits relations containing extension::SenseWireHit objects (SenseWireHits).
+//   - For material effects (optional): ROOT TGeo geometry available via gGeoManager (loaded by framework) OR imported from a ROOT file via:
+//       TGeoFile="<detector.root>" (optional), and optionally TGeoTopVolume="<volName>".
+// Outputs:
+//   - EDM4hep/extension TrackCollection: fitted tracks (default: "GenFitTracks").
+//   - Each output track has:
+//       * type set to PDG hypothesis (PDG property, default 13).
+//       * chi2/ndf filled from GenFit FitStatus.
+//       * trackerHits relation propagated from input (same hits, for traceability).
+//       * an EDM4hep TrackState with location=AtIP added via addAtIPState():
+//           - TrackState.time = pT [GeV] when pT is considered valid, else InvalidPTSentinel (default -1).
+//           - TrackState.omega = q/pT [GeV^-1] (signed curvature convention).
+//           - referencePoint = (x,y,z) at IP (or publish state if IP extrap fails), in mm.
+//           - covariance: either full 5x5 perigee covariance (d0,phi,omega,z0,tanLambda) from FD Jacobian,
+//             or fallback placeholder diagonal entries.
+//   - k4FWCore MetaDataHandle<string> written:
+//       * cfgMeta: JSON blob of fitter configuration (written at initialize()).
+//       * evtMeta: JSON blob of per-event summary counts + robust pT stats (written each event).
+// Connects-To:
+//   - Upstream: GGTF_tracking.cpp (or equivalent) that produces inputTracks and attaches SenseWireHits via trackerHits relation.
+//   - Downstream:
+//       * analysis scripts reading GenFitTracks TrackStates (AtIP) to compute pT resolution vs pT/eta.
+//       * compare/diagnostic scripts comparing TrackState pT to hit-based curvature observability metrics.
+//   - Geometry/material pipeline:
+//       * ddsim/DD4hep -> ROOT TGeo export (optional) -> this fitter via gGeoManager or TGeoFile import.
+// Collections:
+//   - inputTracks (vector<string>): default ["OutputTracksGGTF"]
+//   - outputTracks (vector<string>): default ["GenFitTracks"]
+//   - Metadata keys (k4FWCore::MetaDataHandle<string>):
+//       * "cfgMeta" (Writer) : job-level JSON config snapshot
+//       * "evtMeta" (Writer) : event-level JSON summary + robust pT stats
+// Algorithm-Flow:
+//   1) Read each input track; collect SenseWireHits from trackerHits; optionally reject negative labels (debug groups).
+//   2) Optional hit preprocessing:
+//       - SortHits: stable PCA-based ordering along principal axis of on-wire positions.
+//       - DeduplicateHits: drop nearly-identical positions within DedupTolMM.
+//       - PreFitOutlierVeto: deterministic XY outlier pruning using Kåsa circle fit + chord-perp fallback.
+//   3) Compute curvature observability metrics in XY (phiSpan, chord, sagitta, obsScore=sagitta/sigmaEff).
+//       - If SkipIfObsTooLow=true and cuts fail, drop the track;
+//         else keep the track but mark pT invalid for publishing.
+//   4) Build GenFit2 Track:
+//       - Seed endpoints from mean of first/last SeedEndpointK hits.
+//       - Seed direction from combined end-window PCA tangents (SeedTangentK), sign-aligned to chord.
+//       - Seed pT from sagitta when available (UseSagittaSeed), else SeedPTFallbackGeV; clamp to [SeedPTMinGeV, SeedPTMaxGeV].
+//       - Convert mm->cm with PositionUnitScale for GenFit internal length units.
+//       - Convert each SenseWireHit to WireMeasurementNew using drift distance (+error), synthesized wire endpoints from
+//         wire position ± WireHalfLengthMM * wireDir(stereo,phi), with MaxDriftMM and drift-error clamps.
+//   5) Fit strategy:
+//       - Optional KalmanFitterRefTrack prefit (UseKFPreFit) then DAF refine (UseDAF) to resolve left/right ambiguity.
+//       - Optional TryBothMomentumDirections: fit with +mom and -mom seed; keep best by goodness + chi2/ndf + FI points.
+//   6) Acceptance/publishing:
+//       - Require >= MinFittedPointsWithFI TrackPoints having AbsFitterInfo and chi2/ndf < MaxChi2Ndf.
+//       - Select publish state deterministically from central window of track points (PublishStateCentralFrac),
+//         extracting a DAF-safe fitted state via AbsFitterInfo::getFittedState(biased/unbiased).
+//       - Extrapolate publish state to IP; compute perigee covariance via finite-difference Jacobian from rep-state covariance
+//         (works even without getPosMomCov ABI).
+//       - Add a single authoritative TrackState(AtIP) with time=pT and omega=q/pT; if obs fails or pT out of range,
+//         publish InvalidPTSentinel instead.
+//   7) Per-event robust pT summary:
+//       - Collect valid published pT values and compute median, MAD, MADsigma (~1.4826*MAD), and truncated RMS over central fraction.
+//       - Store in evtMeta JSON and print summary counters.
+// Key-Properties:
+//   - I/O: inputTracks, outputTracks
+//   - Field/hypothesis: Bz [T], PDG
+//   - Fit: UseKFPreFit, KFMaxIters, UseDAF, DAFMaxIters, FallbackToKFIfDAFFails, TryBothMomentumDirections
+//   - Preprocessing: SortHits, DeduplicateHits, DedupTolMM, PreFitOutlierVeto (+ Outlier* controls)
+//   - Wire modeling: WireHalfLengthMM, MaxDriftMM, MaxDriftMMForHit, MinDriftErrMM, MaxDriftErrMM, WireAnglesAreDegrees, DetId/UseLabelAsDetId
+//   - Seeding: SeedEndpointK, SeedTangentK, UseSagittaSeed (+ MinSagittaForSeedMM), SeedPTFallbackGeV, SeedPTMin/MaxGeV, SeedPMinGeV
+//   - Observability gating: MinHitsForObs, ObsSigmaEffMM, ObsMinPhiSpanRad, ObsMinChordMM, ObsMinSagittaMM, ObsMinScore, SkipIfObsTooLow
+//   - Acceptance/publishing: MinHitsPerTrack, MinMeasurementsToFit, MinFittedPointsWithFI, MaxChi2Ndf,
+//       PublishStateCentralFrac, UseBiasedStateForPublish, PublishPTMaxGeV, InvalidPTSentinel
+//   - Material effects: UseMaterialEffects, TGeoFile, TGeoTopVolume, DisableEnergyLoss, DisableAllMaterialEffects, HardDisableMaterialIfNoGeo
+//   - Reporting: StatsTruncCentralFrac, JobTag, DiagEveryNTracks
+// Physics-Notes:
+//   - Intended for drift-chamber (wire) tracking where left/right drift ambiguity is best handled by DAF.
+//   - Material effects (multiple scattering; optional energy loss) require a valid TGeo geometry; otherwise material effects are disabled.
+//   - pT publication is intentionally “physics-clean”: no truth or SimLinks required, and no cuts on reconstructed pT vs expectation;
+//     only geometric observability + fit quality cuts.
+//   - TrackState.time is used as the authoritative stored pT in downstream analysis; omega retains the standard q/pT convention.
+// Caveats:
+//   - Requires input trackerHits to actually be extension::SenseWireHit; if GGTF is not attaching SenseWireHit relations,
+//     this fitter will skip tracks.
+//   - GenFit ABI variations: helper stubs exist for alternative covariance APIs; current implementation uses FD Jacobian
+//     on rep-state covariance to avoid fork-specific getPosMomCov signatures.
+//   - Units: positions are assumed to be in mm at I/O boundaries; GenFit internal length unit is cm via PositionUnitScale.
+// Tags:
+//   tracking, drift-chamber, IDEA, FCCee, key4hep, k4FWCore, Gaudi, GenFit2, DAF, Kalman, WireMeasurementNew, TGeo, material-effects, pT-resolution, robust-stats, metadata
+// DOC_END
+
+
+
+
 // GenFit2DCHFitter.cpp  -- DCH fit of GGTF tracks using GenFit2 WireMeasurementNew
 //
 // Purpose (Option A, matches your GGTF_tracking.cpp intent):

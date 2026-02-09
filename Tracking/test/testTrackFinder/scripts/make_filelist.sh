@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Base directory on EOS where the gun sample subdirs live
-BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_22_2026/W}"
+BASE_DIR="${1:-/eos/user/c/cglenn/gun_samples/1_29_2026/100umCF_0.313474umAu}"
 
 # Output file (in CWD unless you pass a second arg)
 OUT_FILE="${2:-filelist.txt}"

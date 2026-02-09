@@ -1,0 +1,175 @@
+__meta__:
+  module: DCHdigi
+  generated_by: compile_config.py sub
+seed:
+  positional: {}
+  env:
+    DCH_DEADTIME_NS:
+      default: '450.0'
+      value: '450.0'
+    DCH_XY_MM:
+      default: '0.10'
+      value: '0.10'
+    DCH_Z_MM:
+      default: '30.0'
+      value: '30.0'
+    DCH_GAS_TYPE:
+      default: '0'
+      value: '0'
+    DCH_DRIFT_VEL_UM_NS:
+      default: '-1.0'
+      value: '-1.0'
+    DCH_READOUT_START_NS:
+      default: '1.0'
+      value: '1.0'
+    DCH_READOUT_DUR_NS:
+      default: '900.0'
+      value: '900.0'
+  pipeline: {}
+  defaults: {}
+cpp_properties:
+  include/DCHdigi_v01.h:
+    GeoSvcName:
+      type: std::string
+      default: '"GeoSvc"'
+      value: '"GeoSvc"'
+      help: The name of the GeoSvc instance
+    uidSvcName:
+      type: std::string
+      default: '"uidSvc"'
+      value: '"uidSvc"'
+      help: The name of the UniqueIDGenSvc instance
+    DCH_name:
+      type: std::string
+      default: '"DCH_v2"'
+      value: '"DCH_v2"'
+      help: Name of the Drift Chamber detector
+    zResolution_mm:
+      type: float
+      default: '1.0'
+      value: '1.0'
+      help: Spatial resolution in the z direction (from reading out the wires at both sides) in mm. Default 1 mm.
+    xyResolution_mm:
+      type: float
+      default: '0.1'
+      value: '0.1'
+      help: Spatial resolution in the xy direction in mm. Default 0.1 mm.
+    calculate_dndx:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: Calculate number of clusters and electron per cluster
+    fileDataAlg:
+      type: std::string
+      default: '"/eos/project/f/fccsw-web/www/filesForSimDigiReco/IDEA/DataAlgFORGEANT.root"'
+      value: '"/eos/project/f/fccsw-web/www/filesForSimDigiReco/IDEA/DataAlgFORGEANT.root"'
+      help: ROOT file with cluster size distributions
+    create_debug_histograms:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: Create output file with histograms for debugging
+    out_debug_filename:
+      type: std::string
+      default: '"dch_digi_alg_debug.root"'
+      value: '"dch_digi_alg_debug.root"'
+      help: name for the file that will contain the histograms for debugging
+  include/DCHdigi_v02.h:
+    uidSvcName:
+      type: std::string
+      default: '"UniqueIDGenSvc"'
+      value: '"UniqueIDGenSvc"'
+      help: The name of the UniqueIDGenSvc instance
+    GeoSvcName:
+      type: std::string
+      default: '"GeoSvc"'
+      value: '"GeoSvc"'
+      help: The name of the GeoSvc instance
+    DCH_name:
+      type: std::string
+      default: '"DCH_v2"'
+      value: '"DCH_v2"'
+      help: Name of the Drift Chamber detector
+    zResolution_mm:
+      type: double
+      default: '1.0'
+      value: '1.0'
+      help: Spatial resolution along the wire, in mm.
+    xyResolution_mm:
+      type: double
+      default: '0.1'
+      value: '0.1'
+      help: Spatial resolution perpendicular to the wire, in mm.
+    timeResolution_ns:
+      type: double
+      default: '0.0'
+      value: '0.0'
+      help: Additional Gaussian time jitter applied to hit time [ns]. (0 disables)
+    Deadtime_ns:
+      type: double
+      default: '400.0'
+      value: '400.0'
+      help: Deadtime of a cell in ns.
+    DeadtimeFromFirstHit:
+      type: bool
+      default: 'true'
+      value: 'true'
+      help: 'If true: group hits into a train if (t - t0) < deadtime. If false: compare to previous hit.'
+    DriftVelocity_um_per_ns:
+      type: double
+      default: '-1.0'
+      value: '-1.0'
+      help: Gas drift velocity in um/ns. If negative, auto-chosen based on GasType.
+    SignalVelocity_mm_per_ns:
+      type: double
+      default: '199.86163866666667'
+      value: '199.86163866666667'
+      help: Signal velocity in the wire in mm/ns (default = (2/3)*c).
+    MinAbsCosStereo:
+      type: double
+      default: 1e-3
+      value: 1e-3
+      help: Minimum |cos(stereoAngle)| allowed to compute readout distance. Below -> skip.
+    GasType:
+      type: int
+      default: '{0}'
+      value: '{0}'
+      help: '0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar.'
+    UseClusterModel:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: If true, estimate clusters from beta*gamma and path length. If false, store zero clusters (geo-only digitizer).
+    ReadoutWindowStartTime_ns:
+      type: double
+      default: '1.0'
+      value: '1.0'
+      help: Start time of readout window (ns).
+    ReadoutWindowDuration_ns:
+      type: double
+      default: '450.0'
+      value: '450.0'
+      help: Duration of readout window (ns).
+    JobTag:
+      type: std::string
+      default: '""'
+      value: '""'
+      help: Optional external tag (e.g. input file name or run label)
+  include/DCHsimpleDigitizer.h:
+    readoutName:
+      type: std::string
+      default: '"CDCHHits"'
+      value: '"CDCHHits"'
+      help: Name of the detector readout
+  include/DCHsimpleDigitizerExtendedEdm.h:
+    readoutName:
+      type: std::string
+      default: '"CDCHHits"'
+      value: '"CDCHHits"'
+      help: Name of the detector readout
+    debugMode:
+      type: bool
+      default: 'false'
+      value: 'false'
+      help: Flag to produce debugging distributions
+argparse: {}

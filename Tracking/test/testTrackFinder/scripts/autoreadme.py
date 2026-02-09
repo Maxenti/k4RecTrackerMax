@@ -1,32 +1,45 @@
 #!/usr/bin/env python3
 """
 DOC
-autoreadme.py (v2)
+autoreadme.py (v3)
 
 Generates:
   - README.md in each directory under --root
   - DOCS_INDEX.md at --root
   - docs/chain.mmd Mermaid graph at --root/docs (unless --no-graph)
 
-Primary signal: per-file DOC block:
-  # DOC:
-  # Summary: ...
-  # Usage:
-  #   ...
-  # Inputs: ...
-  # Outputs: ...
-  # Connects-To: ...
-  # Collections: ...
-  # Tags: ...
-  # DOC_END
+Primary signal: per-file DOC block near the top of each file.
 
-Also adds heuristic "Inferred" links:
-  - python imports
-  - C++ includes
-  - bash/python calls
-  - k4run / condor usage
-  - Gaudi configuration patterns (TopAlg, Configurables)
-  DOC_END
+Accepted DOC block markers (case-insensitive; with or without comment prefixes):
+  Start markers (any of):
+    DOC
+    DOC:
+    DOC_START
+    DOC_BEGIN
+    DOCBLOCK
+    DOC_BLOCK
+    BEGIN_DOC
+  End markers (any of):
+    DOC_END
+    END_DOC
+    DOC_STOP
+    DOC_FINISH
+
+DOC blocks can appear as:
+  - comment blocks:  # ...   // ...   /* ... */   ; ...   -- ...
+  - inside Python triple-quoted docstrings (the script strips bare triple-quote-only lines)
+
+Recommended fields inside a DOC block (all optional but strongly encouraged):
+  Summary: one-liner of what the file does
+  Usage: how to run / how to include in a chain
+  Examples: runnable example commands + what you expect to get
+  Inputs: input files / collections / objects + types
+  Outputs: outputs created + types
+  Collections: collection names + schemas/types
+  Connects-To: upstream/downstream files or components
+  Arguments: CLI args or Gaudi properties + defaults + meaning
+  Tags: comma-separated keywords
+DOC_END
 """
 
 from __future__ import annotations
@@ -56,10 +69,12 @@ IMPORTANT_SUBPATH_HINTS = (
 
 TEXTFILE_MAX = 400_000  # bytes
 
-DOC_START_RE = re.compile(r'^\s*(?:(#|//)\s*)?DOC:\s*$')
-DOC_END_RE   = re.compile(r'^\s*(?:(#|//)\s*)?DOC_END\s*$')
+# How far from the top we search for a DOC block.
+DOC_SCAN_MAX_LINES = 600
 
-
+# -------------
+# Regex helpers
+# -------------
 PY_IMPORT_RE = re.compile(r"^\s*(?:from\s+([A-Za-z0-9_\.]+)\s+import|import\s+([A-Za-z0-9_\.]+))")
 CPP_INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^">]+)[">]')
 BASH_CALL_RE = re.compile(r"^\s*(?:\./|bash\s+|sh\s+|zsh\s+|python3\s+|python\s+)([A-Za-z0-9_\-./]+)")
@@ -74,54 +89,148 @@ GAUDI_DECLARE_COMPONENT_RE = re.compile(r"\bDECLARE_COMPONENT\b|\bDECLARE_FACTOR
 # simple CLI usage extraction (argparse)
 ARGPARSE_RE = re.compile(r"\bargparse\.ArgumentParser\b|\badd_argument\(")
 
-@dataclass
-class FileDoc:
-    path: Path
-    summary: str = ""
-    usage: List[str] = field(default_factory=list)
-    inputs: str = ""
-    outputs: str = ""
-    connects_to: List[str] = field(default_factory=list)
-    collections: str = ""
-    tags: List[str] = field(default_factory=list)
+# Heuristic extraction of argparse add_argument lines (best-effort, not full AST)
+ARGPARSE_ADDARG_RE = re.compile(
+    r"""add_argument\(\s*([^\)]*?)\s*\)""",
+    flags=re.IGNORECASE
+)
 
-    inferred_links: List[str] = field(default_factory=list)
-    has_doc_block: bool = False
-    notes: List[str] = field(default_factory=list)
+# Heuristic extraction of Gaudi::Property declarations in C++ (best-effort)
+# Matches e.g. Gaudi::Property<double> m_Bz {this, "Bz", 2.0, "..."};
+GAUDI_PROPERTY_RE = re.compile(
+    r"""Gaudi::Property<\s*([^>]+?)\s*>\s+([A-Za-z0-9_]+)\s*\{\s*this\s*,\s*"([^"]+)"\s*,\s*([^,}]+)""",
+    flags=re.MULTILINE
+)
 
-def read_text_safely(p: Path) -> str:
-    try:
-        data = p.read_bytes()
-        if len(data) > TEXTFILE_MAX:
-            return ""
-        return data.decode("utf-8", errors="replace")
-    except Exception:
-        return ""
+# -----------------------------
+# DOC block parsing (flexible)
+# -----------------------------
+
+# Start/end marker tokens we accept (normalized)
+DOC_START_TOKENS = {
+    "DOC", "DOC:", "DOC_START", "DOC_BEGIN", "DOCBLOCK", "DOC_BLOCK", "BEGIN_DOC"
+}
+DOC_END_TOKENS = {
+    "DOC_END", "END_DOC", "DOC_STOP", "DOC_FINISH"
+}
+
+# Comment prefixes we know how to strip from DOC block lines
+COMMENT_PREFIX_RE = re.compile(
+    r"""^\s*(?:
+          \# |
+          // |
+          /\* |
+          \* |
+          ; |
+          -- |
+          ! |
+          :: |
+        )\s*""",
+    re.VERBOSE
+)
+
+TRIPLE_QUOTE_ONLY_RE = re.compile(r"""^\s*("{3}|'{3})\s*$""")
 
 
+def _strip_leading_comment(line: str) -> str:
+    """Remove one leading comment prefix token (if present)."""
+    return COMMENT_PREFIX_RE.sub("", line, count=1).rstrip()
 
-        
+
+def _normalize_marker(s: str) -> str:
+    """
+    Normalize a candidate marker line:
+      - strip leading comment tokens
+      - strip surrounding whitespace
+      - collapse spaces
+      - keep underscores/colons
+      - uppercase
+    """
+    s2 = _strip_leading_comment(s).strip()
+    # remove surrounding brackets if someone wrote [DOC] etc.
+    s2 = s2.strip("[](){}")
+    # collapse internal whitespace
+    s2 = re.sub(r"\s+", " ", s2)
+    return s2.upper()
+
+
+def _is_doc_start(line: str) -> bool:
+    m = _normalize_marker(line)
+    return m in DOC_START_TOKENS
+
+
+def _is_doc_end(line: str) -> bool:
+    m = _normalize_marker(line)
+    return m in DOC_END_TOKENS
+
+
+def _strip_doc_line(line: str) -> Optional[str]:
+    """
+    Strip comment prefix; drop bare triple-quote-only lines; return cleaned line or None if ignorable.
+    """
+    ln2 = _strip_leading_comment(line)
+
+    # Drop bare triple-quote lines inside DOC blocks (common in Python docstrings)
+    if TRIPLE_QUOTE_ONLY_RE.match(ln2.strip()):
+        return None
+
+    # Also drop empty
+    if not ln2.strip():
+        return None
+
+    return ln2.rstrip()
+
+
+def _canonical_key(k: str) -> str:
+    """
+    Map possible field header spellings to canonical keys used in FileDoc.
+    """
+    k0 = k.strip().lower().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "connects": "connects_to",
+        "connects_to": "connects_to",
+        "connects-to": "connects_to",
+        "collections": "collections",
+        "inputs": "inputs",
+        "outputs": "outputs",
+        "summary": "summary",
+        "usage": "usage",
+        "examples": "examples",
+        "example": "examples",
+        "args": "arguments",
+        "arguments": "arguments",
+        "parameters": "arguments",
+        "properties": "arguments",
+        "tags": "tags",
+        "notes": "notes",
+    }
+    return aliases.get(k0, k0)
+
+
 def parse_doc_block(text: str) -> Dict[str, List[str]]:
+    """
+    Parse the first DOC block found near the top of the file.
+
+    The parser is intentionally permissive:
+      - accepts many start markers: DOC, DOC:, DOC_START, ...
+      - accepts many end markers: DOC_END, END_DOC, ...
+      - strips common comment prefixes (#, //, /*, *, ;, --, ...)
+      - tolerates Python docstrings by ignoring bare triple-quote-only lines
+    """
     lines = text.splitlines()
     in_doc = False
     block: List[str] = []
 
-    # scan near top (allow licenses + module docstring)
-    for ln in lines[:260]:
-        if not in_doc and DOC_START_RE.match(ln):
+    for ln in lines[:DOC_SCAN_MAX_LINES]:
+        if not in_doc and _is_doc_start(ln):
             in_doc = True
             continue
-        if in_doc and DOC_END_RE.match(ln):
+        if in_doc and _is_doc_end(ln):
             break
         if in_doc:
-            # Remove leading comment markers if present
-            ln2 = re.sub(r"^\s*(#|//)\s*", "", ln).rstrip()
-
-            # Remove bare triple-quote lines inside the DOC block (optional)
-            if ln2.strip() in ('"""', "'''"):
-                continue
-
-            block.append(ln2)
+            cleaned = _strip_doc_line(ln)
+            if cleaned is not None:
+                block.append(cleaned)
 
     if not block:
         return {}
@@ -129,12 +238,13 @@ def parse_doc_block(text: str) -> Dict[str, List[str]]:
     fields: Dict[str, List[str]] = {}
     current_key: Optional[str] = None
 
+    # Field header pattern: Key: value
+    header_re = re.compile(r"^([A-Za-z0-9_\- ]+)\s*:\s*(.*)$")
+
     for ln in block:
-        if not ln.strip():
-            continue
-        m = re.match(r"^([A-Za-z0-9_\-]+)\s*:\s*(.*)$", ln)
+        m = header_re.match(ln)
         if m:
-            current_key = m.group(1).strip().lower()
+            current_key = _canonical_key(m.group(1))
             fields.setdefault(current_key, [])
             val = m.group(2).strip()
             if val:
@@ -146,6 +256,41 @@ def parse_doc_block(text: str) -> Dict[str, List[str]]:
     return fields
 
 
+# -----------------------------
+# Model / file doc structure
+# -----------------------------
+@dataclass
+class FileDoc:
+    path: Path
+    summary: str = ""
+    usage: List[str] = field(default_factory=list)
+    examples: List[str] = field(default_factory=list)
+    inputs: str = ""
+    outputs: str = ""
+    connects_to: List[str] = field(default_factory=list)
+    collections: str = ""
+    arguments: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+
+    inferred_links: List[str] = field(default_factory=list)
+    inferred_arguments: List[str] = field(default_factory=list)
+    has_doc_block: bool = False
+    notes: List[str] = field(default_factory=list)
+
+
+def read_text_safely(p: Path) -> str:
+    try:
+        data = p.read_bytes()
+        if len(data) > TEXTFILE_MAX:
+            return ""
+        return data.decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+
+
+# -----------------------------
+# Heuristic extraction helpers
+# -----------------------------
 def fallback_summary(text: str) -> str:
     # Python module docstring first line
     m = re.search(r'^\s*"""(.*?)"""', text, flags=re.DOTALL | re.MULTILINE)
@@ -155,7 +300,7 @@ def fallback_summary(text: str) -> str:
             return first
 
     # First meaningful comment line
-    for ln in text.splitlines()[:40]:
+    for ln in text.splitlines()[:60]:
         s = ln.strip()
         if s.startswith("#") or s.startswith("//"):
             cleaned = re.sub(r"^(#|//)\s*", "", s).strip()
@@ -172,29 +317,13 @@ def fallback_summary(text: str) -> str:
 
     return ""
 
-def is_interesting(p: Path, root: Path) -> bool:
-    if p.is_dir():
-        return False
-    if any(part in IGNORE_DIR_PARTS for part in p.parts):
-        return False
-    if p.suffix and p.suffix not in INCLUDE_EXTS:
-        return False
-    # skip generated readmes we write
-    if p.name in ("README.md", "DOCS_INDEX.md"):
-        return False
-    try:
-        p.relative_to(root)
-    except Exception:
-        return False
-    return True
 
 def infer_links(p: Path, text: str) -> List[str]:
     links: Set[str] = set()
 
-    # keep inference near top for speed, but scan more for gaudi-ish wiring
     lines = text.splitlines()
-    head = lines[:500]
-    full = lines[:2000]
+    head = lines[:800]
+    full = lines[:3000]
 
     for ln in head:
         m = PY_IMPORT_RE.match(ln)
@@ -219,19 +348,16 @@ def infer_links(p: Path, text: str) -> List[str]:
         links.add("uses:condor")
 
     # Gaudi Python config inference
-    # - list Configurables imported
     for ln in full:
         m = GAUDI_CONFIGURABLES_RE.match(ln)
         if m:
-            # avoid huge lines; just label it
             links.add("gaudi:imports:Configurables")
             break
 
-    # - find algorithm names in TopAlg patterns (very heuristic)
-    # e.g. ApplicationMgr( TopAlg = [ "Alg1", "Alg2" ] )
+    # Algorithm names in TopAlg patterns (very heuristic)
     topalg_str = " ".join(full)
     for alg in re.findall(r'"([A-Za-z0-9_]+)"', topalg_str):
-        if len(alg) >= 5 and any(k in alg.lower() for k in ("track", "dch", "fit", "gtt", "gltf", "acts")):
+        if len(alg) >= 5 and any(k in alg.lower() for k in ("track", "dch", "fit", "gtt", "gltf", "acts", "genfit")):
             links.add(f"gaudi:topalg:{alg}")
 
     # C++ Gaudi component hint
@@ -239,6 +365,121 @@ def infer_links(p: Path, text: str) -> List[str]:
         links.add("gaudi:declares_component")
 
     return sorted(links)
+
+
+def infer_argparse_arguments(text: str, max_items: int = 25) -> List[str]:
+    """
+    Best-effort extraction of argparse add_argument(...) calls.
+    Produces short, markdown-friendly bullet lines.
+    """
+    if not ARGPARSE_RE.search(text):
+        return []
+
+    out: List[str] = []
+    lines = text.splitlines()
+    window = "\n".join(lines[:2500])
+
+    for m in ARGPARSE_ADDARG_RE.finditer(window):
+        body = m.group(1)
+        if not body:
+            continue
+
+        opt = None
+        optm = re.search(r"""(["'])(--?[A-Za-z0-9_\-]+)\1""", body)
+        if optm:
+            opt = optm.group(2)
+
+        default = None
+        dm = re.search(r"\bdefault\s*=\s*([^,\)]+)", body)
+        if dm:
+            default = dm.group(1).strip()
+
+        help_s = None
+        hm = re.search(r"""\bhelp\s*=\s*["']([^"']+)["']""", body)
+        if hm:
+            help_s = hm.group(1).strip()
+
+        if opt:
+            parts = [opt]
+            if default is not None:
+                parts.append(f"default={default}")
+            if help_s:
+                parts.append(help_s)
+            out.append("  - " + " | ".join(parts))
+        else:
+            snippet = re.sub(r"\s+", " ", body).strip()
+            out.append("  - " + (snippet[:160] + ("..." if len(snippet) > 160 else "")))
+
+        if len(out) >= max_items:
+            break
+
+    return out
+
+
+def infer_gaudi_properties_cpp(text: str, max_items: int = 40) -> List[str]:
+    """
+    Best-effort extraction of Gaudi::Property declarations from C++.
+    Produces bullet lines like:
+      - Bz (double) default=2.0 : Bz field [T]
+    """
+    out: List[str] = []
+    for m in GAUDI_PROPERTY_RE.finditer(text[:350_000]):
+        typ = m.group(1).strip()
+        member = m.group(2).strip()
+        propname = m.group(3).strip()
+        default = m.group(4).strip()
+
+        start = m.end()
+        eol = text.find("\n", start)
+        if eol == -1:
+            eol = min(len(text), start + 300)
+        tail = text[start:eol]
+        docm = re.search(r""",\s*"([^"]+)"\s*\}""", tail)
+        doc = docm.group(1).strip() if docm else ""
+
+        line = f"  - {propname} ({typ}) default={default}"
+        if doc:
+            line += f" : {doc}"
+        else:
+            line += f" (member={member})"
+        out.append(line)
+
+        if len(out) >= max_items:
+            break
+    return out
+
+
+def is_interesting(p: Path, root: Path) -> bool:
+    if p.is_dir():
+        return False
+    if any(part in IGNORE_DIR_PARTS for part in p.parts):
+        return False
+    if p.suffix and p.suffix not in INCLUDE_EXTS:
+        return False
+    if p.name in ("README.md", "DOCS_INDEX.md"):
+        return False
+    try:
+        p.relative_to(root)
+    except Exception:
+        return False
+    return True
+
+
+def relpath(p: Path, root: Path) -> str:
+    try:
+        return str(p.relative_to(root))
+    except Exception:
+        return str(p)
+
+
+def md_escape(s: str) -> str:
+    return s.replace("|", "\\|")
+
+
+def is_important(p: Path, root: Path) -> bool:
+    rp = relpath(p, root).lower()
+    return any(f"/{h}/" in f"/{rp}/" for h in IMPORTANT_SUBPATH_HINTS)
+
 
 def build_filedoc(p: Path, root: Path) -> Optional[FileDoc]:
     text = read_text_safely(p)
@@ -250,14 +491,23 @@ def build_filedoc(p: Path, root: Path) -> Optional[FileDoc]:
 
     if fields:
         fd.has_doc_block = True
+
         fd.summary = " ".join(fields.get("summary", [])).strip()
         fd.usage = fields.get("usage", [])
+        fd.examples = fields.get("examples", [])
         fd.inputs = " ".join(fields.get("inputs", [])).strip()
         fd.outputs = " ".join(fields.get("outputs", [])).strip()
         fd.collections = " ".join(fields.get("collections", [])).strip()
 
-        conns = fields.get("connects-to", []) + fields.get("connects_to", [])
+        conns = fields.get("connects-to", []) + fields.get("connects_to", []) + fields.get("connects", [])
         fd.connects_to = [x.strip() for x in conns if x.strip()]
+
+        fd.arguments = (
+            fields.get("arguments", [])
+            + fields.get("args", [])
+            + fields.get("parameters", [])
+            + fields.get("properties", [])
+        )
 
         tags: List[str] = []
         for tline in fields.get("tags", []):
@@ -268,7 +518,14 @@ def build_filedoc(p: Path, root: Path) -> Optional[FileDoc]:
 
     fd.inferred_links = infer_links(p, text)
 
-    # small quality notes
+    inferred_args: List[str] = []
+    if p.suffix == ".py":
+        inferred_args = infer_argparse_arguments(text)
+    elif p.suffix in (".cpp", ".cc", ".cxx", ".h", ".hpp"):
+        inferred_args = infer_gaudi_properties_cpp(text)
+
+    fd.inferred_arguments = inferred_args
+
     if not fd.summary:
         fd.notes.append("missing_summary")
     if not fd.has_doc_block:
@@ -276,18 +533,6 @@ def build_filedoc(p: Path, root: Path) -> Optional[FileDoc]:
 
     return fd
 
-def relpath(p: Path, root: Path) -> str:
-    try:
-        return str(p.relative_to(root))
-    except Exception:
-        return str(p)
-
-def md_escape(s: str) -> str:
-    return s.replace("|", "\\|")
-
-def is_important(p: Path, root: Path) -> bool:
-    rp = relpath(p, root).lower()
-    return any(f"/{h}/" in f"/{rp}/" for h in IMPORTANT_SUBPATH_HINTS)
 
 def write_dir_readme(dirpath: Path, root: Path, docs: List[FileDoc], write: bool) -> None:
     if not docs:
@@ -296,9 +541,11 @@ def write_dir_readme(dirpath: Path, root: Path, docs: List[FileDoc], write: bool
     rp = relpath(dirpath, root)
     title = f"# {rp}\n"
     intro = (
-        "\nThis README is auto-generated from per-file `DOC:` blocks (preferred) plus heuristics.\n"
-        "Improve accuracy by adding a `DOC:` header to important glue files, then re-run:\n\n"
+        "\nThis README is auto-generated from per-file DOC blocks (preferred) plus heuristics.\n"
+        "Improve accuracy by adding a DOC header to important glue files, then re-run:\n\n"
         "```bash\npython3 scripts/autoreadme.py --root . --write\n```\n\n"
+        "Accepted DOC start markers include `DOC`, `DOC:`, `DOC_START`, `DOC_BEGIN` (and similar); "
+        "end markers include `DOC_END`, `END_DOC` (and similar).\n\n"
     )
 
     lines: List[str] = [title, intro]
@@ -314,18 +561,32 @@ def write_dir_readme(dirpath: Path, root: Path, docs: List[FileDoc], write: bool
         badge = "✅" if fd.has_doc_block else "⚠️"
         lines.append(f"| {badge} `{fd.path.name}` | {summ} | {usage} | {conns} | {inf} |\n")
 
-    # Inputs / Outputs / Collections section
-    io = [fd for fd in docs if fd.inputs or fd.outputs or fd.collections]
-    if io:
-        lines.append("\n## Inputs / Outputs / Collections\n")
-        for fd in io:
-            lines.append(f"### `{fd.path.name}`\n")
+    details = [fd for fd in docs if (fd.inputs or fd.outputs or fd.collections or fd.examples or fd.arguments or fd.inferred_arguments)]
+    if details:
+        lines.append("\n## Details\n")
+        for fd in sorted(details, key=lambda x: x.path.name.lower()):
+            lines.append(f"\n### `{fd.path.name}`\n")
             if fd.inputs:
                 lines.append(f"- **Inputs:** {md_escape(fd.inputs)}\n")
             if fd.outputs:
                 lines.append(f"- **Outputs:** {md_escape(fd.outputs)}\n")
             if fd.collections:
                 lines.append(f"- **Collections:** {md_escape(fd.collections)}\n")
+
+            if fd.examples:
+                lines.append("- **Examples:**\n")
+                for ex in fd.examples[:12]:
+                    lines.append(f"  - {md_escape(ex)}\n")
+
+            if fd.arguments:
+                lines.append("- **Arguments / Properties (DOC):**\n")
+                for a in fd.arguments[:25]:
+                    lines.append(f"  - {md_escape(a)}\n")
+
+            if fd.inferred_arguments:
+                lines.append("- **Arguments / Properties (inferred):**\n")
+                for a in fd.inferred_arguments[:25]:
+                    lines.append(f"{md_escape(a)}\n")
 
     out = dirpath / "README.md"
     content = "".join(lines)
@@ -335,6 +596,7 @@ def write_dir_readme(dirpath: Path, root: Path, docs: List[FileDoc], write: bool
     else:
         print(f"[dry] would write {out}")
 
+
 def write_root_index(root: Path, all_docs: List[FileDoc], write: bool) -> None:
     out = root / "DOCS_INDEX.md"
     lines: List[str] = []
@@ -343,7 +605,6 @@ def write_root_index(root: Path, all_docs: List[FileDoc], write: bool) -> None:
     lines.append("## How to regenerate\n\n")
     lines.append("```bash\npython3 scripts/autoreadme.py --root . --write\n```\n\n")
 
-    # group by directory
     by_dir: Dict[Path, List[FileDoc]] = {}
     for fd in all_docs:
         by_dir.setdefault(fd.path.parent, []).append(fd)
@@ -370,19 +631,18 @@ def write_root_index(root: Path, all_docs: List[FileDoc], write: bool) -> None:
     else:
         print(f"[dry] would write {out}")
 
+
 def write_mermaid_graph(root: Path, all_docs: List[FileDoc], write: bool) -> None:
     docs_dir = root / "docs"
     docs_dir.mkdir(exist_ok=True)
     out = docs_dir / "chain.mmd"
 
-    # edges from explicit connects_to plus inferred calls/mentions/gaudi topalg
     edges: Set[Tuple[str, str]] = set()
     nodes: Set[str] = set()
 
     def node_id(s: str) -> str:
         return re.sub(r"[^A-Za-z0-9_]", "_", s)
 
-    # build quick lookup of basenames for resolution
     basename_to_rel: Dict[str, str] = {}
     for fd in all_docs:
         rp = relpath(fd.path, root)
@@ -393,7 +653,6 @@ def write_mermaid_graph(root: Path, all_docs: List[FileDoc], write: bool) -> Non
         nodes.add(src)
 
         for c in fd.connects_to:
-            # resolve "runX.py" -> repo-relative if present
             tgt = basename_to_rel.get(Path(c).name, c)
             edges.add((src, tgt))
             nodes.add(tgt)
@@ -423,36 +682,52 @@ def write_mermaid_graph(root: Path, all_docs: List[FileDoc], write: bool) -> Non
     else:
         print(f"[dry] would write {out}")
 
+
+def file_contains_any_doc_marker(text: str) -> bool:
+    for ln in text.splitlines()[:DOC_SCAN_MAX_LINES]:
+        if _is_doc_start(ln):
+            return True
+    return False
+
+
+def comment_prefix_for_path(p: Path) -> str:
+    if p.suffix in (".cpp", ".cc", ".cxx", ".h", ".hpp"):
+        return "// "
+    if p.suffix in (".sh", ".bash", ".zsh"):
+        return "# "
+    if p.suffix in (".ini", ".cfg"):
+        return "; "
+    return "# "
+
+
 def inject_stub_doc_block(p: Path) -> bool:
-    """
-    Inserts a DOC block at the top of a file if none exists.
-    Conservative: only for text-like files, and only if file doesn't already contain 'DOC:'.
-    """
     text = read_text_safely(p)
-    if not text or "DOC:" in text:
+    if not text:
+        return False
+    if file_contains_any_doc_marker(text):
         return False
 
-    # Choose comment prefix
-    if p.suffix in (".cpp", ".cc", ".cxx", ".h", ".hpp"):
-        prefix = "// "
-    else:
-        prefix = "# "
+    prefix = comment_prefix_for_path(p)
 
     stub = (
         f"{prefix}DOC:\n"
-        f"{prefix}Summary: TODO\n"
+        f"{prefix}Summary: TODO one-line description\n"
         f"{prefix}Usage:\n"
-        f"{prefix}  TODO\n"
-        f"{prefix}Inputs: TODO\n"
-        f"{prefix}Outputs: TODO\n"
-        f"{prefix}Connects-To: TODO\n"
-        f"{prefix}Collections: TODO\n"
-        f"{prefix}Tags: TODO\n"
+        f"{prefix}  TODO how to run / include\n"
+        f"{prefix}Examples:\n"
+        f"{prefix}  TODO example command(s) + expected result\n"
+        f"{prefix}Inputs: TODO (include types/classes/collections)\n"
+        f"{prefix}Outputs: TODO (include types/classes/collections)\n"
+        f"{prefix}Collections: TODO (name -> type/schema)\n"
+        f"{prefix}Connects-To: TODO upstream/downstream files/components\n"
+        f"{prefix}Arguments: TODO important args/properties + defaults + meaning\n"
+        f"{prefix}Tags: TODO comma,separated,tags\n"
         f"{prefix}DOC_END\n\n"
     )
 
     p.write_text(stub + text, encoding="utf-8")
     return True
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -469,11 +744,9 @@ def main():
     if not root.is_dir():
         raise SystemExit(f"Not a directory: {root}")
 
-    # collect docs
     all_docs: List[FileDoc] = []
     interesting_files: List[Path] = [p for p in root.rglob("*") if is_interesting(p, root)]
 
-    # optionally inject stubs
     if args.inject_stubs:
         changed = 0
         for p in interesting_files:
@@ -487,7 +760,6 @@ def main():
         if fd:
             all_docs.append(fd)
 
-    # check mode (CI): important files must have DOC block
     if args.check:
         missing: List[str] = []
         for fd in all_docs:
@@ -500,7 +772,6 @@ def main():
             raise SystemExit(2)
         print("[check] OK: all important files have DOC blocks")
 
-    # group by directory
     by_dir: Dict[Path, List[FileDoc]] = {}
     for fd in all_docs:
         by_dir.setdefault(fd.path.parent, []).append(fd)
@@ -511,6 +782,7 @@ def main():
     write_root_index(root, all_docs, write=args.write)
     if not args.no_graph:
         write_mermaid_graph(root, all_docs, write=args.write)
+
 
 if __name__ == "__main__":
     main()

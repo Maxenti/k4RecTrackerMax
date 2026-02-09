@@ -1,5 +1,4 @@
 flowchart LR
-  ___["..."]
   Alg__CDCHHits["Alg::CDCHHits"]
   Alg__CDCHTracks["Alg::CDCHTracks"]
   Alg__DCHCollection["Alg::DCHCollection"]
@@ -50,6 +49,7 @@ flowchart LR
   Alg__GenFitTracks_tracks_theta["Alg::GenFitTracks_tracks_theta"]
   Alg__GenFitter["Alg::GenFitter"]
   Alg__HelixFitter["Alg::HelixFitter"]
+  Alg__IDEA_DCH["Alg::IDEA_DCH"]
   Alg__InputSimTrackerHits["Alg::InputSimTrackerHits"]
   Alg__InputTracks["Alg::InputTracks"]
   Alg__InputTracksFromGenParticlesAssociation["Alg::InputTracksFromGenParticlesAssociation"]
@@ -89,6 +89,8 @@ flowchart LR
   Alg__dch_drift_um_ns["Alg::dch_drift_um_ns"]
   Alg__dch_gas_type["Alg::dch_gas_type"]
   Alg__dch_sig_mm_ns["Alg::dch_sig_mm_ns"]
+  Alg__fit_mode["Alg::fit_mode"]
+  Alg__genfit["Alg::genfit"]
   Alg__genfit2["Alg::genfit2"]
   Alg__genfit_tracks["Alg::genfit_tracks"]
   Alg__gf_prefitOutlierVeto["Alg::gf_prefitOutlierVeto"]
@@ -99,6 +101,7 @@ flowchart LR
   Alg__max3DPerTrack["Alg::max3DPerTrack"]
   Alg__minHitsOnTrack["Alg::minHitsOnTrack"]
   Alg__nTracksPerEvent["Alg::nTracksPerEvent"]
+  Alg__n_points_fit["Alg::n_points_fit"]
   Alg__n_states_in_track["Alg::n_states_in_track"]
   Alg__n_tracks["Alg::n_tracks"]
   Alg__n_tracks_evt["Alg::n_tracks_evt"]
@@ -108,17 +111,20 @@ flowchart LR
   Alg__nstates_per_track_med["Alg::nstates_per_track_med"]
   Alg__nstates_per_track_min["Alg::nstates_per_track_min"]
   Alg__outputTracks["Alg::outputTracks"]
+  Alg__per_eta_fits["Alg::per_eta_fits"]
   Alg__primary_track_index["Alg::primary_track_index"]
   Alg__primary_track_nstates["Alg::primary_track_nstates"]
   Alg__saveDCHsimHitTool["Alg::saveDCHsimHitTool"]
   Alg__test_TrackFinder["Alg::test_TrackFinder"]
   Alg__test_TracksFromGenParticles["Alg::test_TracksFromGenParticles"]
   Alg__track["Alg::track"]
+  Alg__trackCollection["Alg::trackCollection"]
   Alg__trackState["Alg::trackState"]
   Alg__trackStates["Alg::trackStates"]
   Alg__trackStates_begin["Alg::trackStates_begin"]
   Alg__trackStates_end["Alg::trackStates_end"]
   Alg__track_collection["Alg::track_collection"]
+  Alg__track_eta_max_inferred["Alg::track_eta_max_inferred"]
   Alg__track_hits_distance_closest_approach["Alg::track_hits_distance_closest_approach"]
   Alg__track_index["Alg::track_index"]
   Alg__track_style["Alg::track_style"]
@@ -144,6 +150,8 @@ flowchart LR
   components_backup_SimpleFitDCHFitter_txt["components/backup/SimpleFitDCHFitter.txt"]
   components_backup_ThreePointFitter_txt["components/backup/ThreePointFitter.txt"]
   components_fit_ggtf_tracks_cpp["components/fit_ggtf_tracks.cpp"]
+  config_Tracking_yaml["config_Tracking.yaml"]
+  extract_delphes_tracker_params_py["extract_delphes_tracker_params.py"]
   include_GenFitter_h["include/GenFitter.h"]
   include_utils_hpp["include/utils.hpp"]
   src_GenFitter_cpp["src/GenFitter.cpp"]
@@ -198,204 +206,24 @@ flowchart LR
   test_testTrackFinder_params_job_118_json["test/testTrackFinder/params/job_118.json"]
   test_testTrackFinder_params_job_119_json["test/testTrackFinder/params/job_119.json"]
   test_testTrackFinder_params_job_12_json["test/testTrackFinder/params/job_12.json"]
-  test_testTrackFinder_params_job_120_json["test/testTrackFinder/params/job_120.json"]
-  test_testTrackFinder_params_job_121_json["test/testTrackFinder/params/job_121.json"]
-  test_testTrackFinder_params_job_122_json["test/testTrackFinder/params/job_122.json"]
-  test_testTrackFinder_params_job_123_json["test/testTrackFinder/params/job_123.json"]
-  test_testTrackFinder_params_job_124_json["test/testTrackFinder/params/job_124.json"]
-  test_testTrackFinder_params_job_125_json["test/testTrackFinder/params/job_125.json"]
-  test_testTrackFinder_params_job_126_json["test/testTrackFinder/params/job_126.json"]
-  test_testTrackFinder_params_job_127_json["test/testTrackFinder/params/job_127.json"]
-  test_testTrackFinder_params_job_128_json["test/testTrackFinder/params/job_128.json"]
-  test_testTrackFinder_params_job_129_json["test/testTrackFinder/params/job_129.json"]
   test_testTrackFinder_params_job_13_json["test/testTrackFinder/params/job_13.json"]
-  test_testTrackFinder_params_job_130_json["test/testTrackFinder/params/job_130.json"]
-  test_testTrackFinder_params_job_131_json["test/testTrackFinder/params/job_131.json"]
-  test_testTrackFinder_params_job_132_json["test/testTrackFinder/params/job_132.json"]
-  test_testTrackFinder_params_job_133_json["test/testTrackFinder/params/job_133.json"]
-  test_testTrackFinder_params_job_134_json["test/testTrackFinder/params/job_134.json"]
-  test_testTrackFinder_params_job_135_json["test/testTrackFinder/params/job_135.json"]
-  test_testTrackFinder_params_job_136_json["test/testTrackFinder/params/job_136.json"]
-  test_testTrackFinder_params_job_137_json["test/testTrackFinder/params/job_137.json"]
-  test_testTrackFinder_params_job_138_json["test/testTrackFinder/params/job_138.json"]
-  test_testTrackFinder_params_job_139_json["test/testTrackFinder/params/job_139.json"]
   test_testTrackFinder_params_job_14_json["test/testTrackFinder/params/job_14.json"]
-  test_testTrackFinder_params_job_140_json["test/testTrackFinder/params/job_140.json"]
-  test_testTrackFinder_params_job_141_json["test/testTrackFinder/params/job_141.json"]
-  test_testTrackFinder_params_job_142_json["test/testTrackFinder/params/job_142.json"]
-  test_testTrackFinder_params_job_143_json["test/testTrackFinder/params/job_143.json"]
-  test_testTrackFinder_params_job_144_json["test/testTrackFinder/params/job_144.json"]
-  test_testTrackFinder_params_job_145_json["test/testTrackFinder/params/job_145.json"]
-  test_testTrackFinder_params_job_146_json["test/testTrackFinder/params/job_146.json"]
-  test_testTrackFinder_params_job_147_json["test/testTrackFinder/params/job_147.json"]
-  test_testTrackFinder_params_job_148_json["test/testTrackFinder/params/job_148.json"]
-  test_testTrackFinder_params_job_149_json["test/testTrackFinder/params/job_149.json"]
   test_testTrackFinder_params_job_15_json["test/testTrackFinder/params/job_15.json"]
-  test_testTrackFinder_params_job_150_json["test/testTrackFinder/params/job_150.json"]
-  test_testTrackFinder_params_job_151_json["test/testTrackFinder/params/job_151.json"]
-  test_testTrackFinder_params_job_152_json["test/testTrackFinder/params/job_152.json"]
-  test_testTrackFinder_params_job_153_json["test/testTrackFinder/params/job_153.json"]
-  test_testTrackFinder_params_job_154_json["test/testTrackFinder/params/job_154.json"]
-  test_testTrackFinder_params_job_155_json["test/testTrackFinder/params/job_155.json"]
-  test_testTrackFinder_params_job_156_json["test/testTrackFinder/params/job_156.json"]
-  test_testTrackFinder_params_job_157_json["test/testTrackFinder/params/job_157.json"]
-  test_testTrackFinder_params_job_158_json["test/testTrackFinder/params/job_158.json"]
-  test_testTrackFinder_params_job_159_json["test/testTrackFinder/params/job_159.json"]
   test_testTrackFinder_params_job_16_json["test/testTrackFinder/params/job_16.json"]
-  test_testTrackFinder_params_job_160_json["test/testTrackFinder/params/job_160.json"]
-  test_testTrackFinder_params_job_161_json["test/testTrackFinder/params/job_161.json"]
-  test_testTrackFinder_params_job_162_json["test/testTrackFinder/params/job_162.json"]
-  test_testTrackFinder_params_job_163_json["test/testTrackFinder/params/job_163.json"]
-  test_testTrackFinder_params_job_164_json["test/testTrackFinder/params/job_164.json"]
-  test_testTrackFinder_params_job_165_json["test/testTrackFinder/params/job_165.json"]
-  test_testTrackFinder_params_job_166_json["test/testTrackFinder/params/job_166.json"]
-  test_testTrackFinder_params_job_167_json["test/testTrackFinder/params/job_167.json"]
-  test_testTrackFinder_params_job_168_json["test/testTrackFinder/params/job_168.json"]
-  test_testTrackFinder_params_job_169_json["test/testTrackFinder/params/job_169.json"]
   test_testTrackFinder_params_job_17_json["test/testTrackFinder/params/job_17.json"]
-  test_testTrackFinder_params_job_170_json["test/testTrackFinder/params/job_170.json"]
-  test_testTrackFinder_params_job_171_json["test/testTrackFinder/params/job_171.json"]
-  test_testTrackFinder_params_job_172_json["test/testTrackFinder/params/job_172.json"]
-  test_testTrackFinder_params_job_173_json["test/testTrackFinder/params/job_173.json"]
-  test_testTrackFinder_params_job_174_json["test/testTrackFinder/params/job_174.json"]
-  test_testTrackFinder_params_job_175_json["test/testTrackFinder/params/job_175.json"]
-  test_testTrackFinder_params_job_176_json["test/testTrackFinder/params/job_176.json"]
-  test_testTrackFinder_params_job_177_json["test/testTrackFinder/params/job_177.json"]
-  test_testTrackFinder_params_job_178_json["test/testTrackFinder/params/job_178.json"]
-  test_testTrackFinder_params_job_179_json["test/testTrackFinder/params/job_179.json"]
   test_testTrackFinder_params_job_18_json["test/testTrackFinder/params/job_18.json"]
-  test_testTrackFinder_params_job_180_json["test/testTrackFinder/params/job_180.json"]
-  test_testTrackFinder_params_job_181_json["test/testTrackFinder/params/job_181.json"]
-  test_testTrackFinder_params_job_182_json["test/testTrackFinder/params/job_182.json"]
-  test_testTrackFinder_params_job_183_json["test/testTrackFinder/params/job_183.json"]
-  test_testTrackFinder_params_job_184_json["test/testTrackFinder/params/job_184.json"]
-  test_testTrackFinder_params_job_185_json["test/testTrackFinder/params/job_185.json"]
-  test_testTrackFinder_params_job_186_json["test/testTrackFinder/params/job_186.json"]
-  test_testTrackFinder_params_job_187_json["test/testTrackFinder/params/job_187.json"]
-  test_testTrackFinder_params_job_188_json["test/testTrackFinder/params/job_188.json"]
-  test_testTrackFinder_params_job_189_json["test/testTrackFinder/params/job_189.json"]
   test_testTrackFinder_params_job_19_json["test/testTrackFinder/params/job_19.json"]
-  test_testTrackFinder_params_job_190_json["test/testTrackFinder/params/job_190.json"]
-  test_testTrackFinder_params_job_191_json["test/testTrackFinder/params/job_191.json"]
-  test_testTrackFinder_params_job_192_json["test/testTrackFinder/params/job_192.json"]
-  test_testTrackFinder_params_job_193_json["test/testTrackFinder/params/job_193.json"]
-  test_testTrackFinder_params_job_194_json["test/testTrackFinder/params/job_194.json"]
-  test_testTrackFinder_params_job_195_json["test/testTrackFinder/params/job_195.json"]
-  test_testTrackFinder_params_job_196_json["test/testTrackFinder/params/job_196.json"]
-  test_testTrackFinder_params_job_197_json["test/testTrackFinder/params/job_197.json"]
-  test_testTrackFinder_params_job_198_json["test/testTrackFinder/params/job_198.json"]
-  test_testTrackFinder_params_job_199_json["test/testTrackFinder/params/job_199.json"]
   test_testTrackFinder_params_job_2_json["test/testTrackFinder/params/job_2.json"]
   test_testTrackFinder_params_job_20_json["test/testTrackFinder/params/job_20.json"]
-  test_testTrackFinder_params_job_200_json["test/testTrackFinder/params/job_200.json"]
-  test_testTrackFinder_params_job_201_json["test/testTrackFinder/params/job_201.json"]
-  test_testTrackFinder_params_job_202_json["test/testTrackFinder/params/job_202.json"]
-  test_testTrackFinder_params_job_203_json["test/testTrackFinder/params/job_203.json"]
-  test_testTrackFinder_params_job_204_json["test/testTrackFinder/params/job_204.json"]
-  test_testTrackFinder_params_job_205_json["test/testTrackFinder/params/job_205.json"]
-  test_testTrackFinder_params_job_206_json["test/testTrackFinder/params/job_206.json"]
-  test_testTrackFinder_params_job_207_json["test/testTrackFinder/params/job_207.json"]
-  test_testTrackFinder_params_job_208_json["test/testTrackFinder/params/job_208.json"]
-  test_testTrackFinder_params_job_209_json["test/testTrackFinder/params/job_209.json"]
   test_testTrackFinder_params_job_21_json["test/testTrackFinder/params/job_21.json"]
-  test_testTrackFinder_params_job_210_json["test/testTrackFinder/params/job_210.json"]
-  test_testTrackFinder_params_job_211_json["test/testTrackFinder/params/job_211.json"]
-  test_testTrackFinder_params_job_212_json["test/testTrackFinder/params/job_212.json"]
-  test_testTrackFinder_params_job_213_json["test/testTrackFinder/params/job_213.json"]
-  test_testTrackFinder_params_job_214_json["test/testTrackFinder/params/job_214.json"]
-  test_testTrackFinder_params_job_215_json["test/testTrackFinder/params/job_215.json"]
-  test_testTrackFinder_params_job_216_json["test/testTrackFinder/params/job_216.json"]
-  test_testTrackFinder_params_job_217_json["test/testTrackFinder/params/job_217.json"]
-  test_testTrackFinder_params_job_218_json["test/testTrackFinder/params/job_218.json"]
-  test_testTrackFinder_params_job_219_json["test/testTrackFinder/params/job_219.json"]
   test_testTrackFinder_params_job_22_json["test/testTrackFinder/params/job_22.json"]
-  test_testTrackFinder_params_job_220_json["test/testTrackFinder/params/job_220.json"]
-  test_testTrackFinder_params_job_221_json["test/testTrackFinder/params/job_221.json"]
-  test_testTrackFinder_params_job_222_json["test/testTrackFinder/params/job_222.json"]
-  test_testTrackFinder_params_job_223_json["test/testTrackFinder/params/job_223.json"]
-  test_testTrackFinder_params_job_224_json["test/testTrackFinder/params/job_224.json"]
-  test_testTrackFinder_params_job_225_json["test/testTrackFinder/params/job_225.json"]
-  test_testTrackFinder_params_job_226_json["test/testTrackFinder/params/job_226.json"]
-  test_testTrackFinder_params_job_227_json["test/testTrackFinder/params/job_227.json"]
-  test_testTrackFinder_params_job_228_json["test/testTrackFinder/params/job_228.json"]
-  test_testTrackFinder_params_job_229_json["test/testTrackFinder/params/job_229.json"]
   test_testTrackFinder_params_job_23_json["test/testTrackFinder/params/job_23.json"]
-  test_testTrackFinder_params_job_230_json["test/testTrackFinder/params/job_230.json"]
-  test_testTrackFinder_params_job_231_json["test/testTrackFinder/params/job_231.json"]
-  test_testTrackFinder_params_job_232_json["test/testTrackFinder/params/job_232.json"]
-  test_testTrackFinder_params_job_233_json["test/testTrackFinder/params/job_233.json"]
-  test_testTrackFinder_params_job_234_json["test/testTrackFinder/params/job_234.json"]
-  test_testTrackFinder_params_job_235_json["test/testTrackFinder/params/job_235.json"]
-  test_testTrackFinder_params_job_236_json["test/testTrackFinder/params/job_236.json"]
-  test_testTrackFinder_params_job_237_json["test/testTrackFinder/params/job_237.json"]
-  test_testTrackFinder_params_job_238_json["test/testTrackFinder/params/job_238.json"]
-  test_testTrackFinder_params_job_239_json["test/testTrackFinder/params/job_239.json"]
   test_testTrackFinder_params_job_24_json["test/testTrackFinder/params/job_24.json"]
-  test_testTrackFinder_params_job_240_json["test/testTrackFinder/params/job_240.json"]
-  test_testTrackFinder_params_job_241_json["test/testTrackFinder/params/job_241.json"]
-  test_testTrackFinder_params_job_242_json["test/testTrackFinder/params/job_242.json"]
-  test_testTrackFinder_params_job_243_json["test/testTrackFinder/params/job_243.json"]
-  test_testTrackFinder_params_job_244_json["test/testTrackFinder/params/job_244.json"]
-  test_testTrackFinder_params_job_245_json["test/testTrackFinder/params/job_245.json"]
-  test_testTrackFinder_params_job_246_json["test/testTrackFinder/params/job_246.json"]
-  test_testTrackFinder_params_job_247_json["test/testTrackFinder/params/job_247.json"]
-  test_testTrackFinder_params_job_248_json["test/testTrackFinder/params/job_248.json"]
-  test_testTrackFinder_params_job_249_json["test/testTrackFinder/params/job_249.json"]
   test_testTrackFinder_params_job_25_json["test/testTrackFinder/params/job_25.json"]
-  test_testTrackFinder_params_job_250_json["test/testTrackFinder/params/job_250.json"]
-  test_testTrackFinder_params_job_251_json["test/testTrackFinder/params/job_251.json"]
-  test_testTrackFinder_params_job_252_json["test/testTrackFinder/params/job_252.json"]
-  test_testTrackFinder_params_job_253_json["test/testTrackFinder/params/job_253.json"]
-  test_testTrackFinder_params_job_254_json["test/testTrackFinder/params/job_254.json"]
-  test_testTrackFinder_params_job_255_json["test/testTrackFinder/params/job_255.json"]
-  test_testTrackFinder_params_job_256_json["test/testTrackFinder/params/job_256.json"]
-  test_testTrackFinder_params_job_257_json["test/testTrackFinder/params/job_257.json"]
-  test_testTrackFinder_params_job_258_json["test/testTrackFinder/params/job_258.json"]
-  test_testTrackFinder_params_job_259_json["test/testTrackFinder/params/job_259.json"]
   test_testTrackFinder_params_job_26_json["test/testTrackFinder/params/job_26.json"]
-  test_testTrackFinder_params_job_260_json["test/testTrackFinder/params/job_260.json"]
-  test_testTrackFinder_params_job_261_json["test/testTrackFinder/params/job_261.json"]
-  test_testTrackFinder_params_job_262_json["test/testTrackFinder/params/job_262.json"]
-  test_testTrackFinder_params_job_263_json["test/testTrackFinder/params/job_263.json"]
-  test_testTrackFinder_params_job_264_json["test/testTrackFinder/params/job_264.json"]
-  test_testTrackFinder_params_job_265_json["test/testTrackFinder/params/job_265.json"]
-  test_testTrackFinder_params_job_266_json["test/testTrackFinder/params/job_266.json"]
-  test_testTrackFinder_params_job_267_json["test/testTrackFinder/params/job_267.json"]
-  test_testTrackFinder_params_job_268_json["test/testTrackFinder/params/job_268.json"]
-  test_testTrackFinder_params_job_269_json["test/testTrackFinder/params/job_269.json"]
   test_testTrackFinder_params_job_27_json["test/testTrackFinder/params/job_27.json"]
-  test_testTrackFinder_params_job_270_json["test/testTrackFinder/params/job_270.json"]
-  test_testTrackFinder_params_job_271_json["test/testTrackFinder/params/job_271.json"]
-  test_testTrackFinder_params_job_272_json["test/testTrackFinder/params/job_272.json"]
-  test_testTrackFinder_params_job_273_json["test/testTrackFinder/params/job_273.json"]
-  test_testTrackFinder_params_job_274_json["test/testTrackFinder/params/job_274.json"]
-  test_testTrackFinder_params_job_275_json["test/testTrackFinder/params/job_275.json"]
-  test_testTrackFinder_params_job_276_json["test/testTrackFinder/params/job_276.json"]
-  test_testTrackFinder_params_job_277_json["test/testTrackFinder/params/job_277.json"]
-  test_testTrackFinder_params_job_278_json["test/testTrackFinder/params/job_278.json"]
-  test_testTrackFinder_params_job_279_json["test/testTrackFinder/params/job_279.json"]
   test_testTrackFinder_params_job_28_json["test/testTrackFinder/params/job_28.json"]
-  test_testTrackFinder_params_job_280_json["test/testTrackFinder/params/job_280.json"]
-  test_testTrackFinder_params_job_281_json["test/testTrackFinder/params/job_281.json"]
-  test_testTrackFinder_params_job_282_json["test/testTrackFinder/params/job_282.json"]
-  test_testTrackFinder_params_job_283_json["test/testTrackFinder/params/job_283.json"]
-  test_testTrackFinder_params_job_284_json["test/testTrackFinder/params/job_284.json"]
-  test_testTrackFinder_params_job_285_json["test/testTrackFinder/params/job_285.json"]
-  test_testTrackFinder_params_job_286_json["test/testTrackFinder/params/job_286.json"]
-  test_testTrackFinder_params_job_287_json["test/testTrackFinder/params/job_287.json"]
-  test_testTrackFinder_params_job_288_json["test/testTrackFinder/params/job_288.json"]
-  test_testTrackFinder_params_job_289_json["test/testTrackFinder/params/job_289.json"]
   test_testTrackFinder_params_job_29_json["test/testTrackFinder/params/job_29.json"]
-  test_testTrackFinder_params_job_290_json["test/testTrackFinder/params/job_290.json"]
-  test_testTrackFinder_params_job_291_json["test/testTrackFinder/params/job_291.json"]
-  test_testTrackFinder_params_job_292_json["test/testTrackFinder/params/job_292.json"]
-  test_testTrackFinder_params_job_293_json["test/testTrackFinder/params/job_293.json"]
-  test_testTrackFinder_params_job_294_json["test/testTrackFinder/params/job_294.json"]
-  test_testTrackFinder_params_job_295_json["test/testTrackFinder/params/job_295.json"]
-  test_testTrackFinder_params_job_296_json["test/testTrackFinder/params/job_296.json"]
-  test_testTrackFinder_params_job_297_json["test/testTrackFinder/params/job_297.json"]
-  test_testTrackFinder_params_job_298_json["test/testTrackFinder/params/job_298.json"]
-  test_testTrackFinder_params_job_299_json["test/testTrackFinder/params/job_299.json"]
   test_testTrackFinder_params_job_3_json["test/testTrackFinder/params/job_3.json"]
   test_testTrackFinder_params_job_30_json["test/testTrackFinder/params/job_30.json"]
   test_testTrackFinder_params_job_31_json["test/testTrackFinder/params/job_31.json"]
@@ -475,6 +303,8 @@ flowchart LR
   test_testTrackFinder_params_job_99_json["test/testTrackFinder/params/job_99.json"]
   test_testTrackFinder_runDCHTestTrackFinder_py["test/testTrackFinder/runDCHTestTrackFinder.py"]
   test_testTrackFinder_runTestTrackFinder_py["test/testTrackFinder/runTestTrackFinder.py"]
+  test_testTrackFinder_scripts_Calculate_Aucoating_thickness_py["test/testTrackFinder/scripts/Calculate_Aucoating_thickness.py"]
+  test_testTrackFinder_scripts_DelphesParamsOutput_py["test/testTrackFinder/scripts/DelphesParamsOutput.py"]
   test_testTrackFinder_scripts_analyze_job_sh["test/testTrackFinder/scripts/analyze_job.sh"]
   test_testTrackFinder_scripts_analyze_pt_resolution_grid_py["test/testTrackFinder/scripts/analyze_pt_resolution_grid.py"]
   test_testTrackFinder_scripts_autoreadme_py["test/testTrackFinder/scripts/autoreadme.py"]
@@ -490,6 +320,7 @@ flowchart LR
   test_testTrackFinder_scripts_make_filelist_sh["test/testTrackFinder/scripts/make_filelist.sh"]
   test_testTrackFinder_scripts_make_runtime_sh["test/testTrackFinder/scripts/make_runtime.sh"]
   test_testTrackFinder_scripts_mk_ddsim_grid_py["test/testTrackFinder/scripts/mk_ddsim_grid.py"]
+  test_testTrackFinder_scripts_patch_trkCov_match_dch_material_py["test/testTrackFinder/scripts/patch_trkCov_match_dch_material.py"]
   test_testTrackFinder_scripts_plot_mcparticles_pt_py["test/testTrackFinder/scripts/plot_mcparticles_pt.py"]
   test_testTrackFinder_scripts_plot_pt_from_trackstate_time_py["test/testTrackFinder/scripts/plot_pt_from_trackstate_time.py"]
   test_testTrackFinder_scripts_prepare_and_submit_sh["test/testTrackFinder/scripts/prepare_and_submit.sh"]
@@ -504,6 +335,7 @@ flowchart LR
   test_testTrackFinder_scripts_view_simhits_event_py["test/testTrackFinder/scripts/view_simhits_event.py"]
   test_testTrackFinder_scripts_view_tracks_event_py["test/testTrackFinder/scripts/view_tracks_event.py"]
   test_testTrackFinder_test_trackFinder_sh["test/testTrackFinder/test_trackFinder.sh"]
+  test_testTrackFinder_tracker_params_json["test/testTrackFinder/tracker_params.json"]
   test_testTracksFromGenParticles_runTracksFromGenParticles_py["test/testTracksFromGenParticles/runTracksFromGenParticles.py"]
   test_testTracksFromGenParticles_test_TracksFromGenParticles_sh["test/testTracksFromGenParticles/test_TracksFromGenParticles.sh"]
   CMakeLists_txt --> Alg__Noddsim_track_test
@@ -563,6 +395,14 @@ flowchart LR
   components_backup_ThreePointFitter_txt --> Alg__ThreePointTracks
   components_backup_ThreePointFitter_txt --> Alg__outputTracks
   components_fit_ggtf_tracks_cpp --> Alg__CDCHTracks
+  config_Tracking_yaml --> Alg__CDCHTracks
+  config_Tracking_yaml --> Alg__DCHCollection
+  config_Tracking_yaml --> Alg__DCH_gas_Lhalf
+  config_Tracking_yaml --> Alg__DCH_gas_inner_cyl_R
+  config_Tracking_yaml --> Alg__DCH_gas_outer_cyl_R
+  config_Tracking_yaml --> Alg__DCH_v2
+  config_Tracking_yaml --> Alg__GenFitTracks
+  config_Tracking_yaml --> Alg__genfit2
   include_GenFitter_h --> Alg__outputTracks
   src_GenFitter_cpp --> Alg__outputTracks
   test_runGenFitTrackingOnSimplifiedDriftChamber_py --> Alg__CDCHHits
@@ -684,10 +524,18 @@ flowchart LR
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCH_v2
   test_testTrackFinder_runTestTrackFinder_py --> Alg__DCHdigi
   test_testTrackFinder_runTestTrackFinder_py --> Alg__GGTF_tracking
+  test_testTrackFinder_scripts_Calculate_Aucoating_thickness_py --> test_testTrackFinder_scripts_Calculate_Aucoating_thickness_py
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__GenFitTracks
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__fit_mode
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__n_points_fit
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__per_eta_fits
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__trackCollection
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> Alg__track_eta_max_inferred
+  test_testTrackFinder_scripts_DelphesParamsOutput_py --> extract_delphes_tracker_params_py
   test_testTrackFinder_scripts_analyze_job_sh --> Alg__GenFitTracks
   test_testTrackFinder_scripts_analyze_job_sh --> test_testTrackFinder_scripts_analyze_pt_resolution_grid_py
   test_testTrackFinder_scripts_analyze_pt_resolution_grid_py --> Alg__GenFitTracks
-  test_testTrackFinder_scripts_autoreadme_py --> ___
+  test_testTrackFinder_scripts_autoreadme_py --> Alg__genfit
   test_testTrackFinder_scripts_autoreadme_py --> Alg__track
   test_testTrackFinder_scripts_compare_pt_resolution_grid_py --> compare_pt_resolution_outputs_py
   test_testTrackFinder_scripts_condor_reco_sh --> Alg__genfit2
@@ -707,6 +555,8 @@ flowchart LR
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__TrackingConf
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__libDCHdigi
   test_testTrackFinder_scripts_make_runtime_sh --> Alg__libTracking
+  test_testTrackFinder_scripts_patch_trkCov_match_dch_material_py --> Alg__IDEA_DCH
+  test_testTrackFinder_scripts_patch_trkCov_match_dch_material_py --> test_testTrackFinder_scripts_patch_trkCov_match_dch_material_py
   test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__GenFit
   test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__GenFitTracks
   test_testTrackFinder_scripts_plot_mcparticles_pt_py --> Alg__TrackStates
@@ -763,6 +613,12 @@ flowchart LR
   test_testTrackFinder_scripts_view_tracks_event_py --> Alg__track_style
   test_testTrackFinder_scripts_view_tracks_event_py --> Alg__view_tracks_metadata
   test_testTrackFinder_scripts_view_tracks_event_py --> test_testTrackFinder_scripts_view_tracks_event_py
+  test_testTrackFinder_tracker_params_json --> Alg__GenFitTracks
+  test_testTrackFinder_tracker_params_json --> Alg__fit_mode
+  test_testTrackFinder_tracker_params_json --> Alg__n_points_fit
+  test_testTrackFinder_tracker_params_json --> Alg__per_eta_fits
+  test_testTrackFinder_tracker_params_json --> Alg__trackCollection
+  test_testTrackFinder_tracker_params_json --> Alg__track_eta_max_inferred
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__DCHCollection
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__PlotTrackHitDistances
   test_testTracksFromGenParticles_runTracksFromGenParticles_py --> Alg__TracksFromGenParticles
