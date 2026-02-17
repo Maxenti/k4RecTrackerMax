@@ -1,25 +1,116 @@
-//======================================================================
-// GGTF_tracking.cpp  (tracks + standalone wire-hit output)  [ROBUST / PHYSICS-SAFE]
-//
-//   - Designed for DCH-only workflows (no planar hits required)
-//   - Runs ONNX embedding + clustering to build extension::TrackCollection (unchanged behavior)
-//
-//   UPDATED OUTPUT MODEL (for your diagnostic script):
-//     - Writes a standalone output SenseWireHit collection (default name set in steering):
-//         OutputWireHitsGGTF  -> e.g. "GGTF_SenseWireHits"
-//     - Tracks store their trackerHits relation pointing to the *OUTPUT* wire hits,
-//       so the ROOT file contains:
-//         GenFitTracks (or CDCHTracks) -> trackerHits_begin/end -> GGTF_SenseWireHits.position.{x,y,z}
-//
-//   Keeps robustness guards:
-//     - truth PDG gating (optional)
-//     - absurd |d| dropping (optional)
-//     - missing collections handling
-//
+// DOC:
+// Summary: Build DCH-centric GGTF track candidates using an ONNX embedding + clustering, and **persist** the exact SenseWireHits used for GGTF as a standalone output collection. Tracks’ `trackerHits` relations point to the *persisted* output wire hits (plus any optional planar hits), so downstream fitters/diagnostics can read wire hit content directly from the output file.
+// Usage:
+//   - As a Gaudi/k4run component: add `GGTF_tracking` to `ApplicationMgr().TopAlg` (or equivalent) and configure input/output collection names + ONNX model path.
+//   - Typical chain position: after DCH digitization (SenseWireHit creation) and before a fitter (e.g., GenFit2DCHFitter / ACTS fit).
+//   - Designed for DCH-only workflows; planar hit inputs may be empty.
+// Examples:
+//   - Gaudi options snippet (Python):
+//       from Configurables import GGTF_tracking, ApplicationMgr
+//       alg = GGTF_tracking("GGTF_tracking",
+//                           ModelPath="model.onnx",
+//                           Tbeta=0.6, Td=0.3,
+//                           OnnxChunk=4096,
+//                           DropWireIfAbsDTooLarge=True, MaxAbsDMM=30.0,
+//                           FilterInputWiresByTruthPdg=True, KeepTruthPdg=13, DropWireIfUnlinked=True,
+//                           OutputTracksGGTF=["CDCHTracks"],
+//                           OutputWireHitsGGTF=["GGTF_SenseWireHits"])
+//       ApplicationMgr(TopAlg=[alg], EvtMax=-1)
+//     Expected outputs:
+//       - An `extension::TrackCollection` named "CDCHTracks" (or configured output)
+//       - An `extension::SenseWireHitCollection` named "GGTF_SenseWireHits"
+//       - Tracks in "CDCHTracks" reference hits in "GGTF_SenseWireHits" via `trackerHits` relation.
+//   - Debug/diagnostic reading idea (ROOT/edm4hep):
+//       - For each track: iterate `track.getTrackerHits()` and for wire hits read `.getPosition()` / `.getDistanceToWire()` / `.getWireStereoAngle()` / `.getWireAzimuthalAngle()`.
+//       - You should observe that wire hits come from OutputWireHitsGGTF, not the original input collection.
+// Inputs:
+//   - InputPlanarHitCollections (vector<edm4hep::TrackerHitPlaneCollection*>):
+//       Optional planar hits (vertex/silicon/planar trackers). May be empty. If present, these are appended to each track’s `trackerHits` alongside wires.
+//   - InputWireHitCollections (vector<extension::SenseWireHitCollection*>):
+//       Drift chamber wire hits (digitized). Each hit provides:
+//         * position (point on wire / reference point)
+//         * distanceToWire (signed drift distance, mm)
+//         * wireStereoAngle (rad)
+//         * wireAzimuthalAngle (rad)
+//   - InputWireSimLinkCollections (vector<extension::SenseWireHitSimTrackerHitLinkCollection*>):
+//       Optional truth links SenseWireHit -> SimTrackerHit -> MCParticle. Used only for optional truth PDG gating.
+// Outputs:
+//   - OutputTracksGGTF (extension::TrackCollection):
+//       One track per clustering label group (subject to label-0 guards). Track content:
+//         * Track.type = clustering label (int)
+//         * Track.trackerHits relation includes:
+//             - planar hits (if provided)
+//             - **wire hits from OutputWireHitsGGTF** (persisted) corresponding to the wires used for embedding/clustering
+//   - OutputWireHitsGGTF (extension::SenseWireHitCollection):
+//       Persisted copy of wire hits used for GGTF processing. This is authoritative for downstream diagnostics/fitting in this workflow.
+// Collections:
+//   - Input collections (names set in steering via DataHandles):
+//       * InputPlanarHitCollections: one or more edm4hep::TrackerHitPlaneCollection
+//       * InputWireHitCollections: one or more extension::SenseWireHitCollection
+//       * InputWireSimLinkCollections: one or more extension::SenseWireHitSimTrackerHitLinkCollection
+//   - Output collections (names set in steering via DataHandles):
+//       * OutputTracksGGTF: extension::TrackCollection (e.g., "CDCHTracks" or "GenFitTracks" upstream of fitter)
+//       * OutputWireHitsGGTF: extension::SenseWireHitCollection (e.g., "GGTF_SenseWireHits")
+// Connects-To:
+//   - Upstream:
+//       * DCH digitization producing extension::SenseWireHitCollection (and optionally truth links).
+//       * Optional planar hit producers (TrackerHitPlane collections).
+//   - Downstream:
+//       * Track fitters (GenFit2DCHFitter / ACTS-based fit) consuming OutputTracksGGTF and reading wire hits through `trackerHits` relation.
+//       * Diagnostic scripts reading OutputWireHitsGGTF directly to validate drift distance, angles, and positions used by GGTF.
+// Arguments:
+//   - ModelPath (string, default=""):
+//       Path to ONNX model used to embed flattened hits into a 4D feature space.
+//       NOTE: must be set; initialization creates an Ort::Session from this path.
+//   - Tbeta (double, default=0.6):
+//       Clustering beta threshold passed to `get_clustering(embed, nHits, Tbeta, Td)`.
+//   - Td (double, default=0.3):
+//       Clustering distance threshold passed to `get_clustering`.
+//   - OnnxChunk (int, default=4096):
+//       Chunk size for ONNX inference. Large events are processed in chunks of (OnnxChunk x 7) inputs.
+//   - MaxHitsPerEvent (int, default=0):
+//       Cap total flattened hits per event (0=off). Applies to combined planar+wires before embedding.
+//   - DropWireIfAbsDTooLarge (bool, default=true):
+//       If true, drop wire hits from GGTF processing when |distanceToWire| > MaxAbsDMM.
+//   - MaxAbsDMM (double, default=30.0):
+//       Maximum allowed absolute drift distance [mm] before dropping (if DropWireIfAbsDTooLarge is enabled).
+//   - FilterInputWiresByTruthPdg (bool, default=true):
+//       If true, wire hits are kept only if their truth-linked MCParticle PDG matches KeepTruthPdg condition.
+//       Implementation uses abs(pdg) == abs(KeepTruthPdg) (so mu+ and mu- both pass when KeepTruthPdg=13).
+//       NOTE: If enabled and no truth links exist, the code warns and effectively drops all wires (fail-closed).
+//   - KeepTruthPdg (int, default=13):
+//       PDG code for truth gate (default 13 = mu). Comparison is absolute value.
+//   - DropWireIfUnlinked (bool, default=true):
+//       When truth gating is enabled: if a wire has no truth link, drop it (true) or keep it (false).
+//   - ZeroMinSizeKeep (int, default=8):
+//       For label==0 groups only: minimum size to consider (when SkipZeroIfSmall is true).
+//   - MinWireFracKeep (double, default=0.60):
+//       For label==0 groups only: minimum fraction of wire hits required to keep the group.
+//   - PromoteZeroIfGood (bool, default=true):
+//       If a label==0 group passes checks, treat it as a normal cluster (currently informational; label remains 0 but it is accepted).
+//   - SkipZeroIfSmall (bool, default=true):
+//       Drop label==0 groups with size < ZeroMinSizeKeep.
+//   - SkipZeroAlways (bool, default=false):
+//       If true, never build tracks from label==0 groups.
+//   - GeoSvcName (string, default="GeoSvc"):
+//       GeoSvc service name (retrieved in constructor). Present for geometry access; this specific implementation primarily uses wire angles provided by hits.
+//   - DchName (string, default="DCH_v2"):
+//       Drift chamber detector name (available for geometry lookups / metadata; not heavily used in shown snippet).
+//   - JobTag (string, default=""):
+//       Free-form run label stored into metadata JSON (`GGTF_trackingConfig`) for reproducibility.
 // Notes:
-//   - We do NOT output 3D spacepoints here.
-//   - Track-building still uses flattened inputs with derived midpoint Mmid for the embedding.
-//======================================================================
+//   - Flattening / embedding model:
+//       * Planar hits contribute [x,y,z, isPlanar=1, 0,0,0].
+//       * Wire hits contribute derived midpoint Mmid = 0.5*(L+R) where L/R are offset by ±distanceToWire along xprime,
+//         plus direction vector dvec=(R-L) packed as [Mmid.x, Mmid.y, Mmid.z, isPlanar=0, dvec.x, dvec.y, dvec.z].
+//   - Output model is intentionally “diagnostic-friendly”:
+//       OutputWireHitsGGTF persists the exact wire hits used, and OutputTracksGGTF references them via relations.
+//   - Performance / memory controls:
+//       ONNX Runtime is configured single-threaded; chunking avoids huge tensor allocations.
+//       The algorithm logs RSS/HWM and per-step timings (flatten, onnx, clustering, bucket, build).
+// Tags: tracking, drift-chamber, DCH, GGTF, ONNX, onnxruntime, clustering, k4run, gaudi, edm4hep, podio, diagnostics, FCC-ee, IDEA
+// DOC_END
+
 
 #include <algorithm>
 #include <chrono>

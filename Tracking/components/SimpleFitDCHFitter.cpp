@@ -1,26 +1,168 @@
-// ======================================================================
-// SimpleFitDCHFitter.cpp  -- ultra-light DCH track fitter + ROOT histos
-//   * Input: GGTF_3DHits (edm4hep::TrackerHit3DCollection)
-//   * Cluster (tiny DBSCAN in mm)  -> circle in XY (Kåsa) -> z(phi) slope
-//   * Export one EDM4hep Track/cluster with TrackState(AtIP)
-//     - omega = q/pT  [GeV^-1]   (EDM/LCIO convention)
-//     - time  = pT    [GeV]      (direct pT for downstream resolution)
-//   * Book/fill ROOT histograms via THistSvc (1D + 2D vs event index)
-//   * OPTIONAL: lightweight "material effects" covariance inflation
-//     - Estimate X/X0 per cluster (TGeo midpoint sampling or fallback)
-//     - Inflate phi/d0/z0 variances using Highland formula
-// ======================================================================
+/*
+DOC:
+Title: SimpleFitFromGGTFTracks (Ultra-light DCH helix fitter from GGTF tracks)
+Summary:
+  Gaudi/k4FWCore MultiTransformer that takes clustered DCH-centric GGTF track candidates
+  (extension::TrackCollection) plus the persisted GGTF wire-hit collection
+  (extension::SenseWireHitCollection), builds simple 3D “fit points” from the wire hits,
+  performs a lightweight circle+helix-style fit (circle in XY + linear z(phi)),
+  and outputs an edm4hep::TrackCollection with TrackState(AtIP).
+  It ALSO writes an edm4hep::TrackerHit3DCollection containing the derived fit points,
+  and attaches these hits to each output track via the edm4hep Track.trackerHits relation.
+
+Primary Use Cases:
+  - Fast, dependency-minimal “sanity fit” downstream of GGTF_tracking without GenFit2/ACTS.
+  - Quick regression checks on GGTF clustering / hit ordering / coordinate conventions.
+  - Producing self-contained edm4hep tracks that carry their own attached 3D hit points
+    (SimpleFitHits) for ROOT/PODIO-level diagnostics and plotting.
+  - Debugging gross issues (sign conventions, B-field mismatch, pathological clustering)
+    via simple fitted pT/helix parameter distributions.
+
+Not Intended For:
+  - Precision drift-chamber fitting (no left/right ambiguity resolution, no DAF/Kalman).
+  - Using true drift-time residuals or DOCA likelihoods (fit points are geometric proxies).
+  - Providing unbiased physics performance metrics comparable to full GenFit2/ACTS fits.
+
+Algorithm Behavior:
+  For each candidate in inputGGTFTracks:
+    1) Identify which trackerHits relations belong to the persisted GGTF wire-hit collection
+       by comparing ObjectID.collectionID to the wire-hits collection ID.
+    2) For each referenced SenseWireHit:
+         - Build a wire direction from (wireAzimuthalAngle, wireStereoAngle).
+         - Construct a local xprime basis and compute a 3D point:
+             * If UseMmidPoint=true (default): Mmid = 0.5*(wpos - d*xprime + wpos + d*xprime)
+               where d = distanceToWire (same “Mmid” concept used by GGTF flattening).
+             * Else: use the wire hit position directly.
+    3) Optional deduplication: drops consecutive near-identical points within DedupTolMM.
+    4) Fit circle in XY using an algebraic Kåsa method -> radius R_mm and center (cx,cy).
+    5) Compute phi around circle center for all points, unwrap, sort by phi.
+       Fit z(phi) = a + b*phi -> tanLambda ≈ (b / R_mm).
+    6) Build an approximate tangent direction at a “perigee-like” point (smallest rT).
+    7) Create an edm4hep Track:
+         - Copy Track.type from the GGTF candidate (preserves label if desired).
+         - Add TrackState at IP (AtIP) with parameters (phi, D0, Z0, omega, tanLambda),
+           with omega stored as q/pT [GeV^-1] using pT = 0.0003 * Bz[T] * R[mm].
+         - Store pT [GeV] in TrackState.time for convenience.
+    8) Create one edm4hep::TrackerHit3D per fitted point and attach them to the output track.
+
+Inputs:
+  - inputGGTFTracks (extension::TrackCollection)
+      Default: "CDCHTracks"
+      Description: GGTF track candidates produced by GGTF_tracking. Each candidate’s
+      trackerHits relation may include:
+        * Persisted wire hits from OutputWireHitsGGTF (extension::SenseWireHitCollection)
+        * Optional planar hits (ignored by this fitter; only wire hits are used here)
+  - inputWireHits (extension::SenseWireHitCollection)
+      Default: "GGTF_SenseWireHits"
+      Description: Persisted copy of the exact SenseWireHits used by GGTF_tracking.
+      This fitter matches candidate relations back to this collection by ObjectID.
+
+Outputs:
+  - outputTracks (edm4hep::TrackCollection)
+      Default: "SimpleTracks"
+      Contents:
+        * One edm4hep track per successfully-fitted GGTF candidate
+        * TrackState(AtIP) filled with:
+            - phi, D0, Z0, omega=q/pT [GeV^-1], tanLambda
+            - TrackState.time stores pT [GeV] (convenience)
+        * Track.trackerHits relation points to hits in outputFitHits (below)
+  - outputFitHits (edm4hep::TrackerHit3DCollection)
+      Default: "SimpleFitHits"
+      Contents:
+        * 3D proxy points derived from wire hits (Mmid or wire position)
+        * Covariance set as diagonal packed symmetric:
+            (xx, xy, xz, yy, yz, zz) with (HitVarXY, 0, 0, HitVarXY, 0, HitVarZ)
+      Notes:
+        * These hits are “fit points”, not physical drift-time measurements.
+
+Collections:
+  - Consumes:
+      * extension::TrackCollection ("CDCHTracks" default)
+      * extension::SenseWireHitCollection ("GGTF_SenseWireHits" default)
+  - Produces:
+      * edm4hep::TrackCollection ("SimpleTracks" default)
+      * edm4hep::TrackerHit3DCollection ("SimpleFitHits" default)
+
+Connects-To:
+  - Upstream:
+      * GGTF_tracking (produces clustered extension::TrackCollection and persisted SenseWireHitCollection)
+  - Downstream:
+      * ROOT/PODIO analysis scripts that expect edm4hep tracks and want attached hit points
+      * Lightweight resolution/QA plots (pT, curvature, helix params) without GenFit2/ACTS
+      * Optional: further processing stages that consume edm4hep::TrackCollection
+
+Key Properties / Arguments:
+  - Bz (double, default=2.0):
+      Uniform magnetic field Bz [Tesla] used for pT conversion:
+        pT[GeV] = 0.0003 * Bz[T] * R[mm]
+  - PDG (int, default=13):
+      PDG hypothesis used only to set charge sign q for omega=q/pT.
+      (No particle-ID inference is performed.)
+  - MinHitsPerTrack (unsigned, default=6):
+      Minimum number of wire-derived points required to fit a GGTF candidate.
+  - UseMmidPoint (bool, default=true):
+      If true, use GGTF-style Mmid points computed from distanceToWire and xprime basis.
+      If false, use SenseWireHit position directly.
+  - DeduplicateHits (bool, default=true) and DedupTolMM (double, default=0.25):
+      Removes consecutive near-duplicate points to stabilize the circle fit.
+  - HitVarXY (float, default=1.0) and HitVarZ (float, default=1.0):
+      Diagonal variances [mm^2] assigned to output TrackerHit3D covariances.
+  - BaseVar_d0, BaseVar_phi, BaseVar_omega, BaseVar_z0, BaseVar_tanLambda:
+      Diagonal variances used for the output TrackState covariance matrix.
+  - FillSummaryHisto (bool, default=false), HistStream, PtBins, PtMax:
+      Optional minimal pT histogram via THistSvc.
+
+Assumptions / Conventions:
+  - SenseWireHit fields are in consistent units with mm for position and distanceToWire.
+  - wireAzimuthalAngle and wireStereoAngle are in radians.
+  - Candidate track relations include ObjectIDs that correctly refer to the persisted
+    inputWireHits collection (OutputWireHitsGGTF from GGTF_tracking).
+  - The circle+z(phi) model is an approximation; it ignores detailed DCH measurement physics.
+
+Failure Modes / Diagnostics:
+  - Skips candidates with < MinHitsPerTrack matching wire hits.
+  - Skips candidates where Kåsa circle fit is ill-conditioned (det ~ 0).
+  - Pathological distributions (very large R, wild tanLambda) may indicate:
+      * broken clustering (mixed tracks), inconsistent coordinates, or incorrect Bz.
+
+Example Usage:
+  - Gaudi options snippet (Python):
+      from Configurables import GGTF_tracking, SimpleFitFromGGTFTracks, ApplicationMgr
+      ggtf = GGTF_tracking("GGTF_tracking",
+                           OutputTracksGGTF=["CDCHTracks"],
+                           OutputWireHitsGGTF=["GGTF_SenseWireHits"])
+      fit  = SimpleFitFromGGTFTracks("SimpleFitFromGGTFTracks",
+                                     inputGGTFTracks=["CDCHTracks"],
+                                     inputWireHits=["GGTF_SenseWireHits"],
+                                     outputTracks=["SimpleTracks"],
+                                     outputFitHits=["SimpleFitHits"],
+                                     Bz=2.0, PDG=13,
+                                     MinHitsPerTrack=6,
+                                     UseMmidPoint=True)
+      ApplicationMgr(TopAlg=[ggtf, fit], EvtMax=-1)
+
+Tags:
+  tracking
+  drift-chamber
+  DCH
+  GGTF
+  helix
+  circle-fit
+  diagnostics
+  gaudi
+  k4run
+  edm4hep
+  podio
+DOC_END
+*/
 
 #include <vector>
 #include <cmath>
 #include <limits>
-#include <queue>
 #include <algorithm>
-#include <unordered_map>
 #include <numeric>
 #include <string>
 
-#include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
 #include "GaudiKernel/ISvcLocator.h"
 #include "GaudiKernel/ITHistSvc.h"
@@ -28,16 +170,18 @@
 
 #include "k4FWCore/Transformer.h"
 
-#include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/TrackCollection.h"
 #include "edm4hep/TrackState.h"
+#include "edm4hep/TrackerHit3DCollection.h"
 
 #include "TVector3.h"
 #include "TH1F.h"
-#include "TH2F.h"
 
-// TGeo (optional; for material estimate)
-#include "TGeoManager.h"
+#include "podio/ObjectID.h"
+
+// GGTF EDM extensions
+#include "extension/TrackCollection.h"
+#include "extension/SenseWireHitCollection.h"
 
 namespace {
 
@@ -45,6 +189,7 @@ inline double PI() { return std::acos(-1.0); }
 
 struct CircleXY { double cx{0}, cy{0}, R{1e9}; bool ok{false}; };
 
+// Kåsa algebraic circle fit in XY
 static CircleXY kasa_circle_xy(const std::vector<TVector3>& P) {
   const size_t N = P.size();
   if (N < 3) return {};
@@ -62,6 +207,7 @@ static CircleXY kasa_circle_xy(const std::vector<TVector3>& P) {
       M11*(M22*M33 - M23*M32)
     - M12*(M21*M33 - M23*M31)
     + M13*(M21*M32 - M22*M31);
+
   CircleXY res;
   if (std::fabs(det) < 1e-12) return res;
 
@@ -76,7 +222,9 @@ static CircleXY kasa_circle_xy(const std::vector<TVector3>& P) {
   const double cx = 0.5*A, cy = 0.5*B;
   const double R2 = C + cx*cx + cy*cy;
   if (!(R2>0 && std::isfinite(R2))) return res;
-  res.cx=cx; res.cy=cy; res.R=std::sqrt(R2); res.ok=std::isfinite(res.R) && res.R>1e-6;
+
+  res.cx=cx; res.cy=cy; res.R=std::sqrt(R2);
+  res.ok = std::isfinite(res.R) && res.R > 1e-6;
   return res;
 }
 
@@ -87,26 +235,10 @@ static double unwrap(double a, double ref) {
   return ref + d;
 }
 
-static std::vector<int> dbscan_mm(const std::vector<TVector3>& P, double eps_mm, unsigned minPts) {
-  const int N = (int)P.size(); const double e2 = eps_mm*eps_mm;
-  std::vector<int> label(N, -99); int cid=0;
-  auto region = [&](int i, std::vector<int>& out){ out.clear(); for (int j=0;j<N;++j) if ((P[j]-P[i]).Mag2()<=e2) out.push_back(j); };
-  for (int i=0;i<N;++i) {
-    if (label[i]!=-99) continue;
-    std::vector<int> neigh; region(i, neigh);
-    if (neigh.size()<minPts){ label[i]=-1; continue; }
-    label[i]=cid; std::queue<int> q;
-    for (int n:neigh) if (label[n]==-99 || label[n]==-1){ label[n]=cid; q.push(n); }
-    while(!q.empty()){
-      int k=q.front(); q.pop();
-      std::vector<int> n2; region(k,n2);
-      if (n2.size()>=minPts){
-        for (int n:n2) if (label[n]==-99 || label[n]==-1){ label[n]=cid; q.push(n); }
-      }
-    }
-    ++cid;
-  }
-  return label;
+static TVector3 safe_unit(const TVector3& v, const TVector3& fallback) {
+  const double m2 = v.Mag2();
+  if (!(m2 > 0.0) || !std::isfinite(m2)) return fallback;
+  return (1.0 / std::sqrt(m2)) * v;
 }
 
 static int chargeFromPDG(int pdg) {
@@ -116,42 +248,11 @@ static int chargeFromPDG(int pdg) {
   return (pdg>=0?+1:-1);
 }
 
-// --- tiny helper to estimate X/X0 along a polyline of points in mm ---
-static double estimate_x_over_x0_midpoint(const std::vector<TVector3>& P_mm, double fallbackXOverX0) {
-  if (!gGeoManager || P_mm.size() < 2) return fallbackXOverX0;
-  double x_over_x0 = 0.0;
-  for (size_t i=1; i<P_mm.size(); ++i) {
-    const TVector3& a = P_mm[i-1];
-    const TVector3& b = P_mm[i];
-    const TVector3  mid = 0.5*(a+b);
-    const double    dl_mm = (b-a).Mag();
-    if (dl_mm <= 0) continue;
-
-    const double x_cm = mid.X() * 0.1;
-    const double y_cm = mid.Y() * 0.1;
-    const double z_cm = mid.Z() * 0.1;
-
-    TGeoNode* node = gGeoManager->FindNode(x_cm, y_cm, z_cm);
-    const TGeoMaterial* mat = (node && node->GetMedium()) ? node->GetMedium()->GetMaterial() : nullptr;
-    const double X0_cm = (mat ? mat->GetRadLen() : 0.0);
-    if (X0_cm <= 0 || !std::isfinite(X0_cm)) {
-      x_over_x0 += (dl_mm * fallbackXOverX0) / std::max(1.0, (double)P_mm.size());
-    } else {
-      const double X0_mm = 10.0 * X0_cm;
-      x_over_x0 += dl_mm / X0_mm;
-    }
-  }
-  if (!(x_over_x0 > 0.0)) x_over_x0 = fallbackXOverX0;
-  return x_over_x0;
-}
-
 static void addAtIPStateWithCov(edm4hep::MutableTrack& trk,
                                 const TVector3& Pmin, const TVector3& tangentUnit,
                                 double R_mm, double tanL, int qSign,
                                 double Bz_T,
-                                // base cov (diagonal) and optional smearing additions
-                                float cov_d0, float cov_phi, float cov_omega, float cov_z0, float cov_tanL,
-                                float add_var_phi = 0.f, float add_var_d0 = 0.f, float add_var_z0 = 0.f)
+                                float cov_d0, float cov_phi, float cov_omega, float cov_z0, float cov_tanL)
 {
   using TP = edm4hep::TrackParams;
 
@@ -168,20 +269,14 @@ static void addAtIPStateWithCov(edm4hep::MutableTrack& trk,
   ts.D0              = float(d0);
   ts.Z0              = float(z0);
 
-  // Store EDM/LCIO convention + convenience pT
   const double omega_qOverPt = (ptGeV > 1e-12) ? (qSign / ptGeV) : 0.0; // GeV^-1
   ts.omega = float(omega_qOverPt);
-  ts.time  = float(ptGeV); // direct pT [GeV]
+  ts.time  = float(ptGeV); // convenience pT [GeV]
 
-  // base diagonal covariances (+ optional MS inflations)
-  float v_phi = cov_phi + add_var_phi;
-  float v_d0  = cov_d0  + add_var_d0;
-  float v_z0  = cov_z0  + add_var_z0;
-
-  ts.setCovMatrix(std::max(1e-12f, v_d0),      TP::d0,        TP::d0);
-  ts.setCovMatrix(std::max(1e-12f, v_phi),     TP::phi,       TP::phi);
+  ts.setCovMatrix(std::max(1e-12f, cov_d0),    TP::d0,        TP::d0);
+  ts.setCovMatrix(std::max(1e-12f, cov_phi),   TP::phi,       TP::phi);
   ts.setCovMatrix(std::max(1e-12f, cov_omega), TP::omega,     TP::omega);
-  ts.setCovMatrix(std::max(1e-12f, v_z0),      TP::z0,        TP::z0);
+  ts.setCovMatrix(std::max(1e-12f, cov_z0),    TP::z0,        TP::z0);
   ts.setCovMatrix(std::max(1e-12f, cov_tanL),  TP::tanLambda, TP::tanLambda);
 
   trk.addToTrackStates(ts);
@@ -190,275 +285,223 @@ static void addAtIPStateWithCov(edm4hep::MutableTrack& trk,
 } // namespace
 
 // ----------------- Algorithm -----------------
-struct SimpleFitDCHFitter final
-  : k4FWCore::Transformer<edm4hep::TrackCollection (const edm4hep::TrackerHit3DCollection&)> {
+struct SimpleFitFromGGTFTracks final
+  : k4FWCore::MultiTransformer<std::tuple<edm4hep::TrackCollection, edm4hep::TrackerHit3DCollection>(
+        const extension::TrackCollection&,
+        const extension::SenseWireHitCollection&)> {
 
   using Traits    = Gaudi::Functional::Traits::use_<>;
   using KeyValues = Gaudi::Functional::details::DataHandleMixin<
                       std::tuple<>, std::tuple<>, Traits>::KeyValues;
 
-  SimpleFitDCHFitter(const std::string& name, ISvcLocator* svcLoc)
-  : Transformer(name, svcLoc,
-      std::tuple<KeyValues>{ KeyValues{"inputHits",  std::vector<std::string>{"GGTF_3DHits"}} },
-      std::tuple<KeyValues>{ KeyValues{"outputTracks", std::vector<std::string>{"SimpleTracks"}} }),
-    m_histSvc("THistSvc", name)
+  SimpleFitFromGGTFTracks(const std::string& name, ISvcLocator* svcLoc)
+  : MultiTransformer(name, svcLoc,
+      { KeyValues{"inputGGTFTracks", std::vector<std::string>{"CDCHTracks"}},
+        KeyValues{"inputWireHits",   std::vector<std::string>{"GGTF_SenseWireHits"}} },
+      { KeyValues{"outputTracks",    std::vector<std::string>{"SimpleTracks"}},
+        KeyValues{"outputFitHits",   std::vector<std::string>{"SimpleFitHits"}} })
   {}
 
-  // --------------- knobs ---------------
+  // -------- knobs --------
+  Gaudi::Property<double>   m_Bz       {this, "Bz", 2.0,  "Uniform Bz [T] (for pT conversion)"};
+  Gaudi::Property<int>      m_pdg      {this, "PDG", 13,  "PDG hypothesis (sets charge sign)"};
+  Gaudi::Property<unsigned> m_minHits  {this, "MinHitsPerTrack", 6u, "Min wire hits to fit a GGTF track"};
 
-  // physics / clustering
-  Gaudi::Property<double>   m_Bz        {this, "Bz", 2.0,  "Uniform Bz [T] (for pT conversion/logging)"};
-  Gaudi::Property<int>      m_pdg       {this, "PDG", 13,   "PDG hypothesis (charge sign)"};
-  Gaudi::Property<unsigned> m_minGroup  {this, "MinGroupSize", 6u, "Minimum hits per cluster to fit"};
-  Gaudi::Property<double>   m_epsMM     {this, "DBSCAN_EpsMM", 20.0, "DBSCAN epsilon [mm]"};
-  Gaudi::Property<unsigned> m_minPts    {this, "DBSCAN_MinPts", 6u, "DBSCAN minPts"};
+  // When converting SenseWireHit -> 3D point:
+  Gaudi::Property<bool>     m_useMmid  {this, "UseMmidPoint", true, "Use GGTF Mmid point (recommended)"};
+
+  // Dedup consecutive near-duplicates
   Gaudi::Property<bool>     m_dedup     {this, "DeduplicateHits", true, "Drop consecutive near-duplicates"};
   Gaudi::Property<double>   m_dedupTolMM{this, "DedupTolMM", 0.25, "Dedup tolerance [mm]"};
 
-  // histogram controls
-  Gaudi::Property<std::string> m_histStream {this, "HistStream", "simple", "THistSvc stream (file logical name)"};
-  Gaudi::Property<int>         m_maxEvtY    {this, "MaxEventsY", 2000, "Y span for 2D 'vs event' plots"};
-  Gaudi::Property<unsigned>    m_ptBins     {this, "PtBins", 100u, "pT bins"};
-  Gaudi::Property<double>      m_ptMax      {this, "PtMax", 100.0, "pT max [GeV]"};
-  Gaudi::Property<double>      m_etaMax     {this, "EtaMax", 3.0,   "|eta| max"};
+  // Output hit covariance (diagonal) for TrackerHit3D (mm^2)
+  Gaudi::Property<float>    m_hitVarXY {this, "HitVarXY",  1.0f, "var(x)=var(y) for output fit hits [mm^2]"};
+  Gaudi::Property<float>    m_hitVarZ  {this, "HitVarZ",   1.0f, "var(z) for output fit hits [mm^2]"};
 
-  // "Material effects" (covariance inflation) — lightweight
-  Gaudi::Property<bool>   m_useMatEff     {this, "UseMaterialEffects", false,
-                                           "If true, estimate X/X0 per cluster and inflate covariances"};
-  Gaudi::Property<bool>   m_useTGeoPath   {this, "UseTGeoPath", true,
-                                           "If true and gGeoManager present, estimate X/X0 via TGeo midpoints"};
-  Gaudi::Property<double> m_fallbackXOverX0 {this, "FallbackXOverX0", 0.02,
-                                             "Fallback integrated material (X/X0) if TGeo not available"};
-  Gaudi::Property<double> m_msK_GeV       {this, "MS_K_GeV", 0.0136,
-                                           "Highland constant (13.6 MeV) in GeV"};
-  Gaudi::Property<double> m_msScale       {this, "MS_Scale", 1.0,
-                                           "Extra scale factor on MS variance additions"};
-
-  // base covariances for exported TrackState (diagonal)
+  // base diagonal covariances for exported TrackState
   Gaudi::Property<float>  m_cov_d0     {this, "BaseVar_d0",        1.0f,   "base var(d0) [mm^2]"};
   Gaudi::Property<float>  m_cov_phi    {this, "BaseVar_phi",       1e-3f,  "base var(phi) [rad^2]"};
-  Gaudi::Property<float>  m_cov_omega  {this, "BaseVar_omega",     1e-8f,  "base var(omega) [(GeV^-1)^2] (placeholder)"};
+  Gaudi::Property<float>  m_cov_omega  {this, "BaseVar_omega",     1e-8f,  "base var(omega) [(GeV^-1)^2]"};
   Gaudi::Property<float>  m_cov_z0     {this, "BaseVar_z0",        1.0f,   "base var(z0) [mm^2]"};
   Gaudi::Property<float>  m_cov_tanL   {this, "BaseVar_tanLambda", 1e-2f,  "base var(tanLambda) [1]"};
 
-  // state
-  ServiceHandle<ITHistSvc> m_histSvc;
-  mutable unsigned long long m_evtCounter{0};
+  // quick sanity hist (optional; harmless if THistSvc absent in job)
+  Gaudi::Property<bool> m_fillSummaryHisto {this, "FillSummaryHisto", false, "Fill minimal pT histo via THistSvc"};
+  Gaudi::Property<std::string> m_histStream {this, "HistStream", "simple", "THistSvc stream (file logical name)"};
+  Gaudi::Property<unsigned>    m_ptBins     {this, "PtBins", 100u, "pT bins"};
+  Gaudi::Property<double>      m_ptMax      {this, "PtMax", 100.0, "pT max [GeV]"};
 
-  // histos
+  ServiceHandle<ITHistSvc> m_histSvc{"THistSvc", this->name()};
   mutable TH1F* h_pt{nullptr};
-  mutable TH1F* h_phi{nullptr};
-  mutable TH1F* h_theta{nullptr};
-  mutable TH1F* h_eta{nullptr};
-  mutable TH1F* h_omega{nullptr};
-  mutable TH1F* h_radius{nullptr};
-  mutable TH1F* h_tanL{nullptr};
-  mutable TH1F* h_nTrk{nullptr};
-
-  mutable TH2F* h_pt_vs_evt{nullptr};
-  mutable TH2F* h_phi_vs_evt{nullptr};
-  mutable TH2F* h_theta_vs_evt{nullptr};
-  mutable TH2F* h_eta_vs_evt{nullptr};
-  mutable TH2F* h_omega_vs_evt{nullptr};
 
   StatusCode initialize() override {
-    info() << "SimpleFitDCHFitter init | Bz=" << m_Bz.value()
-           << " | PDG=" << m_pdg.value()
-           << " | epsMM=" << m_epsMM.value()
-           << " | minPts=" << m_minPts.value()
-           << " | minGroup=" << m_minGroup.value()
-           << " | HistStream=" << m_histStream.value()
-           << " | UseMaterialEffects=" << (m_useMatEff.value() ? "true":"false")
-           << " | UseTGeoPath=" << (m_useTGeoPath.value() ? "true":"false")
-           << " | FallbackXOverX0=" << m_fallbackXOverX0.value()
-           << endmsg;
-
+    if (!m_fillSummaryHisto.value()) return StatusCode::SUCCESS;
     if (!m_histSvc.retrieve().isSuccess()) {
-      warning() << "THistSvc NOT available; histograms will not be written." << endmsg;
-    } else {
-      const std::string base = "/" + m_histStream.value() + "/";
-
-      auto mk1 = [&](const char* n, const char* t, int nb, double lo, double hi)->TH1F* {
-        TH1F* h = new TH1F(n,t,nb,lo,hi); h->Sumw2();
-        m_histSvc->regHist(base + n, h).ignore(); return h;
-      };
-      auto mk2 = [&](const char* n, const char* t,
-                     int nbx,double xlo,double xhi, int nby,double ylo,double yhi)->TH2F* {
-        TH2F* h = new TH2F(n,t,nbx,xlo,xhi,nby,ylo,yhi);
-        m_histSvc->regHist(base + n, h).ignore(); return h;
-      };
-
-      const int   nEvtY   = std::max(1, m_maxEvtY.value());
-      const double yMin   = 0.0, yMax = double(nEvtY);
-
-      h_pt     = mk1("pt",     "p_{T} [GeV]",          m_ptBins.value(), 0.0, m_ptMax.value());
-      h_phi    = mk1("phi",    "#phi [rad]",           72, -PI(), PI());
-      h_theta  = mk1("theta",  "#theta [rad]",         90, 0.0, PI());
-      h_eta    = mk1("eta",    "#eta",                 60, -m_etaMax.value(), m_etaMax.value());
-      h_omega  = mk1("omega",  "#omega [GeV^{-1}]",   200, -0.1, 0.1);
-
-      // radius axis upper bound: pT_max -> R_max (mm) = pT / (0.0003 * Bz)
-      const double Rmax_mm = (m_ptMax.value() > 0 && m_Bz.value() > 1e-9)
-                             ? (m_ptMax.value() / (0.0003 * m_Bz.value()))
-                             : 1e6;
-      h_radius = mk1("radius_mm", "R [mm]",           150, 0.0, Rmax_mm);
-
-      h_tanL   = mk1("tanLambda", "tan#lambda",       120, -6.0, 6.0);
-      h_nTrk   = mk1("nTracksPerEvent", "tracks / event", 51, -0.5, 50.5);
-
-      h_pt_vs_evt    = mk2("pt_vs_evt",    "p_{T} vs event; p_{T} [GeV]; event index",
-                           m_ptBins.value(), 0.0, m_ptMax.value(), nEvtY, yMin, yMax);
-      h_phi_vs_evt   = mk2("phi_vs_evt",   "#phi vs event; #phi [rad]; event index",
-                           72, -PI(), PI(), nEvtY, yMin, yMax);
-      h_theta_vs_evt = mk2("theta_vs_evt", "#theta vs event; #theta [rad]; event index",
-                           90, 0.0, PI(), nEvtY, yMin, yMax);
-      h_eta_vs_evt   = mk2("eta_vs_evt",   "#eta vs event; #eta; event index",
-                           60, -m_etaMax.value(), m_etaMax.value(), nEvtY, yMin, yMax);
-      h_omega_vs_evt = mk2("omega_vs_evt", "#omega vs event; #omega [GeV^{-1}]; event index",
-                           200, -0.1, 0.1, nEvtY, yMin, yMax);
+      warning() << "THistSvc NOT available; summary histo disabled." << endmsg;
+      return StatusCode::SUCCESS;
     }
-
+    const std::string base = "/" + m_histStream.value() + "/";
+    h_pt = new TH1F("pt", "p_{T} [GeV]", m_ptBins.value(), 0.0, m_ptMax.value());
+    h_pt->Sumw2();
+    m_histSvc->regHist(base + "pt", h_pt).ignore();
     return StatusCode::SUCCESS;
   }
 
-  edm4hep::TrackCollection operator()(const edm4hep::TrackerHit3DCollection& hits) const override {
-    edm4hep::TrackCollection out;
-    const unsigned long long evtIdx = m_evtCounter++;  // monotonically increasing
-    if (hits.empty()) { if (h_nTrk) h_nTrk->Fill(0); return out; }
+  std::tuple<edm4hep::TrackCollection, edm4hep::TrackerHit3DCollection>
+  operator()(const extension::TrackCollection& ggtfTracks,
+             const extension::SenseWireHitCollection& wireHits) const override {
 
-    // 1) collect positions (mm) by index
-    std::vector<TVector3> P; P.reserve(hits.size());
-    for (size_t i=0;i<hits.size();++i) {
-      const auto p = hits[i].getPosition();
-      P.emplace_back(p.x, p.y, p.z);
+    edm4hep::TrackCollection outTracks;
+    edm4hep::TrackerHit3DCollection outFitHits;
+
+    if (ggtfTracks.empty() || wireHits.empty()) {
+      return std::make_tuple(std::move(outTracks), std::move(outFitHits));
     }
 
-    // 2) cluster
-    const auto labels = dbscan_mm(P, m_epsMM.value(), m_minPts.value());
-    int maxLbl = -1; for (int L: labels) maxLbl = std::max(maxLbl, L);
-    if (maxLbl < 0) { if (h_nTrk) h_nTrk->Fill(0); return out; }
+    // collectionID for the persisted wire hits (all entries share it)
+    const auto wireCollID = wireHits[0].getObjectID().collectionID;
 
     const int qSign = chargeFromPDG(m_pdg.value());
-    int nTrkThisEvent = 0;
 
-    // 3) per-cluster fit & export
-    for (int L=0; L<=maxLbl; ++L) {
-      std::vector<size_t> idx;
-      idx.reserve(P.size());
-      for (size_t i=0;i<labels.size();++i) if (labels[i]==L) idx.push_back(i);
-      if (idx.size() < std::max<size_t>(m_minGroup.value(), 3u)) continue;
+    for (const auto& cand : ggtfTracks) {
 
-      if (m_dedup.value() && idx.size()>=2) {
-        std::vector<size_t> idx2; idx2.reserve(idx.size());
-        TVector3 prev(1e99,1e99,1e99);
-        const double tol2 = m_dedupTolMM.value()*m_dedupTolMM.value();
-        for (size_t k : idx) { if ((P[k]-prev).Mag2() >= tol2) { idx2.push_back(k); prev = P[k]; } }
-        if (idx2.size() >= 3) idx.swap(idx2);
+      // Gather the indices of wire hits referenced by this GGTF track
+      std::vector<int> wireIdx;
+      wireIdx.reserve(64);
+
+      for (const auto& rel : cand.getTrackerHits()) {
+        const auto oid = rel.getObjectID();
+        if (oid.collectionID != wireCollID) continue;
+        if (oid.index < 0 || oid.index >= (int)wireHits.size()) continue;
+        wireIdx.push_back(oid.index);
       }
-      if (idx.size() < 3) continue;
 
-      std::vector<TVector3> Pc; Pc.reserve(idx.size());
-      for (auto k: idx) Pc.push_back(P[k]);
+      if (wireIdx.size() < std::max<unsigned>(m_minHits.value(), 3u)) continue;
 
-      // circle in XY
-      CircleXY cir = kasa_circle_xy(Pc);
+      // Convert each SenseWireHit -> a 3D point (and keep the points for fitting)
+      std::vector<TVector3> P;
+      P.reserve(wireIdx.size());
+
+      for (int idx : wireIdx) {
+        const auto& h  = wireHits[idx];
+        const auto  wp = h.getPosition();
+
+        const double d   = double(h.getDistanceToWire());
+        const double phi = double(h.getWireAzimuthalAngle());
+        const double st  = double(h.getWireStereoAngle());
+
+        TVector3 wpos(wp.x, wp.y, wp.z);
+
+        // wire direction
+        TVector3 dir(0,0,1);
+        dir.RotateX(st);
+        dir.RotateZ(phi);
+        dir = safe_unit(dir, TVector3(0,0,1));
+
+        // local xprime basis
+        TVector3 xprime(1.0, 0.0, -dir.X() / std::max(1e-12, dir.Z()));
+        xprime = safe_unit(xprime, TVector3(1,0,0));
+        TVector3 yprime = dir.Cross(xprime);
+        yprime = safe_unit(yprime, TVector3(0,1,0));
+        xprime = safe_unit(yprime.Cross(dir), TVector3(1,0,0));
+
+        TVector3 point = wpos;
+        if (m_useMmid.value()) {
+          const TVector3 L = wpos + xprime * (-d);
+          const TVector3 R = wpos + xprime * (+d);
+          point = 0.5 * (L + R);
+        }
+        P.push_back(point);
+      }
+
+      // optional dedup
+      if (m_dedup.value() && P.size() >= 2) {
+        std::vector<TVector3> P2; P2.reserve(P.size());
+        const double tol2 = m_dedupTolMM.value() * m_dedupTolMM.value();
+        TVector3 prev(1e99,1e99,1e99);
+        for (const auto& v : P) {
+          if ((v - prev).Mag2() >= tol2) { P2.push_back(v); prev = v; }
+        }
+        if (P2.size() >= 3) P.swap(P2);
+      }
+      if (P.size() < 3) continue;
+
+      // circle fit
+      CircleXY cir = kasa_circle_xy(P);
       if (!cir.ok) continue;
       const double R_mm = cir.R;
 
-      // pick a reference point near origin as "perigee-like"
+      // pick perigee-like point (smallest transverse radius)
       size_t imin=0; double r2min=std::numeric_limits<double>::infinity();
-      for (size_t j=0;j<Pc.size();++j){ const double r2=Pc[j].Perp2(); if (r2<r2min){r2min=r2; imin=j;} }
-      const TVector3 Pmin = Pc[imin];
+      for (size_t j=0;j<P.size();++j){ const double r2=P[j].Perp2(); if (r2<r2min){r2min=r2; imin=j;} }
+      const TVector3 Pmin = P[imin];
 
-      // angular coordinate about center
-      std::vector<double> phi(Pc.size());
-      for (size_t j=0;j<Pc.size();++j) phi[j]=std::atan2(Pc[j].Y()-cir.cy, Pc[j].X()-cir.cx);
-      for (size_t j=1;j<Pc.size();++j) phi[j]=unwrap(phi[j], phi[j-1]);
+      // unwrap phi around center; fit z(phi)
+      std::vector<double> ph(P.size());
+      for (size_t j=0;j<P.size();++j) ph[j] = std::atan2(P[j].Y()-cir.cy, P[j].X()-cir.cx);
+      for (size_t j=1;j<P.size();++j) ph[j] = unwrap(ph[j], ph[j-1]);
 
-      // sort by angle
-      std::vector<size_t> ord(Pc.size()); std::iota(ord.begin(),ord.end(),0);
-      std::sort(ord.begin(),ord.end(),[&](size_t a,size_t b){return phi[a] < phi[b];});
+      std::vector<size_t> ord(P.size()); std::iota(ord.begin(), ord.end(), 0);
+      std::sort(ord.begin(), ord.end(), [&](size_t a,size_t b){ return ph[a] < ph[b]; });
 
-      // z(phi) = a + b*phi  -> tanL = b / R
-      double S1=0,Sph=0,Sz=0,Sphp=0,Sphz=0;
-      for (auto j: ord){ const double ph=phi[j]; const double z=Pc[j].Z(); S1+=1; Sph+=ph; Sz+=z; Sphp+=ph*ph; Sphz+=ph*z; }
+      double S1=0, Sph=0, Sz=0, Sphp=0, Sphz=0;
+      for (auto j : ord) {
+        const double pphi = ph[j];
+        const double z    = P[j].Z();
+        S1 += 1; Sph += pphi; Sz += z; Sphp += pphi*pphi; Sphz += pphi*z;
+      }
       const double det = S1*Sphp - Sph*Sph;
-      double b=0;
-      if (std::fabs(det) > 1e-12) b = (S1*Sphz - Sph*Sz)/det;
-      const double tanL = (R_mm>1e-9) ? (b / R_mm) : 0.0;
+      double b = 0.0;
+      if (std::fabs(det) > 1e-12) b = (S1*Sphz - Sph*Sz) / det;
 
-      // tangent direction at Pmin
+      const double tanL = (R_mm > 1e-9) ? (b / R_mm) : 0.0;
+
+      // tangent at Pmin
       TVector3 rvec(Pmin.X()-cir.cx, Pmin.Y()-cir.cy, 0.0);
-      if (rvec.Perp2()==0) rvec=TVector3(1,0,0);
+      if (rvec.Perp2()==0) rvec = TVector3(1,0,0);
       const TVector3 rhat = rvec.Unit();
-      TVector3 that(-rhat.Y(), rhat.X(), 0.0);  // 90° CCW
+      TVector3 that(-rhat.Y(), rhat.X(), 0.0);
       TVector3 tangent = TVector3(that.X(), that.Y(), tanL).Unit();
 
-      // kinematics (pt for histos only; state will store pt/time anyway)
-      const double pt = 0.0003 * m_Bz.value() * R_mm;              // GeV (R in mm)
-      const double theta = std::atan2(1.0, tanL);                  // 0..pi
-      const double eta   = -std::log(std::tan(0.5*theta));
-      const double omega_qOverPt = (pt>1e-12) ? (qSign/pt) : 0.0;  // GeV^-1
-
-      // --- lightweight material effects: add MS to phi/d0/z0 variances
-      float add_var_phi = 0.f, add_var_d0 = 0.f, add_var_z0 = 0.f;
-      if (m_useMatEff.value()) {
-        const double p  = pt * std::sqrt(1.0 + tanL*tanL); // GeV
-        double XoX0 = m_fallbackXOverX0.value();
-        if (m_useTGeoPath.value() && gGeoManager) {
-          XoX0 = estimate_x_over_x0_midpoint(Pc, m_fallbackXOverX0.value());
-        }
-        XoX0 = std::max(0.0, XoX0);
-
-        const double msK = m_msK_GeV.value();
-        double theta0 = 0.0;
-        if (p > 1e-6 && XoX0 > 0.0) {
-          const double corr = 1.0 + 0.038 * std::log(std::max(1e-6, XoX0));
-          theta0 = (msK / p) * std::sqrt(XoX0) * corr;
-        }
-        theta0 *= m_msScale.value();
-
-        const double Lchar_mm = R_mm;
-        add_var_phi = float(theta0*theta0);                                 // rad^2
-        add_var_d0  = float((Lchar_mm*theta0)*(Lchar_mm*theta0));           // mm^2
-        add_var_z0  = float((Lchar_mm*theta0*tanL)*(Lchar_mm*theta0*tanL)); // mm^2
-      }
-
-      // export track
-      auto trk = out.create();
-      trk.setType(m_pdg.value());
-      for (auto k: idx) trk.addToTrackerHits(hits[k]);
+      // ---- create output track ----
+      auto trk = outTracks.create();
+      trk.setType(cand.getType()); // preserve GGTF label if desired
 
       addAtIPStateWithCov(trk, Pmin, tangent, R_mm, tanL, qSign, m_Bz.value(),
                           m_cov_d0.value(), m_cov_phi.value(), m_cov_omega.value(),
-                          m_cov_z0.value(), m_cov_tanL.value(),
-                          add_var_phi, add_var_d0, add_var_z0);
+                          m_cov_z0.value(), m_cov_tanL.value());
 
-      // fill histos
-      const double phi_xy= std::atan2(tangent.Y(), tangent.X());
-      if (h_pt)     h_pt->Fill(pt);
-      if (h_phi)    h_phi->Fill(phi_xy);
-      if (h_theta)  h_theta->Fill(theta);
-      if (h_eta)    h_eta->Fill(eta);
-      if (h_omega)  h_omega->Fill(omega_qOverPt);
-      if (h_radius) h_radius->Fill(R_mm);
-      if (h_tanL)   h_tanL->Fill(tanL);
+      // ---- create output fit hits and attach them to the edm4hep track ----
+      // One output hit per point used in fit (in the same order as P)
+      for (const auto& v : P) {
+        auto oh = outFitHits.create();
+        oh.setPosition({float(v.X()), float(v.Y()), float(v.Z())});
 
-      const double yevt = std::min<double>(evtIdx + 0.5, double(std::max(1,m_maxEvtY.value())) - 1e-3);
-      if (h_pt_vs_evt)    h_pt_vs_evt->Fill(pt,    yevt);
-      if (h_phi_vs_evt)   h_phi_vs_evt->Fill(phi_xy, yevt);
-      if (h_theta_vs_evt) h_theta_vs_evt->Fill(theta, yevt);
-      if (h_eta_vs_evt)   h_eta_vs_evt->Fill(eta,   yevt);
-      if (h_omega_vs_evt) h_omega_vs_evt->Fill(omega_qOverPt, yevt);
+        // Minimal diagonal covariance; edm4hep TrackerHit3D stores a 6-element packed symmetric cov
+        // ordering: (xx, xy, xz, yy, yz, zz)
+        oh.setCovMatrix({
+          m_hitVarXY.value(), 0.f, 0.f,
+          m_hitVarXY.value(), 0.f,
+          m_hitVarZ.value()
+        });
 
-      ++nTrkThisEvent;
+        // Optional: store a “time” — leave at 0 unless you want something meaningful
+        // oh.setTime(0.f);
+
+        trk.addToTrackerHits(oh);
+      }
+
+      // summary histo
+      if (h_pt) {
+        const double pt = 0.0003 * m_Bz.value() * R_mm;
+        h_pt->Fill(pt);
+      }
     }
 
-    if (h_nTrk) h_nTrk->Fill(nTrkThisEvent);
-    return out;
+    return std::make_tuple(std::move(outTracks), std::move(outFitHits));
   }
 
   StatusCode finalize() override { return StatusCode::SUCCESS; }
 };
 
-DECLARE_COMPONENT(SimpleFitDCHFitter)
+DECLARE_COMPONENT(SimpleFitFromGGTFTracks)
