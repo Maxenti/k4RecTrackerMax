@@ -1,30 +1,51 @@
 #!/usr/bin/env python3
 """
-
 DOC
-plot_pt_from_trackstate_time.py
-
-Read pT from EDM4hep TrackState.time (your convention: time = pT [GeV])
-and make a pretty histogram with configurable binning.
-
-Examples
---------
-# 80 bins, auto-range from data:
-python3 plot_pt_from_trackstate_time.py -i reco.root --coll GenFitTracks --bins 80 -o pt.png
-
-# 200 bins from 0..200 GeV:
-python3 plot_pt_from_trackstate_time.py -i reco.root --bins 0:200:200 -o pt_0_200.png
-
-# Custom bin edges:
-python3 plot_pt_from_trackstate_time.py -i reco.root --bin-edges 0,1,2,5,10,20,50,100,200 -o pt_edges.png
-
-# Log y-axis:
-python3 plot_pt_from_trackstate_time.py -i reco.root --bins 0:200:200 --logy -o pt_logy.png
-
-# Keep only one pT per event (e.g. median of all trackstates in that event):
-python3 plot_pt_from_trackstate_time.py -i reco.root --per-event median --bins 0:200:200 -o pt_event_median.png
-
-
+Summary: Plot pT values stored in EDM4hep TrackState.time for a selected track collection, with flexible event selection, filtering, and histogram binning.
+Status: secondary
+Usage:
+  python3 scripts/plot_pt_from_trackstate_time.py -i RECO.root --coll GenFitTracks --bins 80 -o pt.png
+  python3 scripts/plot_pt_from_trackstate_time.py -i RECO.root --coll GenFitTracks --bins 0:200:200 --logy -o pt_0_200_logy.png
+Examples:
+  python3 scripts/plot_pt_from_trackstate_time.py \
+    -i /eos/.../reco_eta+1.00_pt14.142.root \
+    --coll GenFitTracks \
+    --bins 0:200:200 \
+    --per-event median \
+    --logy \
+    -o artifacts/analysis/pt_from_trackstate_time_eta+1.00.png
+Inputs: EDM4hep/ROOT reco file containing an events TTree and TrackState.time leaf for the selected track collection.
+Outputs: Histogram image file, usually PNG or PDF, showing pT values read from TrackState.time.
+Collections: Reads TrackState.time from GenFitTracks by default; supports common branch layouts such as GenFitTracks.trackStates.time, GenFitTracks.TrackStates.time, _GenFitTracks_trackStates.time, and _GenFitTracks_TrackStates.time.
+Connects-To: scripts/pt_diagnostics_to_root.py, scripts/inspect_events_pt_pathology.py, scripts/scan_pt_time_by_event.py, scripts/dump_covmatrix_one_event.py, steering/runDCHTestTrackFinder.py
+Arguments:
+  -i, --input: input EDM4hep ROOT reco file.
+  --tree: TTree name; default events.
+  --coll: track collection name; default GenFitTracks.
+  --leaf: explicit TrackState.time leaf name; overrides auto-detection.
+  --invalid-sentinel: invalid pT marker value stored in TrackState.time; default -1.0.
+  --include-invalid: include invalid sentinel values instead of dropping them.
+  --min: minimum pT value to keep in GeV.
+  --max: maximum pT value to keep in GeV.
+  --per-event: reduction mode for multiple TrackState.time values per event; choices are all, first, median, mean; default all.
+  --max-events: process only the first N events.
+  --events: comma-separated list of zero-based event indices to process.
+  --bins: histogram binning as either N or min:max:nbins; default 80.
+  --bin-edges: comma-separated custom bin edges; overrides --bins.
+  --logy: draw histogram with logarithmic y-axis.
+  --title: custom plot title.
+  -o, --out: output image file path; default pt_hist.png.
+  --dpi: output image DPI; default 160.
+  --show: display an interactive matplotlib window when available.
+  --verbose: print TrackState.time leaf auto-detection diagnostics.
+Notes:
+  This script assumes the project convention that TrackState.time may carry reconstructed pT in GeV for diagnostic/publication purposes.
+  Auto-detection tries several common EDM4hep/k4 branch naming patterns and falls back to scanning all leaves for collection/time matches.
+  Use --per-event median or --per-event first when you want one pT entry per event instead of one entry per TrackState.
+  Invalid sentinel values are dropped by default so failed fits do not dominate the histogram.
+  This is a diagnostic plotting utility, not a replacement for the full pT-resolution analysis chain.
+  Pair this with pt_diagnostics_to_root.py, inspect_events_pt_pathology.py, or dump_covmatrix_one_event.py when debugging TrackState.time versus omega behavior.
+Tags: secondary, diagnostics, plotting, pt, trackstate, genfittracks, root, matplotlib, edm4hep
 DOC_END
 """
 

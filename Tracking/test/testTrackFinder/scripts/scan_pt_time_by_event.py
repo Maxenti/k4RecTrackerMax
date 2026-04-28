@@ -1,26 +1,52 @@
 #!/usr/bin/env python3
 """
 DOC
-scan_pt_time_by_event.py
-
-UPDATED:
-  - Observability points are derived from SenseWireHit fields (wire point + angles + drift distance),
-    not from position.x/y/z (which may not exist for SenseWireHit in podio ROOT output).
-  - Track->trackerHits relation is decoded using:
-      GenFitTracks.trackerHits_begin/end
-      _GenFitTracks_trackerHits.index / _GenFitTracks_trackerHits.collectionID
-    and we infer the target hit-collectionID per-track from the mode of collectionID values
-    inside that track’s slice (no need for SenseWireHit@collectionID).
-
-FIX (this update):
-  - Preserve circle condition number values, including +inf, instead of converting them to NaN.
-    Previously, circleCond was stored/printed as NaN whenever not finite, so inf -> NaN.
-    Now, circleCond stores raw float values (finite / inf / nan).
-    Only "None" is converted to NaN.
-
+Summary: Scan one reco ROOT file event-by-event to extract pT from TrackState.time/omega, compute signed pT errors, and derive curvature-observability diagnostics from SenseWireHit geometry.
+Status: secondary
 Usage:
-  python3 scan_pt_time_by_event.py --input reco.root --expectedPt 53.183 --stdout
-
+  python3 scripts/scan_pt_time_by_event.py --input RECO.root --expectedPt PT_TRUE --stdout
+  python3 scripts/scan_pt_time_by_event.py --input RECO.root --expectedPt PT_TRUE --csv scan.csv --top 30 --type bad --metric rel
+Examples:
+  python3 scripts/scan_pt_time_by_event.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --trackCollection GenFitTracks \
+    --hitCollection OutputWireHitsGGTF \
+    --expectedPt 14.142 \
+    --csv artifacts/analysis/scan_eta+1.00_pt14.142.csv \
+    --stdout \
+    --verbose
+Inputs: One EDM4hep/ROOT reco output file containing an events TTree, reconstructed TrackState leaves, track-to-hit relations, and SenseWireHit fields.
+Outputs: Log file with global pT/error/observability statistics and ranked best/worst events; optional CSV with one row per usable event.
+Collections: Reads GenFitTracks by default; reads OutputWireHitsGGTF by default; uses TrackState time/omega leaves, trackStates_begin/end, trackerHits_begin/end, trackerHits relation index/collectionID leaves, and SenseWireHit wire-position/drift-distance/angle leaves.
+Connects-To: scripts/analyze_pt_resolution_grid.py, scripts/extract_delphes_tracker_params.py, scripts/inspect_events_pt_pathology.py, scripts/debug_z_spur_event.py, scripts/dump_covmatrix_one_event.py, Tracking/components/GGTF_tracking.cpp, Tracking/components/GenFit2DCHFitter.cpp
+Arguments:
+  --input: input EDM4hep ROOT reco file.
+  --trackCollection: reconstructed track collection; default GenFitTracks.
+  --hitCollection: SenseWireHit collection used for observability diagnostics; default OutputWireHitsGGTF.
+  --expectedPt: true pT for this file in GeV; required.
+  --top: number of ranked good/bad events to print; default 30.
+  --event: optional single zero-based event index to scan instead of the full file.
+  --csv: optional CSV output path for per-event scan results.
+  --verbose: print per-event diagnostic lines into the log.
+  --invalidTime: invalid TrackState.time sentinel; default -1.0.
+  --minPhiSpan: minimum phi span in radians for curvature observability; default 0.06.
+  --minChordXY: minimum transverse chord length in mm for curvature observability; default 500.0.
+  --maxCircleCond: maximum circle-fit condition number used for diagnostics; default 1e6.
+  --centralFrac: central fraction used for robust truncated-RMS statistics; default 0.95.
+  --type: ranked-event mode; bad shows largest errors, good shows smallest errors; default bad.
+  --metric: ranking metric, abs for |pT-expected| or rel for |pT-expected|/expected; default abs.
+  --log: explicit log-file path; default derives from input basename.
+  --stdout: also stream INFO-level log messages to stdout.
+Notes:
+  This script is the per-file scanner used by higher-level pT-resolution reducers and Delphes-parameter extraction helpers.
+  The preferred pT source is TrackState.time when it is finite, positive, and not equal to invalidTime; otherwise the script falls back to pT inferred from TrackState.omega as 1/|omega|.
+  For each event, the primary track is chosen as the track whose pT estimate is closest to expectedPt.
+  Observability points are reconstructed from SenseWireHit wire position, drift distance, wire azimuthal angle, and stereo angle rather than relying on generic position.x/y/z leaves.
+  Track-to-hit relations are decoded using trackerHits_begin/end plus trackerHits.index and trackerHits.collectionID; the target hit collection ID is inferred per track from the mode of collectionID values.
+  Curvature observability combines phi-span, transverse chord, and circle-condition diagnostics; circleCond deliberately preserves finite, inf, and nan values rather than forcing inf to nan.
+  The returned Python API scan_file(...) is used by analyze_pt_resolution_grid.py and extract_delphes_tracker_params.py, so interface changes can affect closeout analyses.
+  Keep diagnostic thresholds fixed across CF-vs-W or other detector/material comparisons unless the threshold change itself is the object of study.
+Tags: secondary, scanner, pt-resolution, diagnostics, trackstate, sensewirehit, genfittracks, ggtf, root, edm4hep
 DOC_END
 """
 

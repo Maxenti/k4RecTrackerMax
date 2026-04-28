@@ -1,0 +1,78 @@
+# DOC:
+# Summary: Authoritative HTCondor submit description for DDSim single-particle gun production, launching one job per generated eta/pT JSON parameter file.
+# Status: authoritative
+# Usage:
+#   condor_submit -a "OUT_DIR=/eos/.../gun_samples/VARIANT" -a "COMPACT_XML_ARG=/eos/.../IDEA_variant.xml" configs/condor/ddsim.condor
+#   Usually submitted through scripts/prepare_and_submit.sh after params/job_*.json and scripts/queue_items.txt are generated.
+# Examples:
+#   cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+#   condor_submit \
+#     -a "OUT_DIR=/eos/user/c/cglenn/gun_samples/1_29_2026/25umCF_0.2umNiP_1.2umAu" \
+#     -a "COMPACT_XML_ARG=/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03_25umCF_0.2umNiP_1.2umAu.xml" \
+#     configs/condor/ddsim.condor
+#   Expected result: one Condor job per line in scripts/queue_items.txt, producing gun ROOT files under OUT_DIR/eta_<eta>/.
+# Inputs: scripts/condor_ddsim.sh, scripts/stamp_ddsim_metadata.py, per-job params/job_*.json files, scripts/queue_items.txt, compact DD4hep XML, and EOS output directory macro OUT_DIR.
+# Outputs: DDSim EDM4hep ROOT gun samples staged to OUT_DIR/eta_<eta>/gun_eta<eta>_pt<pt>.root by scripts/condor_ddsim.sh; Condor stdout/stderr/log files under logs/.
+# Collections: Produced ROOT files are DDSim/EDM4hep event files; downstream reco expects DCHCollection and related SimTrackerHit collections according to the selected compact geometry.
+# Connects-To: scripts/prepare_and_submit.sh, scripts/mk_ddsim_grid.py, scripts/condor_ddsim.sh, scripts/stamp_ddsim_metadata.py, scripts/make_filelist.sh, scripts/submit_reco.sh
+# Arguments:
+#   jobfile: queued basename from scripts/queue_items.txt, such as job_0.json; transferred from params/$(jobfile).
+#   COMPACT_XML_ARG: compact DD4hep XML path or transferred basename; normally supplied with condor_submit -a by scripts/prepare_and_submit.sh.
+#   OUT_DIR: EOS output directory base for generated gun samples; supplied with condor_submit -a by scripts/prepare_and_submit.sh.
+#   transfer_input_files: transfers the DDSim worker wrapper, DDSim metadata stamper, and the per-job params JSON.
+#   request_cpus/request_memory/request_disk: Condor resource requests, currently 1 CPU, 8 GB memory, and 3 GB disk.
+#   +JobFlavour: CERN batch runtime class; set to tomorrow for DDSim production jobs.
+# Notes:
+#   This is the authoritative submit description for the maintained DDSim gun-production Condor pipeline.
+#   The normal workflow is prepare_and_submit.sh -> ddsim.condor -> condor_ddsim.sh -> EOS gun samples.
+#   The queue is driven by scripts/queue_items.txt, which must list per-job JSON basenames already present under params/.
+#   Condor transfers only small control files and wrappers; DDSim writes locally on the worker and condor_ddsim.sh stages final ROOT outputs to EOS with xrdcp.
+#   Do not rely on Condor output-file transfer for the generated ROOT files; when_to_transfer_output is only for normal job-side files/log handling.
+#   If TRANSFER_COMPACT=1 is used by prepare_and_submit.sh, COMPACT_XML_ARG should be the transferred XML basename and the XML must be appended to transfer_input_files at submit time.
+#   If TRANSFER_COMPACT=0, COMPACT_XML_ARG should be the full EOS compact XML path readable by the worker.
+#   Generated gun samples are upstream inputs to the reco pipeline and should not be mixed into active source/config directories.
+# Tags: authoritative, ddsim, condor, gun-production, eta-grid, pt-grid, eos, xrootd, upstream
+# DOC_END
+
+# ================= DDSim gun production (per-eta dir + per-(eta,pt) file) =================
+
+universe        = vanilla
+executable      = scripts/condor_ddsim.sh
+
+# Resources
+request_cpus    = 1
+request_memory  = 8 GB
+request_disk    = 3 GB
+
+# Environment and platform
++JobFlavour     = "tomorrow"
+
+
+# We write locally and xrdcp to EOS; do NOT let Condor transfer outputs.
+should_transfer_files    = YES
+when_to_transfer_output  = ON_EXIT
+transfer_executable      = True
+
+# We always transfer the wrapper and the per-job params JSON.
+# queue_items.txt lists filenames like "job_0.json" that live under params/
+transfer_input_files     = scripts/condor_ddsim.sh, scripts/stamp_ddsim_metadata.py, params/$(jobfile)
+
+
+# ----------- RUNTIME MACROS (set via -a on condor_submit) -----------
+#   -a OUT_DIR=/eos/user/c/cglenn/gun_samples
+#   -a COMPACT_XML_ARG=/eos/.../IDEA_o1_v03CF_2umAu.xml
+# --------------------------------------------------------------------
+
+# Logging
+output          = logs/$(jobfile).out
+error           = logs/$(jobfile).err
+log             = logs/condor.log
+
+# Arguments:
+#   1) params json (basename under params/)
+#   2) compact XML path on EOS
+#   3) OUT_DIR base on EOS
+arguments       = $(jobfile) $(COMPACT_XML_ARG) $(OUT_DIR)
+
+# Submit one job per line from queue_items.txt (each line like: job_0.json)
+queue jobfile from scripts/queue_items.txt

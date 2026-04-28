@@ -1,4 +1,43 @@
 #!/usr/bin/env python3
+
+
+
+"""
+DOC
+Summary: Inspect selected reco events for pT/pathology debugging by printing GGTF 3D-hit spatial spans and GenFit TrackState parameters.
+Status: secondary
+Usage:
+  python3 scripts/inspect_events_pt_pathology.py --input RECO.root --events EVENT1,EVENT2,EVENT3
+  python3 scripts/inspect_events_pt_pathology.py --input RECO.root --events 718,838,302 --hits GGTF_3DHits --track GenFitTracks
+Examples:
+  python3 scripts/inspect_events_pt_pathology.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --events 718,838,302 \
+    --hits GGTF_3DHits \
+    --track GenFitTracks
+Inputs: Reco ROOT file containing an events TTree, a 3D hit collection with position leaves, and a reconstructed track collection with TrackState leaves.
+Outputs: Terminal report for each requested event showing hit count, r/z min/max/span, TrackState count, pT from TrackState.time, pT from 1/|omega|, omega, phi, tanLambda, D0, and Z0.
+Collections: Reads GGTF_3DHits by default; reads GenFitTracks TrackStates by default; auto-detects common TrackState branch prefixes for the selected track collection.
+Connects-To: scripts/scan_pt_time_by_event.py, scripts/dump_covmatrix_one_event.py, scripts/debug_z_spur_event.py, scripts/view_tracks_event.py, Tracking/components/GenFit2DCHFitter.cpp
+Arguments:
+  --input: input reco ROOT file.
+  --events: comma-separated zero-based event indices to inspect.
+  --hits: 3D hit collection prefix used for position.x/y/z leaves; default GGTF_3DHits.
+  --track: reconstructed track collection used for TrackState leaves; default GenFitTracks.
+Notes:
+  This is a read-only event-level diagnostic utility for investigating suspicious pT estimates, large geometry spans, bad curvature values, or track-state publication issues.
+  The script compares pT encoded in TrackState.time with pT inferred as 1/|omega|, which is useful for checking the project convention where pT may be stored in the time field.
+  Hit statistics are simple geometric summaries: radial span and z span of the selected hit collection in mm.
+  TrackState prefix detection checks common EDM4hep/ROOT branch layouts such as GenFitTracks.trackStates., GenFitTracks.TrackStates., and underscored collection forms.
+  This script does not create plots or modify files; pair it with debug_z_spur_event.py or view_tracks_event.py when a visual event display is needed.
+Tags: secondary, diagnostics, pt-pathology, trackstate, genfittracks, ggtf, root, event-inspection
+DOC_END
+"""
+
+
+
+
+
 import argparse, math
 import ROOT
 ROOT.gROOT.SetBatch(True)

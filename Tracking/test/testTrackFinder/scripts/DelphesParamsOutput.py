@@ -1,51 +1,53 @@
 #!/usr/bin/env python3
 """
-extract_delphes_tracker_params.py
-
-Purpose
--------
-Given your reco gun grid directory layout:
-  OUTDIR/eta_+0.00/reco_gun_eta+0.00_pt0.69475.root
-  ...
-
-This script:
-  1) Calls your trusted scan module: scan_pt_time_by_event.scan_file(...)
-  2) Computes per-(eta, pt) tracker "efficiency" and dpT/pT resolution
-  3) Fits dpT/pT vs pt to the Delphes-friendly model:
-        dpT/pT = sqrt(A^2 + B^2*pt + (C*pt)^2)
-     using a linearized weighted least squares on (dpT/pT)^2.
-  4) Prints the exact "set RES_A ...", "set RES_B ...", "set RES_C ...",
-     and recommended TRACK_* values to paste into your Delphes card (Option A).
-  5) Writes a JSON report + CSV table.
-
-Important assumptions (consistent with your current workflow)
--------------------------------------------------------------
-- Gun samples: one truth particle per event per file (pt taken from filename, eta from directory).
-- scan_file(...) returns:
-    results: list of dicts per usable event, each with at least:
-      - rel_signed: (pt_reco - pt_true)/pt_true  (signed)
-      - pt_used_src: e.g. "time" if using TrackState.time convention
-      - curvObservable, circleOK, etc. (optional but used if present)
-    n_ev: total events in file (or scanned count)
-    n_scanned: scanned events (depends on your scanmod)
-- "Efficiency" here is defined as: (# usable results) / (n_scanned or n_ev).
-  For gun studies this is a reasonable proxy for tracking efficiency; for full physics
-  events you would re-derive efficiency with truth-matching.
-
-Usage
------
-  python3 extract_delphes_tracker_params.py \
-    --inputDir /path/to/reco_grid \
-    --outJson tracker_params.json \
-    --outCsv  tracker_points.csv \
+DOC
+Summary: Extract Delphes-style tracker efficiency and pT-resolution parameters from reco gun-sample grids by scanning GenFit/GGTF outputs and fitting a compact dpT/pT model.
+Status: secondary
+Usage:
+  python3 scripts/extract_delphes_tracker_params.py --inputDir RECO_DIR --outJson tracker_params.json --outCsv tracker_points.csv
+  python3 scripts/extract_delphes_tracker_params.py --inputDir RECO_DIR --trackCollection GenFitTracks --hitCollection OutputWireHitsGGTF --method truncrms68 --qualityCut none
+Examples:
+  python3 scripts/extract_delphes_tracker_params.py \
+    --inputDir /eos/.../reco_samples2/CF25_Au2p227matched \
+    --outJson configs/tracker_params_CF25_Au2p227matched.json \
+    --outCsv artifacts/analysis/tracker_points_CF25_Au2p227matched.csv \
     --trackCollection GenFitTracks \
     --hitCollection OutputWireHitsGGTF \
     --method truncrms68 \
-    --qualityCut none
-
-You will typically run it twice (CF and W) and paste the printed values into:
-  idea_card2_CF.tcl
-  idea_card2_W.tcl
+    --qualityCut none \
+    --fitMode global
+Inputs: Reco campaign directory with eta_* subdirectories and reco_*.root files whose names encode true pT as _pt<value>; each file is scanned with scan_pt_time_by_event.scan_file().
+Outputs: JSON report with inferred Delphes tracker parameters and fit diagnostics; CSV table of per-(eta,pT) efficiency/resolution/bias points; printed Tcl snippet with TRACK_ETA_MAX, TRACK_PT_MIN, TRACK_EFF_PLATEAU, RES_A, RES_B, and RES_C.
+Collections: Reads trackCollection, normally GenFitTracks; reads hitCollection, normally OutputWireHitsGGTF; does not write EDM4hep collections.
+Connects-To: scripts/scan_pt_time_by_event.py, configs/delphes/*.tcl, configs/tracker_params.json, scripts/patch_trkCov_match_dch_material.py, scripts/analyze_pt_resolution_grid.py
+Arguments:
+  --inputDir: base reco directory containing eta_* subdirectories.
+  --outJson: JSON output report path; default tracker_params.json.
+  --outCsv: CSV output table path; default tracker_points.csv.
+  --trackCollection: reconstructed track collection to analyze; default GenFitTracks.
+  --hitCollection: hit collection used by the scanner diagnostics; default OutputWireHitsGGTF.
+  --minPhiSpan: minimum phi span used by scanner curvature diagnostics; default 0.06.
+  --minChordXY: minimum transverse chord length in mm used by scanner diagnostics; default 500.0.
+  --maxCircleCond: maximum circle-fit condition number accepted by scanner diagnostics; default 1e6.
+  --centralFrac: central fraction used by the scanner for robust per-event quantities; default 0.95.
+  --qualityCut: event selection applied before computing resolution; choices are none, curv, curv_circle; default none.
+  --method: resolution estimator used as dpT/pT for the Delphes fit; choices are rms, madsigma, central68, truncrms68; default truncrms68.
+  --ptPlateauMin: pT threshold used to estimate plateau tracking efficiency; default 5.0 GeV.
+  --effTurnonFrac: fraction of plateau efficiency used to estimate TRACK_PT_MIN; default 0.5.
+  --overrideEtaMax: explicit TRACK_ETA_MAX override; if omitted, inferred from eta_* directory names.
+  --fitMode: global fits all eta points together; perEta additionally fits each eta directory separately; default global.
+  --minFitPt: minimum pT included in the resolution fit; default 0.2 GeV.
+Notes:
+  This is a Delphes/fastsim parameter-extraction helper, not the authoritative pT-resolution closeout reducer.
+  The fitted model is dpT/pT = sqrt(A^2 + B^2*pt + (C*pt)^2), obtained by linearized weighted least squares on (dpT/pT)^2.
+  Efficiency is defined as usable scanned results divided by n_scanned or n_ev for single-particle gun files; this is suitable for gun-grid studies but not a full physics-event tracking efficiency definition.
+  True pT is parsed from the reco filename using the _pt<value> token, so campaign naming must preserve that token.
+  Eta acceptance is inferred from eta_* directory names unless --overrideEtaMax is supplied.
+  Use the same scanner cuts, qualityCut, method, and fit settings when comparing CF and W parameterizations.
+  The printed Tcl snippet is intended for manual review before pasting into Delphes cards; do not blindly overwrite production cards without checking fit quality and point coverage.
+  If --fitMode perEta is used, per-eta fits are diagnostic extras; the global fit remains the compact card-friendly parameterization.
+Tags: secondary, delphes, tracker-params, pt-resolution, efficiency, fastsim, genfittracks, ggtf, parameter-extraction
+DOC_END
 """
 
 import argparse

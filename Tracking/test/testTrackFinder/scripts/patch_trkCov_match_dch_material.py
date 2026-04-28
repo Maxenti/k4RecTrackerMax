@@ -1,52 +1,49 @@
 #!/usr/bin/env python3
 """
-Example:
-  python3 scripts/patch_trkCov_match_dch_material.py \
-    --base-card /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/delphes_card_IDEAtrkCov.tcl \
-    --g4-cf /eos/user/c/cglenn/FCCWork/Testing/pT_Resolution/Pt_etascans_combined/output_eta_folded_CF_E15000MeV.root \
-    --g4-w  /eos/user/c/cglenn/FCCWork/Testing/pT_Resolution/Pt_etascans_combined/output_eta_folded_W_E15000MeV.root \
-    --outdir /afs/cern.ch/user/c/cglenn/FCCWork/Delphes/cards \
-    --npart 12 \
-    --hist "hMatVsAbsEta_total" \
-    --fit-cans
-
-Notes:
-  - --npart is NUMBER OF ETA PARTITIONS (not radial).
-  - Output DCH lines count grows ~ (N_DCH_layers * N_partitions * 2 sides). This is OK.
-"""
-#!/usr/bin/env python3
-"""
-patch_trkCov_match_dch_material.py  (FIXED: NO eta z-slicing)
-
-Goal:
-  Create Delphes cards whose *DCH-only* material budget matches Geant4 x/X0 vs |eta|
-  by fitting *effective X0 per radial partition* of the existing DCH shells in
-  TrackCovariance's DetectorGeometry.
-
-Key points:
-  - We do NOT change zmin/zmax. They are z-extent in meters.
-  - We do NOT duplicate lines / slice in z.
-  - We only adjust the X0 column (token[6]) for "1 DCH ..." lines.
-
-Model:
-  For a barrel shell i at radius r_i, thickness w_i, z-extent zmax_i:
-    crossed_i(eta) = 1 if r_i*sinh(|eta|) < zmax_i else 0
-  Then:
-    x/X0(eta) ≈ cosh(|eta|) * Σ_i crossed_i(eta) * (w_i / X0_i)
-
-We group layers into npart contiguous radial partitions and fit one X0 per partition.
-
+DOC
+Summary: Patch Delphes TrackCovariance cards so DCH DetectorGeometry X0 values reproduce Geant4 DCH material-budget x/X0 versus |eta| for CF and W variants.
+Status: secondary
 Usage:
-  python3 patch_trkCov_match_dch_material.py \
-    --base-card cards/IDEA_BASE.tcl \
-    --g4-cf cf.root --g4-w w.root \
+  python3 scripts/patch_trkCov_match_dch_material.py --base-card BASE.tcl --g4-cf CF.root --g4-w W.root --outdir OUTDIR --npart 12 --hist hMatVsAbsEta_total
+Examples:
+  python3 scripts/patch_trkCov_match_dch_material.py \
+    --base-card configs/delphes/delphes_card_IDEAtrkCov.tcl \
+    --g4-cf /eos/.../output_eta_folded_CF_E15000MeV.root \
+    --g4-w  /eos/.../output_eta_folded_W_E15000MeV.root \
+    --outdir configs/delphes/generated \
+    --npart 12 \
     --hist hMatVsAbsEta_total \
-    --outdir cards_out \
-    --npart 12
+    --tag IDEA_DCH
+Inputs: Base Delphes Tcl card containing module TrackCovariance TrackSmearing with a DetectorGeometry block; Geant4 material-budget ROOT files for CF and W variants; optional histogram name.
+Outputs: Two patched Delphes Tcl cards, <tag>_CF.tcl and <tag>_W.tcl, with DCH X0 columns adjusted by radial partition.
+Collections: None; reads ROOT material-budget histograms and edits Delphes Tcl card geometry lines.
+Connects-To: configs/delphes/*.tcl, scripts/dch_x0_per_layer.py, material-budget closeout ROOT outputs, Delphes TrackCovariance studies
+Arguments:
+  --base-card: input Delphes Tcl card to patch.
+  --g4-cf: Geant4/material-budget ROOT file for the CF detector/material variant.
+  --g4-w: Geant4/material-budget ROOT file for the W/default-like detector/material variant.
+  --outdir: output directory for patched Tcl cards.
+  --npart: number of contiguous radial DCH layer partitions used in the X0 fit; default 12.
+  --hist: histogram name to read from each ROOT file; if omitted, the script tries to auto-pick an eta/x0/radlen-like TH1.
+  --tag: output card basename prefix; default IDEA_DCH.
+Notes:
+  This script patches only the X0 column of existing "1 DCH ..." DetectorGeometry lines.
+  It does not slice in z, does not duplicate DCH geometry lines, and does not change zmin/zmax/radius/thickness values.
+  The fitted model approximates x/X0(|eta|) as cosh(|eta|) times the sum over crossed DCH layer thicknesses divided by effective partition X0.
+  A layer is considered crossed when r_i*sinh(|eta|) < zmax_i.
+  The fitted parameters are one effective X0 per contiguous radial partition, then each DCH line inherits the X0 value of its partition.
+  Use DCH-only or appropriately isolated material-budget histograms; fitting total-detector material can incorrectly absorb non-DCH material into DCH X0.
+  The output cards are generated artifacts and should be reviewed before being treated as maintained Delphes configs.
+  This is a fastsim/material-matching helper and does not replace DD4hep/Geant4 material-budget validation.
+Tags: secondary, delphes, track-covariance, material-budget, dch, x0, geant4, cf-vs-w, tcl, fastsim
 
 NOTE:
   Do NOT use --fit-cans for DCH-only Geant4 files.
+
+DOC_END
 """
+
+
 
 import argparse, os, re
 import numpy as np

@@ -1,32 +1,54 @@
 #!/usr/bin/env python3
 """
-
 DOC
-analyze_pt_resolution_grid.py
-
-Batch analysis of reco gun samples organized as:
-  OUTDIR/eta_+0.00/reco_gun_eta+0.00_pt0.69475.root
-  ...
-
-Writes an output ROOT file with:
-  - byEta/<eta_dir> :
-      * TGraphErrors per method vs pT (WITH Y-errors for all methods)
-      * one TMultiGraph overlay + legend
-      * a log-log TCanvas overlay (markers only, no connecting lines)
-      * an additional "relative error" graph per method (err/value) to spot unusable estimators
-  - diagnostics/<eta_dir> :
-      * diagnostic graphs vs pT (WITH errors where meaningful)
-      * a log-x TCanvas overlay of key diagnostics (markers only)
-  - byMethod/<method> :
-      * overlay multigraph of all etas + legend
-      * per-eta clones (styled)
-      * a log-log TCanvas overlay (markers only)
-  - summary TTree with all values (includes *_err for all methods and diag errs)
-
-IMPORTANT PyROOT stability rules used here:
-  - Always directory.cd() before calling Write()
-  - ROOT.SetOwnership(obj, False) to prevent Python GC deleting objects held by TMultiGraph/TLegend/TCanvas
-
+Summary: Reduce eta- and pT-organized reco ROOT outputs into a single pT-resolution summary ROOT file with resolution graphs, diagnostics, and a summary TTree.
+Status: authoritative
+Usage:
+  python3 scripts/analyze_pt_resolution_grid.py --inputDir RECO_DIR --outRoot PTRES.root
+  python3 scripts/analyze_pt_resolution_grid.py --inputDir RECO_DIR --outRoot PTRES.root --trackCollection GenFitTracks --hitCollection OutputWireHitsGGTF --qualityCut none --minPhiSpan 0.06 --minChordXY 500.0 --maxCircleCond 1e6 --centralFrac 0.95
+Examples:
+  python3 scripts/analyze_pt_resolution_grid.py \
+    --inputDir /eos/.../reco_samples2/CF25_Au2p227matched \
+    --outRoot /eos/.../final_analysis/CF25_Au2p227matched_ptres.root \
+    --trackCollection GenFitTracks \
+    --hitCollection OutputWireHitsGGTF \
+    --qualityCut none \
+    --minPhiSpan 0.06 \
+    --minChordXY 500.0 \
+    --maxCircleCond 1e6 \
+    --centralFrac 0.95
+Inputs: Reco campaign directory containing eta_* subdirectories with reco_*.root files whose filenames encode true pT as _pt<value>; each file is scanned by scan_pt_time_by_event.scan_file().
+Outputs: ROOT summary file containing byEta graphs, byMethod graphs, diagnostics graphs, log-scale canvases, relative-error graphs, and a summary TTree.
+Collections: Reads trackCollection, normally GenFitTracks; reads hitCollection, normally OutputWireHitsGGTF; writes ROOT objects under byEta/, byMethod/, diagnostics/, plus TTree summary.
+Connects-To: scripts/scan_pt_time_by_event.py, scripts/analyze_job.sh, scripts/compare_pt_resolution_grid.py, scripts/summarize_ptres_improvement.py, scripts/export_root_plots.py
+Arguments:
+  --inputDir: base reco directory containing eta_* subdirectories.
+  --outRoot: output ROOT file path for the pT-resolution summary.
+  --trackCollection: reconstructed track collection read from each reco ROOT file; default GenFitTracks.
+  --hitCollection: hit collection used by the event scanner for diagnostics; default OutputWireHitsGGTF.
+  --minPhiSpan: minimum phi span used by curvature-observability diagnostics; default 0.06.
+  --minChordXY: minimum transverse chord length in mm used by diagnostics; default 500.0.
+  --maxCircleCond: maximum accepted circle-fit condition number used by diagnostics; default 1e6.
+  --centralFrac: central fraction used inside scan_pt_time_by_event for robust per-event quantities; default 0.95.
+  --qualityCut: selects which scanned events enter resolution metrics; choices are none, curv, curv_circle; default none.
+  --maxFilesPerEta: optional debug cap on number of reco files analyzed per eta directory; 0 means all files.
+  --diagBootstrap: number of bootstrap samples for median-type diagnostic error bars; default 200.
+  --diagBootstrapSeed: seed base for diagnostic bootstrap reproducibility; default 12345.
+  --methodBootstrap: number of bootstrap samples for central68 and truncrms68 method error bars; default 300.
+  --methodBootstrapSeed: seed base for method bootstrap reproducibility; default 54321.
+  --methodBootstrapCap: maximum sample size used in bootstrap resampling for method errors; default 5000.
+  --maxRelErrWarn: warning threshold for method error/value ratio; default 0.5.
+Notes:
+  Expected input layout is RECO_DIR/eta_+X.XX/reco_*.root. Directories not matching eta_<signed number> are ignored.
+  True pT is parsed from the reco filename using the _pt<value> token, so campaign naming must preserve that token.
+  The script computes multiple resolution estimators: RMS, MAD-equivalent sigma, central 68 percent half-width, truncated RMS over central 68 percent, mean absolute relative error, and median absolute relative error.
+  Resolution metrics are computed from signed relative pT error values returned by scan_pt_time_by_event.py, after the selected qualityCut is applied.
+  Diagnostics include curvature-observable fraction, circle-fit OK fraction, time-source fraction, median phi span, median chord length, median circle condition number, median primary-hit count, median algorithm residual, usable event count, and quality-selected event count.
+  Error bars are analytic for simple standard-deviation/binomial quantities and bootstrap-based for median/central-interval style quantities.
+  For CF-vs-W or other detector/material comparisons, keep all analysis cuts and bootstrap settings identical between variants.
+  The output ROOT file is intended as the canonical input to compare_pt_resolution_grid.py and summarize_ptres_improvement.py.
+  PyROOT ownership is handled explicitly with ROOT.SetOwnership to avoid batch-mode object deletion issues.
+Tags: authoritative, analysis, pt-resolution, root, genfittracks, diagnostics, closeout, eta-grid, reco-summary
 DOC_END
 """
 

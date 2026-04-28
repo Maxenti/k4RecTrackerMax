@@ -1,0 +1,4408 @@
+# DOC:
+# Summary: TODO one-line description (Maintained workflow/config file.)
+# Status: authoritative
+# Usage:
+#   TODO how to run / include
+# Examples:
+#   TODO example command(s) + expected result
+# Inputs: TODO input files/classes/collections
+# Outputs: TODO output files/classes/collections
+# Collections: TODO collection names and types/schemas
+# Connects-To: TODO upstream/downstream files/components
+# Arguments: TODO important args/properties/defaults
+# Tags: TODO comma,separated,tags
+# DOC_END
+
+schema_version: 1
+root: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking
+summary:
+  num_knobs: 243
+  num_duplicates: 200
+duplicates:
+- name: JobTag
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp
+    line: 293
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1452
+- name: RejectNegativeLabels
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1164
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1230
+- name: MinHitsPerTrack
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1169
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1235
+- name: MinMeasurementsToFit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1174
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1240
+- name: MinFittedPointsWithFI
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1179
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1245
+- name: SortHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1185
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1251
+- name: DeduplicateHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1190
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1256
+- name: DedupTolMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1195
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1261
+- name: PreFitOutlierVeto
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1201
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1267
+- name: OutlierMaxDrop
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1206
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1272
+- name: OutlierCircleResidualMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1211
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1277
+- name: OutlierChordResidualMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1216
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1282
+- name: OutlierMinKeep
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1221
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1287
+- name: SeedEndpointK
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1227
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1320
+- name: SeedTangentK
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1233
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1326
+- name: UseKFPreFit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1239
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1332
+- name: UseDAF
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1244
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1337
+- name: FallbackToKFIfDAFFails
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1249
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1342
+- name: KFMaxIters
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1254
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1347
+- name: DAFMaxIters
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1258
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1351
+- name: TryBothMomentumDirections
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1262
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1355
+- name: Bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1268
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1377
+- name: PDG
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1269
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1378
+- name: UseBiasedStateForPublish
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1272
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1381
+- name: PublishStateCentralFrac
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1278
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1387
+- name: UseMaterialEffects
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1284
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1393
+- name: TGeoFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1287
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1396
+- name: TGeoTopVolume
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1291
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1400
+- name: DisableEnergyLoss
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1296
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1405
+- name: DisableAllMaterialEffects
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1298
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1407
+- name: HardDisableMaterialIfNoGeo
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1300
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1409
+- name: PositionUnitScale
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1306
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1415
+- name: WireHalfLengthMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1310
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1419
+- name: MaxDriftMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1316
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1425
+- name: MaxDriftMMForHit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1321
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1430
+- name: MinDriftErrMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1326
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1435
+- name: MaxDriftErrMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1331
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1440
+- name: MinCovEigenvalue
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1337
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1446
+- name: SeedPosSigmaMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1343
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1452
+- name: SeedMomSigmaGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1344
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1453
+- name: SeedPTFallbackGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1346
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1455
+- name: SeedPTMinGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1351
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1460
+- name: SeedPTMaxGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1352
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1461
+- name: SeedPMinGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1353
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1462
+- name: MinHitsForObs
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1356
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1465
+- name: ObsSigmaEffMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1361
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1470
+- name: ObsMinPhiSpanRad
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1366
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1475
+- name: ObsMinChordMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1371
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1480
+- name: ObsMinSagittaMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1376
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1485
+- name: ObsMinScore
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1381
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1490
+- name: SkipIfObsTooLow
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1386
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1495
+- name: UseSagittaSeed
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1392
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1501
+- name: MinSagittaForSeedMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1397
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1506
+- name: MaxChi2Ndf
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1403
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1512
+- name: PublishPTMaxGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1408
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1517
+- name: InvalidPTSentinel
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1413
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1522
+- name: OmegaVarGood
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1418
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1527
+- name: OmegaVarBad
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1423
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1532
+- name: StatsTruncCentralFrac
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1429
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1538
+- name: DetId
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1435
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1544
+- name: UseLabelAsDetId
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1440
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1549
+- name: WireAnglesAreDegrees
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1446
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1555
+- name: JobTag
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp
+    line: 293
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1561
+- name: DiagEveryNTracks
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1458
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1567
+- name: RejectNegativeLabels
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1164
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1144
+- name: MinHitsPerTrack
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1169
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1149
+- name: MinMeasurementsToFit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1174
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1154
+- name: MinFittedPointsWithFI
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1179
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1159
+- name: SortHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1185
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1164
+- name: DeduplicateHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1190
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1169
+- name: DedupTolMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1195
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1174
+- name: PreFitOutlierVeto
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1201
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1179
+- name: OutlierMaxDrop
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1206
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1184
+- name: OutlierCircleResidualMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1211
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1189
+- name: OutlierChordResidualMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1216
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1194
+- name: OutlierMinKeep
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1221
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1199
+- name: PostFitOutlierRefit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1293
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1204
+- name: PostFitMaxDrop
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1298
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1209
+- name: PostFitCircleResidualInternal
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1303
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1214
+- name: PostFitMinKeep
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1308
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1219
+- name: PreferSmoothedState
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1314
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1224
+- name: SeedEndpointK
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1227
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1229
+- name: SeedTangentK
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1233
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1234
+- name: UseKFPreFit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1239
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1239
+- name: UseDAF
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1244
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1244
+- name: FallbackToKFIfDAFFails
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1249
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1249
+- name: KFMaxIters
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1254
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1254
+- name: DAFMaxIters
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1258
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1258
+- name: TryBothMomentumDirections
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1262
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1262
+- name: UseGBLRefit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1361
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1268
+- name: GBLMaxIters
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1366
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1273
+- name: GBLOnlyIfImprovesChi2Ndf
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v02.cpp
+    line: 1371
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1278
+- name: Bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1268
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1284
+- name: PDG
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1269
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1285
+- name: UseBiasedStateForPublish
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1272
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1287
+- name: PublishStateCentralFrac
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1278
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1292
+- name: UseMaterialEffects
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1284
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1298
+- name: TGeoFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1287
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1301
+- name: TGeoTopVolume
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1291
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1305
+- name: DisableEnergyLoss
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1296
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1310
+- name: DisableAllMaterialEffects
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1298
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1312
+- name: HardDisableMaterialIfNoGeo
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1300
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1314
+- name: PositionUnitScale
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1306
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1320
+- name: WireHalfLengthMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1310
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1324
+- name: MaxDriftMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1316
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1330
+- name: MaxDriftMMForHit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1321
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1335
+- name: MinDriftErrMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1326
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1340
+- name: MaxDriftErrMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1331
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1345
+- name: MinCovEigenvalue
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1337
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1350
+- name: SeedPosSigmaMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1343
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1355
+- name: SeedMomSigmaGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1344
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1356
+- name: SeedPTFallbackGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1346
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1358
+- name: SeedPTMinGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1351
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1363
+- name: SeedPTMaxGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1352
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1364
+- name: SeedPMinGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1353
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1365
+- name: MinHitsForObs
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1356
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1368
+- name: ObsSigmaEffMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1361
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1373
+- name: ObsMinPhiSpanRad
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1366
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1378
+- name: ObsMinChordMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1371
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1383
+- name: ObsMinSagittaMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1376
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1388
+- name: ObsMinScore
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1381
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1393
+- name: SkipIfObsTooLow
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1386
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1398
+- name: UseSagittaSeed
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1392
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1404
+- name: MinSagittaForSeedMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1397
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1409
+- name: MaxChi2Ndf
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1403
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1415
+- name: PublishPTMaxGeV
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1408
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1420
+- name: InvalidPTSentinel
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1413
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1425
+- name: OmegaVarGood
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1418
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1430
+- name: OmegaVarBad
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1423
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1435
+- name: StatsTruncCentralFrac
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1429
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1440
+- name: DetId
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1435
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1446
+- name: UseLabelAsDetId
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1440
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1451
+- name: WireAnglesAreDegrees
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1446
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1457
+- name: JobTag
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GGTF_tracking.cpp
+    line: 293
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1463
+- name: DiagEveryNTracks
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1458
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter_v03.cpp
+    line: 1469
+- name: Bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1268
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/PlotTrackHitResiduals.cpp
+    line: 176
+- name: Bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1268
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 306
+- name: PDG
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1269
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 307
+- name: MinHitsPerTrack
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1169
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 308
+- name: DeduplicateHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1190
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 314
+- name: DedupTolMM
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1195
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 315
+- name: Bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1268
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 280
+- name: PDG
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1269
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 281
+- name: MinHitsPerTrack
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/GenFit2DCHFitter.cpp
+    line: 1169
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 283
+- name: UseMmidPoint
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 311
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 290
+- name: HitVarXY
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 318
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 293
+- name: HitVarZ
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/SimpleFitDCHFitter.cpp
+    line: 319
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/components/ThreePointFitter.cpp
+    line: 294
+- name: gf_useMat
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 73
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 75
+- name: gf_sortHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 78
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 80
+- name: gf_dedup
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 83
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 85
+- name: gf_useFallback
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 124
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 126
+- name: gf_retry
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 134
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 136
+- name: inputFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 20
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 40
+- name: outputFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 22
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 42
+- name: compactXML
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 36
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 44
+- name: dchSimHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 34
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 52
+- name: dchName
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 38
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 54
+- name: modelPath
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 24
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 57
+- name: stage
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 60
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 60
+- name: tbeta
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 28
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 90
+- name: td
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 30
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 91
+- name: onnxChunk
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 52
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 92
+- name: maxHitsPerEvent
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 46
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 93
+- name: ggtf_dropWireIfAbsDTooLarge
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 95
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 97
+- name: ggtf_promoteZeroIfGood
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 103
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 104
+- name: ggtf_skipZeroIfSmall
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 105
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 106
+- name: ggtf_skipZeroAlways
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 107
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 108
+- name: ggtf_filterInputWiresByTruthPdg
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 111
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 113
+- name: ggtf_dropWireIfUnlinked
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 116
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 118
+- name: ggtfLog
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 44
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 126
+- name: fitter
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 64
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 129
+- name: fitOut
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 66
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 130
+- name: fitterLog
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 68
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 131
+- name: gf_useMat
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 73
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 134
+- name: gf_useMat
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 73
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 135
+- name: gf_bz
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 116
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 136
+- name: gf_pdg
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 118
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 137
+- name: gf_disableEloss
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 140
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 142
+- name: gf_disableAllMat
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 143
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 145
+- name: gf_hardDisableMatIfNoGeo
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 146
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 148
+- name: gf_sortHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 78
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 151
+- name: gf_sortHits
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 78
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 152
+- name: gf_dedup
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 83
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 153
+- name: gf_dedup
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 83
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 154
+- name: gf_rejectNegativeLabels
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 158
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 160
+- name: gf_useKFPreFit
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 169
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 170
+- name: gf_useDAF
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 173
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 174
+- name: gf_fallbackToKFIfDAFFails
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 177
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 179
+- name: gf_tryBothMomDirs
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 182
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 183
+- name: gf_useBiasedStateForPublish
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 186
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 188
+- name: gf_useSagittaSeed
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 225
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 226
+- name: gf_skipIfObsTooLow
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 236
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 238
+- name: gf_prefitOutlierVeto
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 241
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 242
+- name: gf_useLabelAsDetId
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 255
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 256
+- name: gf_wireAnglesAreDegrees
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 258
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runDCHTestTrackFinder.py
+    line: 261
+- name: inputFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 20
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runTestTrackFinder.py
+    line: 14
+- name: outputFile
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 22
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runTestTrackFinder.py
+    line: 15
+- name: modelPath
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 24
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runTestTrackFinder.py
+    line: 16
+- name: tbeta
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 28
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runTestTrackFinder.py
+    line: 17
+- name: td
+  kept:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+    line: 30
+  dropped:
+    file: /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/runTestTrackFinder.py
+    line: 18
+knobs:
+  TmaxNs: &id001
+    kind: property
+    lang: cpp
+    type: float
+    default: '450.0'
+    help: Keep event if max(hit.time) <= this [ns]
+    source:
+      file: components/DCHLooperEventFilter.cpp
+      line: 75
+    raw: "Gaudi::Property<double> m_tmaxNs{this, \"TmaxNs\", 450.0,\n            \
+      \                      \"Keep event if max(hit.time) <= this [ns]\"};"
+  NHitsMax: &id002
+    kind: property
+    lang: cpp
+    type: int
+    default: '30000'
+    help: Keep event if nHits <= this (<=0 disables)
+    source:
+      file: components/DCHLooperEventFilter.cpp
+      line: 78
+    raw: "Gaudi::Property<int> m_nHitsMax{this, \"NHitsMax\", 30000,\n           \
+      \                      \"Keep event if nHits <= this (<=0 disables)\"};"
+  KeepEmpty: &id003
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: If true, keep events with 0 hits
+    source:
+      file: components/DCHLooperEventFilter.cpp
+      line: 81
+    raw: "Gaudi::Property<bool> m_keepEmpty{this, \"KeepEmpty\", false,\n        \
+      \                            \"If true, keep events with 0 hits\"};"
+  ModelPath: &id004
+    kind: property
+    lang: cpp
+    type: str
+    default: '""'
+    help: Path to ONNX model
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 254
+    raw: Gaudi::Property<std::string> m_modelPath{this, "ModelPath", "", "Path to
+      ONNX model"};
+  Tbeta: &id005
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.6'
+    help: clustering beta threshold
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 255
+    raw: Gaudi::Property<double>      m_tbeta{this, "Tbeta", 0.6, "clustering beta
+      threshold"};
+  Td: &id006
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.3'
+    help: clustering distance threshold
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 256
+    raw: Gaudi::Property<double>      m_td{this, "Td", 0.3, "clustering distance threshold"};
+  MaxHitsPerEvent: &id007
+    kind: property
+    lang: cpp
+    type: int
+    default: '0'
+    help: Cap input hits per event (0=off)
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 258
+    raw: Gaudi::Property<int> m_maxHitsPerEvent{this, "MaxHitsPerEvent", 0, "Cap input
+      hits per event (0=off)"};
+  OnnxChunk: &id008
+    kind: property
+    lang: cpp
+    type: int
+    default: '4096'
+    help: Chunk size for ONNX inference
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 259
+    raw: Gaudi::Property<int> m_onnxChunk{this, "OnnxChunk", 4096, "Chunk size for
+      ONNX inference"};
+  DropWireIfAbsDTooLarge: &id009
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Drop wire digi from GGTF processing if |d| > MaxAbsDMM
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 262
+    raw: "Gaudi::Property<bool>   m_dropWireIfAbsDTooLarge{this, \"DropWireIfAbsDTooLarge\"\
+      , true,\n                                                   \"Drop wire digi\
+      \ from GGTF processing if |d| > MaxAbsDMM\"};"
+  MaxAbsDMM: &id010
+    kind: property
+    lang: cpp
+    type: float
+    default: '30.0'
+    help: Maximum allowed |distanceToWire| [mm] before dropping (if enabled)
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 264
+    raw: "Gaudi::Property<double> m_maxAbsDMM{this, \"MaxAbsDMM\", 30.0,\n       \
+      \                               \"Maximum allowed |distanceToWire| [mm] before\
+      \ dropping (if enabled)\"};"
+  ZeroMinSizeKeep: &id011
+    kind: property
+    lang: cpp
+    type: int
+    default: '8'
+    help: Min hits for a label=0 group to be considered (else dropped)
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 268
+    raw: "Gaudi::Property<int> m_zeroMinSizeKeep{\n      this, \"ZeroMinSizeKeep\"\
+      , 8, \"Min hits for a label=0 group to be considered (else dropped)\"};"
+  MinWireFracKeep: &id012
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.60'
+    help: Min fraction of wire hits to keep a zero-label group
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 270
+    raw: "Gaudi::Property<double> m_minWireFracKeep{\n      this, \"MinWireFracKeep\"\
+      , 0.60, \"Min fraction of wire hits to keep a zero-label group\"};"
+  PromoteZeroIfGood: &id013
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: If a zero-label group passes checks, treat it as a normal cluster
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 272
+    raw: "Gaudi::Property<bool> m_promoteZeroIfGood{\n      this, \"PromoteZeroIfGood\"\
+      , true, \"If a zero-label group passes checks, treat it as a normal cluster\"\
+      };"
+  SkipZeroIfSmall: &id014
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: If label=0 group smaller than ZeroMinSizeKeep, drop it
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 274
+    raw: "Gaudi::Property<bool> m_skipZeroIfSmall{\n      this, \"SkipZeroIfSmall\"\
+      , true, \"If label=0 group smaller than ZeroMinSizeKeep, drop it\"};"
+  SkipZeroAlways: &id015
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: If true, never build tracks from label=0
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 276
+    raw: Gaudi::Property<bool> m_skipZeroAlways{this, "SkipZeroAlways", false, "If
+      true, never build tracks from label=0"};
+  FilterInputWiresByTruthPdg: &id016
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: If true, exclude wire digis whose linked MCParticle PDG != KeepTruthPdg
+      from GGTF processing.
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 279
+    raw: "Gaudi::Property<bool> m_filterInputWiresByTruthPdg{\n      this, \"FilterInputWiresByTruthPdg\"\
+      , true,\n      \"If true, exclude wire digis whose linked MCParticle PDG !=\
+      \ KeepTruthPdg from GGTF processing.\"};"
+  KeepTruthPdg: &id017
+    kind: property
+    lang: cpp
+    type: int
+    default: '13'
+    help: PDG code to keep when FilterInputWiresByTruthPdg is enabled (default 13=mu).
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 282
+    raw: "Gaudi::Property<int> m_keepTruthPdg{\n      this, \"KeepTruthPdg\", 13,\n\
+      \      \"PDG code to keep when FilterInputWiresByTruthPdg is enabled (default\
+      \ 13=mu).\"};"
+  DropWireIfUnlinked: &id018
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'When filtering enabled: if a wire digi has no truth link, drop it (true)
+      or keep it (false).'
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 285
+    raw: "Gaudi::Property<bool> m_dropWireIfUnlinked{\n      this, \"DropWireIfUnlinked\"\
+      , true,\n      \"When filtering enabled: if a wire digi has no truth link, drop\
+      \ it (true) or keep it (false).\"};"
+  GeoSvcName: &id019
+    kind: property
+    lang: cpp
+    type: str
+    default: '"GeoSvc"'
+    help: GeoSvc name
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 290
+    raw: Gaudi::Property<std::string> m_geoSvcName{this, "GeoSvcName", "GeoSvc", "GeoSvc
+      name"};
+  DchName: &id020
+    kind: property
+    lang: cpp
+    type: str
+    default: '"DCH_v2"'
+    help: Drift chamber detector name
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 291
+    raw: Gaudi::Property<std::string> m_dchName{this, "DchName", "DCH_v2", "Drift
+      chamber detector name"};
+  JobTag: &id021
+    kind: property
+    lang: cpp
+    type: str
+    default: '""'
+    help: Optional free-form tag (e.g. steering script name, input file, run label)
+      stored in metadata
+    source:
+      file: components/GGTF_tracking.cpp
+      line: 293
+    raw: "Gaudi::Property<std::string> m_jobTag{\n      this, \"JobTag\", \"\",\n\
+      \      \"Optional free-form tag (e.g. steering script name, input file, run\
+      \ label) stored in metadata\"};"
+  RejectNegativeLabels: &id022
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Skip GGTF tracks with track.type < 0 (debug labels).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1164
+    raw: "Gaudi::Property<bool> m_rejectNegativeLabels{\n    this,\"RejectNegativeLabels\"\
+      , true,\n    \"Skip GGTF tracks with track.type < 0 (debug labels).\"\n  };"
+  MinHitsPerTrack: &id023
+    kind: property
+    lang: cpp
+    type: str
+    default: 8u
+    help: Minimum SenseWireHits per GGTF track to attempt fit (after pruning/dedup).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1169
+    raw: "Gaudi::Property<unsigned> m_minHitsPerTrack{\n    this,\"MinHitsPerTrack\"\
+      , 8u,\n    \"Minimum SenseWireHits per GGTF track to attempt fit (after pruning/dedup).\"\
+      \n  };"
+  MinMeasurementsToFit: &id024
+    kind: property
+    lang: cpp
+    type: str
+    default: 6u
+    help: Minimum WireMeasurementNew inserted into GenFit track to attempt fit.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1174
+    raw: "Gaudi::Property<unsigned> m_minMeasurementsToFit{\n    this, \"MinMeasurementsToFit\"\
+      , 6u,\n    \"Minimum WireMeasurementNew inserted into GenFit track to attempt\
+      \ fit.\"\n  };"
+  MinFittedPointsWithFI: &id025
+    kind: property
+    lang: cpp
+    type: str
+    default: 10u
+    help: Minimum number of TrackPoints with FitterInfo before accepting/publishing.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1179
+    raw: "Gaudi::Property<unsigned> m_minFittedPointsWithFI{\n    this, \"MinFittedPointsWithFI\"\
+      , 10u,\n    \"Minimum number of TrackPoints with FitterInfo before accepting/publishing.\"\
+      \n  };"
+  SortHits: &id026
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Sort SenseWireHits along PCA axis computed from on-wire positions.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1185
+    raw: "Gaudi::Property<bool> m_sortHits{\n    this,\"SortHits\", true,\n    \"\
+      Sort SenseWireHits along PCA axis computed from on-wire positions.\"\n  };"
+  DeduplicateHits: &id027
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Drop nearly-identical on-wire positions.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1190
+    raw: "Gaudi::Property<bool> m_dedupHits{\n    this,\"DeduplicateHits\", true,\n\
+      \    \"Drop nearly-identical on-wire positions.\"\n  };"
+  DedupTolMM: &id028
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.05'
+    help: Dedup tolerance on on-wire XYZ distance (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1195
+    raw: "Gaudi::Property<double> m_dedupTolMM{\n    this,\"DedupTolMM\", 0.05,\n\
+      \    \"Dedup tolerance on on-wire XYZ distance (mm).\"\n  };"
+  PreFitOutlierVeto: &id029
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Deterministic pre-fit outlier veto (circle-fit in XY + chord fallback).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1201
+    raw: "Gaudi::Property<bool> m_prefitOutlierVeto{\n    this, \"PreFitOutlierVeto\"\
+      , true,\n    \"Deterministic pre-fit outlier veto (circle-fit in XY + chord\
+      \ fallback).\"\n  };"
+  OutlierMaxDrop: &id030
+    kind: property
+    lang: cpp
+    type: str
+    default: 2u
+    help: Max number of hits to drop in pre-fit outlier veto.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1206
+    raw: "Gaudi::Property<unsigned> m_outlierMaxDrop{\n    this, \"OutlierMaxDrop\"\
+      , 2u,\n    \"Max number of hits to drop in pre-fit outlier veto.\"\n  };"
+  OutlierCircleResidualMM: &id031
+    kind: property
+    lang: cpp
+    type: float
+    default: '8.0'
+    help: Drop worst hit if |r-R| exceeds this in circle-fit pruning (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1211
+    raw: "Gaudi::Property<double> m_outlierCircleResMM{\n    this, \"OutlierCircleResidualMM\"\
+      , 8.0,\n    \"Drop worst hit if |r-R| exceeds this in circle-fit pruning (mm).\"\
+      \n  };"
+  OutlierChordResidualMM: &id032
+    kind: property
+    lang: cpp
+    type: float
+    default: '20.0'
+    help: Fallback drop worst hit if chord-perp distance exceeds this (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1216
+    raw: "Gaudi::Property<double> m_outlierChordResMM{\n    this, \"OutlierChordResidualMM\"\
+      , 20.0,\n    \"Fallback drop worst hit if chord-perp distance exceeds this (mm).\"\
+      \n  };"
+  OutlierMinKeep: &id033
+    kind: property
+    lang: cpp
+    type: str
+    default: 10u
+    help: Never prune below this number of hits.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1221
+    raw: "Gaudi::Property<unsigned> m_outlierMinKeep{\n    this, \"OutlierMinKeep\"\
+      , 10u,\n    \"Never prune below this number of hits.\"\n  };"
+  SeedEndpointK: &id034
+    kind: property
+    lang: cpp
+    type: str
+    default: 6u
+    help: Mean of first/last K hits (after sorting/pruning) used as seed endpoints.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1227
+    raw: "Gaudi::Property<unsigned> m_seedEndpointK{\n    this, \"SeedEndpointK\"\
+      , 6u,\n    \"Mean of first/last K hits (after sorting/pruning) used as seed\
+      \ endpoints.\"\n  };"
+  SeedTangentK: &id035
+    kind: property
+    lang: cpp
+    type: str
+    default: 10u
+    help: Window size for tangent estimation at each end (PCA direction over first/last
+      K hits).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1233
+    raw: "Gaudi::Property<unsigned> m_seedTangentK{\n    this, \"SeedTangentK\", 10u,\n\
+      \    \"Window size for tangent estimation at each end (PCA direction over first/last\
+      \ K hits).\"\n  };"
+  UseKFPreFit: &id036
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true: run KalmanFitterRefTrack first as a prefit, then run DAF (if enabled).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1239
+    raw: "Gaudi::Property<bool> m_useKFPreFit{\n    this, \"UseKFPreFit\", true,\n\
+      \    \"If true: run KalmanFitterRefTrack first as a prefit, then run DAF (if\
+      \ enabled).\"\n  };"
+  UseDAF: &id125
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true: run DAF after prefit (recommended for wire left/right ambiguity).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1244
+    raw: "Gaudi::Property<bool> m_useDAF{\n    this,\"UseDAF\", true,\n    \"If true:\
+      \ run DAF after prefit (recommended for wire left/right ambiguity).\"\n  };"
+  FallbackToKFIfDAFFails: &id037
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true and UseDAF=true: if DAF throws/fails, keep KF result (if good).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1249
+    raw: "Gaudi::Property<bool> m_fallbackToKFIfDAFFails{\n    this, \"FallbackToKFIfDAFFails\"\
+      , true,\n    \"If true and UseDAF=true: if DAF throws/fails, keep KF result\
+      \ (if good).\"\n  };"
+  KFMaxIters: &id038
+    kind: property
+    lang: cpp
+    type: str
+    default: 12u
+    help: KF max iterations.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1254
+    raw: "Gaudi::Property<unsigned> m_kfMaxIterations{\n    this,\"KFMaxIters\", 12u,\
+      \ \"KF max iterations.\"\n  };"
+  DAFMaxIters: &id039
+    kind: property
+    lang: cpp
+    type: str
+    default: 8u
+    help: DAF max iterations.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1258
+    raw: "Gaudi::Property<unsigned> m_dafMaxIterations{\n    this,\"DAFMaxIters\"\
+      , 8u, \"DAF max iterations.\"\n  };"
+  TryBothMomentumDirections: &id040
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Try mom0 and -mom0; keep best fit.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1262
+    raw: "Gaudi::Property<bool> m_tryBothMomDirs{\n    this, \"TryBothMomentumDirections\"\
+      , true,\n    \"Try mom0 and -mom0; keep best fit.\"\n  };"
+  Bz: &id126
+    kind: property
+    lang: cpp
+    type: float
+    default: '2.0'
+    help: Bz field [T]
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1268
+    raw: Gaudi::Property<double> m_Bz {this, "Bz", 2.0, "Bz field [T]"};
+  PDG: &id127
+    kind: property
+    lang: cpp
+    type: int
+    default: '13'
+    help: PDG hypothesis.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1269
+    raw: Gaudi::Property<int>    m_pdg{this, "PDG", 13,  "PDG hypothesis."};
+  UseBiasedStateForPublish: &id041
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Use AbsFitterInfo::getFittedState(biased=true) for publishing. If false,
+      use unbiased.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1272
+    raw: "Gaudi::Property<bool> m_useBiasedStateForPublish{\n    this, \"UseBiasedStateForPublish\"\
+      , true,\n    \"Use AbsFitterInfo::getFittedState(biased=true) for publishing.\
+      \ If false, use unbiased.\"\n  };"
+  PublishStateCentralFrac: &id042
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.60'
+    help: Fraction of track points (by index) to consider around the middle for publish-state
+      selection.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1278
+    raw: "Gaudi::Property<double> m_publishStateCentralFrac{\n    this, \"PublishStateCentralFrac\"\
+      , 0.60,\n    \"Fraction of track points (by index) to consider around the middle\
+      \ for publish-state selection.\"\n  };"
+  UseMaterialEffects: &id128
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Use TGeoMaterialInterface for GenFit MaterialEffects
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1284
+    raw: "Gaudi::Property<bool> m_useMatEff{this, \"UseMaterialEffects\", true,\n\
+      \                                    \"Use TGeoMaterialInterface for GenFit\
+      \ MaterialEffects\"};"
+  TGeoFile: &id129
+    kind: property
+    lang: cpp
+    type: str
+    default: '""'
+    help: Optional ROOT geometry file to import if gGeoManager is null (e.g. detector.root).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1287
+    raw: "Gaudi::Property<std::string> m_tgeoFile{\n                             \
+      \         this, \"TGeoFile\", \"\",\n                                      \"\
+      Optional ROOT geometry file to import if gGeoManager is null (e.g. detector.root).\"\
+      \n                                    };"
+  TGeoTopVolume: &id043
+    kind: property
+    lang: cpp
+    type: str
+    default: '""'
+    help: 'Optional: if importing, set a specific top volume name (usually leave empty).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1291
+    raw: "Gaudi::Property<std::string> m_tgeoTopVolume{\n                        \
+      \              this, \"TGeoTopVolume\", \"\",\n                            \
+      \          \"Optional: if importing, set a specific top volume name (usually\
+      \ leave empty).\"\n                                    };"
+  DisableEnergyLoss: &id044
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Disable energy loss (keep MS) when material effects enabled
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1296
+    raw: "Gaudi::Property<bool> m_disableEloss{this, \"DisableEnergyLoss\", true,\n\
+      \                                       \"Disable energy loss (keep MS) when\
+      \ material effects enabled\"};"
+  DisableAllMaterialEffects: &id045
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: Disable all GenFit material effects
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1298
+    raw: "Gaudi::Property<bool> m_disableAllMat{this, \"DisableAllMaterialEffects\"\
+      , false,\n                                        \"Disable all GenFit material\
+      \ effects\"};"
+  HardDisableMaterialIfNoGeo: &id046
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true and gGeoManager is null: force MaterialEffects::setNoEffects(true).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1300
+    raw: "Gaudi::Property<bool> m_hardDisableMatIfNoGeo{\n    this, \"HardDisableMaterialIfNoGeo\"\
+      , true,\n    \"If true and gGeoManager is null: force MaterialEffects::setNoEffects(true).\"\
+      \n  };"
+  PositionUnitScale: &id047
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.1'
+    help: 'Multiply positions (0.1: mm->cm) for GenFit internal units.'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1306
+    raw: "Gaudi::Property<double> m_posScale{this, \"PositionUnitScale\", 0.1,\n \
+      \                                    \"Multiply positions (0.1: mm->cm) for\
+      \ GenFit internal units.\"};"
+  WireHalfLengthMM: &id048
+    kind: property
+    lang: cpp
+    type: float
+    default: '2250.0'
+    help: Half wire length used to synthesize endpoints (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1310
+    raw: "Gaudi::Property<double> m_wireHalfLengthMM{\n    this,\"WireHalfLengthMM\"\
+      , 2250.0,\n    \"Half wire length used to synthesize endpoints (mm).\"\n  };"
+  MaxDriftMM: &id049
+    kind: property
+    lang: cpp
+    type: float
+    default: '30.0'
+    help: Max drift distance (mm) used for WireMeasurementNew setMaxDistance.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1316
+    raw: "Gaudi::Property<double> m_maxDriftMM{\n    this,\"MaxDriftMM\", 30.0,\n\
+      \    \"Max drift distance (mm) used for WireMeasurementNew setMaxDistance.\"\
+      \n  };"
+  MaxDriftMMForHit: &id050
+    kind: property
+    lang: cpp
+    type: float
+    default: '35.0'
+    help: 'Hard hit-level cut: drop hits with |drift| > this (mm). (Should be >= MaxDriftMM).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1321
+    raw: "Gaudi::Property<double> m_maxDriftMMForHit{\n    this,\"MaxDriftMMForHit\"\
+      , 35.0,\n    \"Hard hit-level cut: drop hits with |drift| > this (mm). (Should\
+      \ be >= MaxDriftMM).\"\n  };"
+  MinDriftErrMM: &id051
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.10'
+    help: Floor for drift distance error (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1326
+    raw: "Gaudi::Property<double> m_minDriftErrMM{\n    this,\"MinDriftErrMM\", 0.10,\n\
+      \    \"Floor for drift distance error (mm).\"\n  };"
+  MaxDriftErrMM: &id052
+    kind: property
+    lang: cpp
+    type: float
+    default: '5.0'
+    help: Ceiling for drift distance error (mm). Hits above are clamped (not dropped).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1331
+    raw: "Gaudi::Property<double> m_maxDriftErrMM{\n    this,\"MaxDriftErrMM\", 5.0,\n\
+      \    \"Ceiling for drift distance error (mm). Hits above are clamped (not dropped).\"\
+      \n  };"
+  MinCovEigenvalue: &id053
+    kind: property
+    lang: cpp
+    type: float
+    default: 1e-8
+    help: Minimum eigenvalue for PD-guarding covariance matrices.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1337
+    raw: "Gaudi::Property<double> m_minCovEigenvalue{\n    this,\"MinCovEigenvalue\"\
+      , 1e-8,\n    \"Minimum eigenvalue for PD-guarding covariance matrices.\"\n \
+      \ };"
+  SeedPosSigmaMM: &id054
+    kind: property
+    lang: cpp
+    type: float
+    default: '80.0'
+    help: Seed pos sigma [mm]
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1343
+    raw: Gaudi::Property<double> m_seedPosSigmaMM  {this, "SeedPosSigmaMM", 80.0,
+      "Seed pos sigma [mm]"};
+  SeedMomSigmaGeV: &id055
+    kind: property
+    lang: cpp
+    type: float
+    default: '5.0'
+    help: Seed mom sigma [GeV]
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1344
+    raw: Gaudi::Property<double> m_seedMomSigmaGeV {this, "SeedMomSigmaGeV", 5.0,  "Seed
+      mom sigma [GeV]"};
+  SeedPTFallbackGeV: &id056
+    kind: property
+    lang: cpp
+    type: float
+    default: '50.0'
+    help: Fallback seed pT when curvature is unobservable (GeV).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1346
+    raw: "Gaudi::Property<double> m_seedPTFallbackGeV{\n    this, \"SeedPTFallbackGeV\"\
+      , 50.0,\n    \"Fallback seed pT when curvature is unobservable (GeV).\"\n  };"
+  SeedPTMinGeV: &id057
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.20'
+    help: Min seed pT [GeV]
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1351
+    raw: Gaudi::Property<double> m_seedPTMinGeV    {this, "SeedPTMinGeV", 0.20, "Min
+      seed pT [GeV]"};
+  SeedPTMaxGeV: &id058
+    kind: property
+    lang: cpp
+    type: float
+    default: '200.0'
+    help: Max seed pT [GeV]
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1352
+    raw: Gaudi::Property<double> m_seedPTMaxGeV    {this, "SeedPTMaxGeV", 200.0, "Max
+      seed pT [GeV]"};
+  SeedPMinGeV: &id059
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.05'
+    help: Min |p| [GeV] floor
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1353
+    raw: Gaudi::Property<double> m_seedPMinGeV     {this, "SeedPMinGeV",  0.05, "Min
+      |p| [GeV] floor"};
+  MinHitsForObs: &id060
+    kind: property
+    lang: cpp
+    type: str
+    default: 10u
+    help: Minimum hits to compute observability metrics (phiSpan/chord/sagitta).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1356
+    raw: "Gaudi::Property<unsigned> m_minHitsForObs{\n    this, \"MinHitsForObs\"\
+      , 10u,\n    \"Minimum hits to compute observability metrics (phiSpan/chord/sagitta).\"\
+      \n  };"
+  ObsSigmaEffMM: &id061
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.25'
+    help: Effective transverse sigma (mm) used to convert sagitta->dimensionless obsScore.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1361
+    raw: "Gaudi::Property<double> m_obsSigmaEffMM{\n    this, \"ObsSigmaEffMM\", 0.25,\n\
+      \    \"Effective transverse sigma (mm) used to convert sagitta->dimensionless\
+      \ obsScore.\"\n  };"
+  ObsMinPhiSpanRad: &id062
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.06'
+    help: Require phi-span >= this for curvature observability (rad).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1366
+    raw: "Gaudi::Property<double> m_obsMinPhiSpanRad{\n    this, \"ObsMinPhiSpanRad\"\
+      , 0.06,\n    \"Require phi-span >= this for curvature observability (rad).\"\
+      \n  };"
+  ObsMinChordMM: &id063
+    kind: property
+    lang: cpp
+    type: float
+    default: '200.0'
+    help: Require chord length >= this for observability (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1371
+    raw: "Gaudi::Property<double> m_obsMinChordMM{\n    this, \"ObsMinChordMM\", 200.0,\n\
+      \    \"Require chord length >= this for observability (mm).\"\n  };"
+  ObsMinSagittaMM: &id064
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.15'
+    help: Require sagitta >= this for observability (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1376
+    raw: "Gaudi::Property<double> m_obsMinSagittaMM{\n    this, \"ObsMinSagittaMM\"\
+      , 0.15,\n    \"Require sagitta >= this for observability (mm).\"\n  };"
+  ObsMinScore: &id065
+    kind: property
+    lang: cpp
+    type: float
+    default: '1.0'
+    help: Require obsScore = sagitta/sigmaEff >= this for publishing pT (dimensionless).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1381
+    raw: "Gaudi::Property<double> m_obsMinScore{\n    this, \"ObsMinScore\", 1.0,\n\
+      \    \"Require obsScore = sagitta/sigmaEff >= this for publishing pT (dimensionless).\"\
+      \n  };"
+  SkipIfObsTooLow: &id066
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: 'If true: drop tracks that fail observability cuts. If false: keep track
+      but publish invalid pT.'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1386
+    raw: "Gaudi::Property<bool> m_skipIfObsTooLow{\n    this, \"SkipIfObsTooLow\"\
+      , false,\n    \"If true: drop tracks that fail observability cuts. If false:\
+      \ keep track but publish invalid pT.\"\n  };"
+  UseSagittaSeed: &id067
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true: compute a sagitta-based pT seed when sagitta is measurable.'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1392
+    raw: "Gaudi::Property<bool> m_useSagittaSeed{\n    this, \"UseSagittaSeed\", true,\n\
+      \    \"If true: compute a sagitta-based pT seed when sagitta is measurable.\"\
+      \n  };"
+  MinSagittaForSeedMM: &id068
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.20'
+    help: Only use sagitta-based pT seed if sagitta >= this (mm).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1397
+    raw: "Gaudi::Property<double> m_minSagittaForSeedMM{\n    this, \"MinSagittaForSeedMM\"\
+      , 0.20,\n    \"Only use sagitta-based pT seed if sagitta >= this (mm).\"\n \
+      \ };"
+  MaxChi2Ndf: &id069
+    kind: property
+    lang: cpp
+    type: float
+    default: '20.0'
+    help: Hard cut on chi2/ndf for accepting/publishing a track.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1403
+    raw: "Gaudi::Property<double> m_maxChi2Ndf{\n    this, \"MaxChi2Ndf\", 20.0,\n\
+      \    \"Hard cut on chi2/ndf for accepting/publishing a track.\"\n  };"
+  PublishPTMaxGeV: &id070
+    kind: property
+    lang: cpp
+    type: float
+    default: '300.0'
+    help: 'Hard maximum pT to publish in TrackState.time. Above: invalid.'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1408
+    raw: "Gaudi::Property<double> m_publishPTMaxGeV{\n    this,\"PublishPTMaxGeV\"\
+      , 300.0,\n    \"Hard maximum pT to publish in TrackState.time. Above: invalid.\"\
+      \n  };"
+  InvalidPTSentinel: &id071
+    kind: property
+    lang: cpp
+    type: float
+    default: -1.0f
+    help: TrackState.time when pT is not published.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1413
+    raw: "Gaudi::Property<float> m_invalidPTSentinel{\n    this, \"InvalidPTSentinel\"\
+      , -1.0f,\n    \"TrackState.time when pT is not published.\"\n  };"
+  OmegaVarGood: &id072
+    kind: property
+    lang: cpp
+    type: float
+    default: 1e-4f
+    help: (GeV^-1)^2 covariance for omega when pT valid.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1418
+    raw: "Gaudi::Property<float> m_omegaVarGood{\n    this, \"OmegaVarGood\", 1e-4f,\n\
+      \    \"(GeV^-1)^2 covariance for omega when pT valid.\"\n  };"
+  OmegaVarBad: &id073
+    kind: property
+    lang: cpp
+    type: float
+    default: 1.0f
+    help: (GeV^-1)^2 covariance for omega when pT invalid.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1423
+    raw: "Gaudi::Property<float> m_omegaVarBad{\n    this, \"OmegaVarBad\", 1.0f,\n\
+      \    \"(GeV^-1)^2 covariance for omega when pT invalid.\"\n  };"
+  StatsTruncCentralFrac: &id074
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.95'
+    help: Central fraction for truncated RMS over published pT values (robust metric).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1429
+    raw: "Gaudi::Property<double> m_statsTruncCentralFrac{\n    this, \"StatsTruncCentralFrac\"\
+      , 0.95,\n    \"Central fraction for truncated RMS over published pT values (robust\
+      \ metric).\"\n  };"
+  DetId: &id075
+    kind: property
+    lang: cpp
+    type: int
+    default: '0'
+    help: detId passed to WireMeasurementNew (recommended constant).
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1435
+    raw: "Gaudi::Property<int> m_detId{\n    this, \"DetId\", 0,\n    \"detId passed\
+      \ to WireMeasurementNew (recommended constant).\"\n  };"
+  UseLabelAsDetId: &id076
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: 'If true: use GGTF input track label as detId (not recommended).'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1440
+    raw: "Gaudi::Property<bool> m_useLabelAsDetId{\n    this, \"UseLabelAsDetId\"\
+      , false,\n    \"If true: use GGTF input track label as detId (not recommended).\"\
+      \n  };"
+  WireAnglesAreDegrees: &id077
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: 'If true: interpret SenseWireHit angles in degrees and convert to radians.'
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1446
+    raw: "Gaudi::Property<bool> m_wireAnglesAreDegrees{\n    this, \"WireAnglesAreDegrees\"\
+      , false,\n    \"If true: interpret SenseWireHit angles in degrees and convert\
+      \ to radians.\"\n  };"
+  DiagEveryNTracks: &id078
+    kind: property
+    lang: cpp
+    type: str
+    default: 1u
+    help: Print DEBUG diagnostics every N tracks when OutputLevel<=DEBUG.
+    source:
+      file: components/GenFit2DCHFitter.cpp
+      line: 1458
+    raw: "Gaudi::Property<unsigned> m_diagEveryNTracks{\n    this, \"DiagEveryNTracks\"\
+      , 1u,\n    \"Print DEBUG diagnostics every N tracks when OutputLevel<=DEBUG.\"\
+      \n  };"
+  PostFitOutlierRefit: &id079
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If a fit is borderline / unstable: iteratively remove worst point by fitted-circle
+      residual and refit.'
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1293
+    raw: "Gaudi::Property<bool> m_postFitOutlierRefit{\n    this, \"PostFitOutlierRefit\"\
+      , true,\n    \"If a fit is borderline / unstable: iteratively remove worst point\
+      \ by fitted-circle residual and refit.\"\n  };"
+  PostFitMaxDrop: &id080
+    kind: property
+    lang: cpp
+    type: str
+    default: 2u
+    help: Max points to drop in post-fit outlier refit loop.
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1298
+    raw: "Gaudi::Property<unsigned> m_postFitMaxDrop{\n    this, \"PostFitMaxDrop\"\
+      , 2u,\n    \"Max points to drop in post-fit outlier refit loop.\"\n  };"
+  PostFitCircleResidualInternal: &id081
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.25'
+    help: Threshold for |r-R| in the *fitted-state coordinate system* (GenFit internal
+      length units; typically cm).
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1303
+    raw: "Gaudi::Property<double> m_postFitCircleResidualInternal{\n    this, \"PostFitCircleResidualInternal\"\
+      , 0.25,\n    \"Threshold for |r-R| in the *fitted-state coordinate system* (GenFit\
+      \ internal length units; typically cm).\"\n  };"
+  PostFitMinKeep: &id082
+    kind: property
+    lang: cpp
+    type: str
+    default: 10u
+    help: Never post-fit prune below this many hits.
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1308
+    raw: "Gaudi::Property<unsigned> m_postFitMinKeep{\n    this, \"PostFitMinKeep\"\
+      , 10u,\n    \"Never post-fit prune below this many hits.\"\n  };"
+  PreferSmoothedState: &id083
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: If supported in your GenFit build, prefer a smoothed state for publishing
+      and post-fit diagnostics.
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1314
+    raw: "Gaudi::Property<bool> m_preferSmoothedState{\n    this, \"PreferSmoothedState\"\
+      , true,\n    \"If supported in your GenFit build, prefer a smoothed state for\
+      \ publishing and post-fit diagnostics.\"\n  };"
+  UseGBLRefit: &id084
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If GBL fitter exists in this GenFit build: run GBL as final refit after
+      KF/DAF.'
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1361
+    raw: "Gaudi::Property<bool> m_useGBLRefit{\n    this, \"UseGBLRefit\", true,\n\
+      \    \"If GBL fitter exists in this GenFit build: run GBL as final refit after\
+      \ KF/DAF.\"\n  };"
+  GBLMaxIters: &id085
+    kind: property
+    lang: cpp
+    type: str
+    default: 6u
+    help: GBL max iterations (if available).
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1366
+    raw: "Gaudi::Property<unsigned> m_gblMaxIters{\n    this, \"GBLMaxIters\", 6u,\n\
+      \    \"GBL max iterations (if available).\"\n  };"
+  GBLOnlyIfImprovesChi2Ndf: &id086
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: 'If true: accept GBL only if it improves chi2/ndf (and keeps FI points).'
+    source:
+      file: components/GenFit2DCHFitter_v02.cpp
+      line: 1371
+    raw: "Gaudi::Property<bool> m_gblOnlyIfImprovesChi2Ndf{\n    this, \"GBLOnlyIfImprovesChi2Ndf\"\
+      , true,\n    \"If true: accept GBL only if it improves chi2/ndf (and keeps FI\
+      \ points).\"\n  };"
+  UseMmidPoint: &id087
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Use GGTF Mmid point (recommended)
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 311
+    raw: Gaudi::Property<bool>     m_useMmid  {this, "UseMmidPoint", true, "Use GGTF
+      Mmid point (recommended)"};
+  HitVarXY: &id088
+    kind: property
+    lang: cpp
+    type: float
+    default: 1.0f
+    help: var(x)=var(y) for output fit hits [mm^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 318
+    raw: Gaudi::Property<float>    m_hitVarXY {this, "HitVarXY",  1.0f, "var(x)=var(y)
+      for output fit hits [mm^2]"};
+  HitVarZ: &id089
+    kind: property
+    lang: cpp
+    type: float
+    default: 1.0f
+    help: var(z) for output fit hits [mm^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 319
+    raw: Gaudi::Property<float>    m_hitVarZ  {this, "HitVarZ",   1.0f, "var(z) for
+      output fit hits [mm^2]"};
+  BaseVar_d0: &id090
+    kind: property
+    lang: cpp
+    type: float
+    default: 1.0f
+    help: base var(d0) [mm^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 322
+    raw: Gaudi::Property<float>  m_cov_d0     {this, "BaseVar_d0",        1.0f,   "base
+      var(d0) [mm^2]"};
+  BaseVar_phi: &id091
+    kind: property
+    lang: cpp
+    type: float
+    default: 1e-3f
+    help: base var(phi) [rad^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 323
+    raw: Gaudi::Property<float>  m_cov_phi    {this, "BaseVar_phi",       1e-3f,  "base
+      var(phi) [rad^2]"};
+  BaseVar_omega: &id092
+    kind: property
+    lang: cpp
+    type: float
+    default: 1e-8f
+    help: base var(omega) [(GeV^-1)^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 324
+    raw: Gaudi::Property<float>  m_cov_omega  {this, "BaseVar_omega",     1e-8f,  "base
+      var(omega) [(GeV^-1)^2]"};
+  BaseVar_z0: &id093
+    kind: property
+    lang: cpp
+    type: float
+    default: 1.0f
+    help: base var(z0) [mm^2]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 325
+    raw: Gaudi::Property<float>  m_cov_z0     {this, "BaseVar_z0",        1.0f,   "base
+      var(z0) [mm^2]"};
+  BaseVar_tanLambda: &id094
+    kind: property
+    lang: cpp
+    type: float
+    default: 1e-2f
+    help: base var(tanLambda) [1]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 326
+    raw: Gaudi::Property<float>  m_cov_tanL   {this, "BaseVar_tanLambda", 1e-2f,  "base
+      var(tanLambda) [1]"};
+  FillSummaryHisto: &id095
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: Fill minimal pT histo via THistSvc
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 329
+    raw: Gaudi::Property<bool> m_fillSummaryHisto {this, "FillSummaryHisto", false,
+      "Fill minimal pT histo via THistSvc"};
+  HistStream: &id096
+    kind: property
+    lang: cpp
+    type: str
+    default: '"simple"'
+    help: THistSvc stream (file logical name)
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 330
+    raw: Gaudi::Property<std::string> m_histStream {this, "HistStream", "simple",
+      "THistSvc stream (file logical name)"};
+  PtBins: &id097
+    kind: property
+    lang: cpp
+    type: str
+    default: 100u
+    help: pT bins
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 331
+    raw: Gaudi::Property<unsigned>    m_ptBins     {this, "PtBins", 100u, "pT bins"};
+  PtMax: &id098
+    kind: property
+    lang: cpp
+    type: float
+    default: '100.0'
+    help: pT max [GeV]
+    source:
+      file: components/SimpleFitDCHFitter.cpp
+      line: 332
+    raw: Gaudi::Property<double>      m_ptMax      {this, "PtMax", 100.0, "pT max
+      [GeV]"};
+  MinChordMM: &id099
+    kind: property
+    lang: cpp
+    type: float
+    default: '5.0'
+    help: Min chord length among the 3 picked points [mm]
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 284
+    raw: Gaudi::Property<double>   m_minChord  {this, "MinChordMM", 5.0, "Min chord
+      length among the 3 picked points [mm]"};
+  MinRadiusMM: &id100
+    kind: property
+    lang: cpp
+    type: float
+    default: '100.0'
+    help: Reject tiny circles R < this [mm]
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 285
+    raw: Gaudi::Property<double>   m_minRmm    {this, "MinRadiusMM", 100.0, "Reject
+      tiny circles R < this [mm]"};
+  MinDeltaPhi: &id101
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.10'
+    help: "Require \u03C6_max-\u03C6_min >= this [rad] (about origin)"
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 286
+    raw: "Gaudi::Property<double>   m_minDeltaPhi {this, \"MinDeltaPhi\", 0.10, \"\
+      Require \u03C6_max-\u03C6_min >= this [rad] (about origin)\"};"
+  FitTanLambda: &id102
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Estimate tanLambda from z(phi) linear fit
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 287
+    raw: Gaudi::Property<bool>     m_doTanL    {this, "FitTanLambda", true, "Estimate
+      tanLambda from z(phi) linear fit"};
+  PrintDiagnostics: &id103
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Print per-track geometry diagnostics
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 297
+    raw: Gaudi::Property<bool>     m_printDiag {this, "PrintDiagnostics", true, "Print
+      per-track geometry diagnostics"};
+  DiagEveryN: &id104
+    kind: property
+    lang: cpp
+    type: int
+    default: '1'
+    help: Print every N-th track
+    source:
+      file: components/ThreePointFitter.cpp
+      line: 298
+    raw: Gaudi::Property<int>      m_diagEvery {this, "DiagEveryN", 1, "Print every
+      N-th track"};
+  ZmaxParameterName: &id105
+    kind: property
+    lang: cpp
+    type: str
+    default: '{"DCH_gas_Lhalf"}'
+    help: Name of XML file parameter describing the z extent of the active volume
+      (max value in +z direction)
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 89
+    raw: "Gaudi::Property<std::string> m_Zmax_parameter_name{\n      this,\n     \
+      \ \"ZmaxParameterName\",\n      {\"DCH_gas_Lhalf\"},\n      \"Name of XML file\
+      \ parameter describing the z extent of the active volume (max value in +z direction)\"\
+      };"
+  ZminParameterName: &id106
+    kind: property
+    lang: cpp
+    type: str
+    default: '{"DCH_gas_Lhalf"}'
+    help: Name of XML file parameter describing the z extent of the active volume
+      (min value in -z direction). For
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 94
+    raw: "Gaudi::Property<std::string> m_Zmin_parameter_name{\n      this,\n     \
+      \ \"ZminParameterName\",\n      {\"DCH_gas_Lhalf\"},\n      \"Name of XML file\
+      \ parameter describing the z extent of the active volume (min value in -z direction).\
+      \ For \"\n      \"forward-backward symmetric detectors, use same name as for\
+      \ ZmaxParameterName. This value is then automatically \"\n      \"converted\
+      \ into the negative value.\"};"
+  RminParameterName: &id107
+    kind: property
+    lang: cpp
+    type: str
+    default: '{"DCH_gas_inner_cyl_R"}'
+    help: Name of XML file parameter describing the inner radius of the active volume.
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 101
+    raw: "Gaudi::Property<std::string> m_Rmin_parameter_name{\n      this,\n     \
+      \ \"RminParameterName\",\n      {\"DCH_gas_inner_cyl_R\"},\n      \"Name of\
+      \ XML file parameter describing the inner radius of the active volume.\"};"
+  RmaxParameterName: &id108
+    kind: property
+    lang: cpp
+    type: str
+    default: '{"DCH_gas_outer_cyl_R"}'
+    help: Name of XML file parameter describing the outer radius of the active volume.
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 106
+    raw: "Gaudi::Property<std::string> m_Rmax_parameter_name{\n      this,\n     \
+      \ \"RmaxParameterName\",\n      {\"DCH_gas_outer_cyl_R\"},\n      \"Name of\
+      \ XML file parameter describing the outer radius of the active volume.\"};"
+  GasSel: &id109
+    kind: property
+    lang: cpp
+    type: int
+    default: '{0}'
+    help: 'Gas selection: 0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%),
+      3: pure Ar.'
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 111
+    raw: "Gaudi::Property<int> m_GasSel{\n      this, \"GasSel\", {0}, \"Gas selection:\
+      \ 0: He(90%)-Isobutane(10%), 1: pure He, 2: Ar(50%)-Ethane(50%), 3: pure Ar.\"\
+      };"
+  FillFactor: &id110
+    kind: property
+    lang: cpp
+    type: float
+    default: '{1.0}'
+    help: Factor (between 0 and 1) describing the fraction of the detector volume
+      that is active (e.g., for Straw Tube
+    source:
+      file: components/TrackdNdxDelphesBased.h
+      line: 113
+    raw: "Gaudi::Property<double> m_fill_factor{\n      this,\n      \"FillFactor\"\
+      ,\n      {1.0},\n      \"Factor (between 0 and 1) describing the fraction of\
+      \ the detector volume that is active (e.g., for Straw Tube \"\n      \"Tracker\
+      \ the factor is significantly below 1 due to gaps between tubes). The factor\
+      \ is used to scale the \"\n      \"calculated track length and thus the corresponding\
+      \ number of clusters.\"};"
+  ExtrapolateToECal: &id111
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'false'
+    help: Calculate track state at ECal inner face or not
+    source:
+      file: components/TracksFromGenParticles.cpp
+      line: 420
+    raw: "Gaudi::Property<bool> m_extrapolateToECal{this, \"ExtrapolateToECal\", false,\n\
+      \                                            \"Calculate track state at ECal\
+      \ inner face or not\"};"
+  KeepOnlyBestExtrapolation: &id112
+    kind: property
+    lang: cpp
+    type: bool
+    default: 'true'
+    help: Keep only extrapolation with shortest time or not
+    source:
+      file: components/TracksFromGenParticles.cpp
+      line: 427
+    raw: "Gaudi::Property<bool> m_keepOnlyBestExtrapolation{this, \"KeepOnlyBestExtrapolation\"\
+      , true,\n                                                    \"Keep only extrapolation\
+      \ with shortest time or not\"};"
+  MinimumParticleMomentum: &id113
+    kind: property
+    lang: cpp
+    type: float
+    default: '0.010'
+    help: Keep only particles with momentum (in GeV) greater than MinimumParticleMomentum
+    source:
+      file: components/TracksFromGenParticles.cpp
+      line: 431
+    raw: "Gaudi::Property<float> m_minParticleMomentum{\n      this, \"MinimumParticleMomentum\"\
+      , 0.010,\n      \"Keep only particles with momentum (in GeV) greater than MinimumParticleMomentum\"\
+      };"
+  SystemEncoding: &id114
+    kind: property
+    lang: cpp
+    type: str
+    default: '"system:5"'
+    help: System encoding string
+    source:
+      file: components/TracksFromGenParticles.cpp
+      line: 447
+    raw: Gaudi::Property<std::string> m_systemEncoding{this, "SystemEncoding", "system:5",
+      "System encoding string"};
+  inputFile: &id209
+    kind: cli
+    lang: python
+    type: str
+    default: '"ddsim_output_edm4hep.root"'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 20
+    raw: "parser.add_argument(\"--inputFile\",  default=\"ddsim_output_edm4hep.root\"\
+      ,\n                    help=\"Input EDM4hep file (from ddsim or digi)"
+  outputFile: &id210
+    kind: cli
+    lang: python
+    type: str
+    default: '"output_digi_tracks.root"'
+    help: Output EDM4hep file
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 22
+    raw: "parser.add_argument(\"--outputFile\", default=\"output_digi_tracks.root\"\
+      ,\n                    help=\"Output EDM4hep file\")"
+  modelPath: &id217
+    kind: cli
+    lang: python
+    type: str
+    default: '""'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 24
+    raw: "parser.add_argument(\"--modelPath\",  default=\"\",\n                  \
+      \  help=\"ONNX model path for GGTF_tracking; accepts .onnx, .onnx.md5, http(s)"
+  tbeta: &id218
+    kind: cli
+    lang: python
+    type: float
+    default: '0.05'
+    help: GGTF beta threshold
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 28
+    raw: "parser.add_argument(\"--tbeta\",      type=float, default=0.05,\n      \
+      \              help=\"GGTF beta threshold\")"
+  td: &id219
+    kind: cli
+    lang: python
+    type: float
+    default: '0.05'
+    help: GGTF distance threshold
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 30
+    raw: "parser.add_argument(\"--td\",         type=float, default=0.05,\n      \
+      \              help=\"GGTF distance threshold\")"
+  dchSimHits: &id233
+    kind: cli
+    lang: python
+    type: str
+    default: '"DCHCollection"'
+    help: Name of DCH sim-hit collection in the input file
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 34
+    raw: "parser.add_argument(\"--dchSimHits\", default=\"DCHCollection\",\n     \
+      \               help=\"Name of DCH sim-hit collection in the input file\")"
+  compactXML: &id234
+    kind: cli
+    lang: python
+    type: str
+    default: '""'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 36
+    raw: "parser.add_argument(\"--compactXML\", default=\"\",\n                  \
+      \  help=\"Path or URL to compact XML to load in GeoSvc (use the same one passed\
+      \ to ddsim)"
+  dchName: &id235
+    kind: cli
+    lang: python
+    type: str
+    default: '"DCH_v2"'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 38
+    raw: "parser.add_argument(\"--dchName\",    default=\"DCH_v2\",\n            \
+      \        help=\"DD4hep detector name for the DCH (e.g. DCH_v2, CDCH, DCH)"
+  produce3DHits: &id115
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 42
+    raw: "parser.add_argument(\"--produce3DHits\", action=\"store_true\", default=False,\n\
+      \                    help=\"If set, also write GGTF_3DHits (disabled by default)"
+  ggtfLog: &id116
+    kind: cli
+    lang: python
+    type: str
+    default: '"INFO"'
+    help: GGTF_tracking OutputLevel.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 44
+    raw: "parser.add_argument(\"--ggtfLog\", choices=[\"INFO\", \"DEBUG\"], default=\"\
+      INFO\",\n                    help=\"GGTF_tracking OutputLevel.\")"
+  maxHitsPerEvent: &id220
+    kind: cli
+    lang: python
+    type: int
+    default: '0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 46
+    raw: "parser.add_argument(\"--maxHitsPerEvent\", type=int, default=0,\n      \
+      \              help=\"If >0, hard-cap number of input hits per event in GGTF\
+      \ (for diagnostics)"
+  wireGateMM: &id117
+    kind: cli
+    lang: python
+    type: float
+    default: '3.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 50
+    raw: "parser.add_argument(\"--wireGateMM\", type=float, default=3.0,\n       \
+      \             help=\"XY residual gate (mm)"
+  onnxChunk: &id221
+    kind: cli
+    lang: python
+    type: int
+    default: '4096'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 52
+    raw: "parser.add_argument(\"--onnxChunk\", type=int, default=4096,\n         \
+      \           help=\"ONNX inference chunk size (hits per slice)"
+  max3DHitsPerEvent: &id118
+    kind: cli
+    lang: python
+    type: int
+    default: '1000000'
+    help: Hard cap for number of 3D hits created per event.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 54
+    raw: "parser.add_argument(\"--max3DHitsPerEvent\", type=int, default=1000000,\n\
+      \                    help=\"Hard cap for number of 3D hits created per event.\"\
+      )"
+  max3DPerTrack: &id119
+    kind: cli
+    lang: python
+    type: int
+    default: '100000'
+    help: Hard cap for number of 3D hits created per reconstructed track.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 56
+    raw: "parser.add_argument(\"--max3DPerTrack\", type=int, default=100000,\n   \
+      \                 help=\"Hard cap for number of 3D hits created per reconstructed\
+      \ track.\")"
+  stage: &id211
+    kind: cli
+    lang: python
+    type: str
+    default: '"ggtf"'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 60
+    raw: "parser.add_argument(\"--stage\", choices=[\"digi\", \"ggtf\", \"fit\"],\
+      \ default=\"ggtf\",\n                    help=\"Which pipeline stage(s)"
+  fitter: &id212
+    kind: cli
+    lang: python
+    type: str
+    default: '"none"'
+    help: Optionally run a fitter after GGTF. 'genfit2' consumes GGTF_3DHits.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 64
+    raw: "parser.add_argument(\"--fitter\", choices=[\"none\",\"genfit2\"], default=\"\
+      none\",\n                    help=\"Optionally run a fitter after GGTF. 'genfit2'\
+      \ consumes GGTF_3DHits.\")"
+  fitOut: &id213
+    kind: cli
+    lang: python
+    type: str
+    default: '"GenFitTracks"'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 66
+    raw: "parser.add_argument(\"--fitOut\", default=\"GenFitTracks\",\n          \
+      \          help=\"Output collection name for fitted tracks (when fitter is enabled)"
+  fitterLog: &id120
+    kind: cli
+    lang: python
+    type: str
+    default: '"INFO"'
+    help: GenFit2DCHFitter OutputLevel.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 68
+    raw: "parser.add_argument(\"--fitterLog\", choices=[\"INFO\",\"DEBUG\"], default=\"\
+      INFO\",\n                    help=\"GenFit2DCHFitter OutputLevel.\")"
+  gf_useMat: &id130
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 73
+    raw: "parser.add_argument(\"--gf-useMat\", dest=\"gf_useMat\", action=\"store_true\"\
+      , default=True,\n                    help=\"Enable material effects (TGeo)"
+  gf_sortHits: &id131
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 78
+    raw: "parser.add_argument(\"--gf-sortHits\", dest=\"gf_sortHits\", action=\"store_true\"\
+      , default=True,\n                    help=\"Sort hits along seed direction (default:\
+      \ on)"
+  gf_dedup: &id132
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 83
+    raw: "parser.add_argument(\"--gf-dedup\", dest=\"gf_dedup\", action=\"store_true\"\
+      , default=True,\n                    help=\"Deduplicate nearly-identical consecutive\
+      \ hits (default: on)"
+  gf_posScale: &id133
+    kind: cli
+    lang: python
+    type: float
+    default: '0.1'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 89
+    raw: "parser.add_argument(\"--gf-posScale\", type=float, default=0.1,\n      \
+      \              help=\"Multiply EDM positions by this before GenFit (0.1=mm->cm)"
+  gf_len2m: &id134
+    kind: cli
+    lang: python
+    type: float
+    default: '0.01'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 91
+    raw: "parser.add_argument(\"--gf-len2m\", type=float, default=0.01,\n        \
+      \            help=\"Internal length unit to meters for pT seeding (0.01 for\
+      \ cm)"
+  gf_dedupTol: &id135
+    kind: cli
+    lang: python
+    type: float
+    default: '0.10'
+    help: Deduplication tolerance [mm].
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 95
+    raw: "parser.add_argument(\"--gf-dedupTol\", type=float, default=0.10,\n     \
+      \               help=\"Deduplication tolerance [mm].\")"
+  gf_hitSigmaXY: &id136
+    kind: cli
+    lang: python
+    type: float
+    default: '0.60'
+    help: Measurement sigma in X/Y [mm] for spacepoints.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 99
+    raw: "parser.add_argument(\"--gf-hitSigmaXY\", type=float, default=0.60,\n   \
+      \                 help=\"Measurement sigma in X/Y [mm] for spacepoints.\")"
+  gf_hitSigmaZ: &id137
+    kind: cli
+    lang: python
+    type: float
+    default: '3.00'
+    help: Measurement sigma in Z [mm] for spacepoints.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 101
+    raw: "parser.add_argument(\"--gf-hitSigmaZ\",  type=float, default=3.00,\n   \
+      \                 help=\"Measurement sigma in Z [mm] for spacepoints.\")"
+  gf_seedPosSigma: &id138
+    kind: cli
+    lang: python
+    type: float
+    default: '30.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 105
+    raw: "parser.add_argument(\"--gf-seedPosSigma\", type=float, default=30.0,\n \
+      \                   help=\"Seed position sigma [mm] (diagonal)"
+  gf_seedMomSigma: &id139
+    kind: cli
+    lang: python
+    type: float
+    default: '2.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 107
+    raw: "parser.add_argument(\"--gf-seedMomSigma\", type=float, default=2.0,\n  \
+      \                  help=\"Seed momentum sigma [GeV] (diagonal)"
+  gf_seedPTMin: &id140
+    kind: cli
+    lang: python
+    type: float
+    default: '0.30'
+    help: Minimum pT seed [GeV].
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 109
+    raw: "parser.add_argument(\"--gf-seedPTMin\", type=float, default=0.30,\n    \
+      \                help=\"Minimum pT seed [GeV].\")"
+  gf_seedPTMax: &id141
+    kind: cli
+    lang: python
+    type: float
+    default: '50.0'
+    help: Maximum pT seed [GeV].
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 111
+    raw: "parser.add_argument(\"--gf-seedPTMax\", type=float, default=50.0,\n    \
+      \                help=\"Maximum pT seed [GeV].\")"
+  gf_bz: &id142
+    kind: cli
+    lang: python
+    type: float
+    default: '2.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 116
+    raw: "parser.add_argument(\"--gf-bz\",  type=float, default=2.0,\n           \
+      \         help=\"Uniform Bz [T] used by fitter (ConstField if no DD4hepFieldSvc)"
+  gf_pdg: &id143
+    kind: cli
+    lang: python
+    type: int
+    default: '13'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 118
+    raw: "parser.add_argument(\"--gf-pdg\", type=int,   default=13,\n            \
+      \        help=\"PDG hypothesis (13=mu-)"
+  gf_minGroup: &id144
+    kind: cli
+    lang: python
+    type: int
+    default: '6'
+    help: Minimum hits per group to attempt a fit.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 122
+    raw: "parser.add_argument(\"--gf-minGroup\", type=int, default=6,\n          \
+      \          help=\"Minimum hits per group to attempt a fit.\")"
+  gf_useFallback: &id145
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: Enable DBSCAN fallback when labels are absent.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 124
+    raw: "parser.add_argument(\"--gf-useFallback\", dest=\"gf_useFallback\", action=\"\
+      store_true\", default=True,\n                    help=\"Enable DBSCAN fallback\
+      \ when labels are absent.\")"
+  gf_fallbackEpsCM: &id146
+    kind: cli
+    lang: python
+    type: float
+    default: '2.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 128
+    raw: "parser.add_argument(\"--gf-fallbackEpsCM\", type=float, default=2.0,\n \
+      \                   help=\"DBSCAN epsilon (cm)"
+  gf_fallbackMinPts: &id147
+    kind: cli
+    lang: python
+    type: int
+    default: '6'
+    help: DBSCAN minPts for fallback clustering.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 130
+    raw: "parser.add_argument(\"--gf-fallbackMinPts\", type=int, default=6,\n    \
+      \                help=\"DBSCAN minPts for fallback clustering.\")"
+  gf_retry: &id148
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: Enable one retry with inflated covariances when no FitterInfo.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 134
+    raw: "parser.add_argument(\"--gf-retry\", dest=\"gf_retry\", action=\"store_true\"\
+      , default=True,\n                    help=\"Enable one retry with inflated covariances\
+      \ when no FitterInfo.\")"
+  gf_retryMeasInfl: &id149
+    kind: cli
+    lang: python
+    type: float
+    default: '4.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 138
+    raw: "parser.add_argument(\"--gf-retryMeasInfl\", type=float, default=4.0,\n \
+      \                   help=\"Retry measurement covariance inflation factor (variance\
+      \ scale)"
+  gf_retrySeedPos: &id150
+    kind: cli
+    lang: python
+    type: float
+    default: '3.0'
+    help: Retry seed position sigma multiplier.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 140
+    raw: "parser.add_argument(\"--gf-retrySeedPos\", type=float, default=3.0,\n  \
+      \                  help=\"Retry seed position sigma multiplier.\")"
+  gf_retrySeedMom: &id151
+    kind: cli
+    lang: python
+    type: float
+    default: '3.0'
+    help: Retry seed momentum sigma multiplier.
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 142
+    raw: "parser.add_argument(\"--gf-retrySeedMom\", type=float, default=3.0,\n  \
+      \                  help=\"Retry seed momentum sigma multiplier.\")"
+  gf_maxMeasPerGroup: &id152
+    kind: cli
+    lang: python
+    type: int
+    default: '0'
+    help: ''
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 144
+    raw: "parser.add_argument(\"--gf-maxMeasPerGroup\", type=int, default=0,\n   \
+      \                 help=\"If >0, cap number of measurements per group (downsample\
+      \ evenly)"
+  gf_seedPMin: &id153
+    kind: cli
+    lang: python
+    type: float
+    default: '1.2'
+    help: Minimum absolute momentum seed |p| [GeV].
+    source:
+      file: test/testTrackFinder/Archive/SimplerunDCHTestTrackFinder.py
+      line: 146
+    raw: "parser.add_argument(\"--gf-seedPMin\", type=float, default=1.2,\n      \
+      \              help=\"Minimum absolute momentum seed |p| [GeV].\")"
+  c: &id121
+    kind: cli
+    lang: python
+    type: str
+    default: null
+    help: ''
+    source:
+      file: test/testTrackFinder/dd4hep2root.py
+      line: 9
+    raw: parser.add_argument('-c', '--compact', help='Compact file location(s)
+  o: &id122
+    kind: cli
+    lang: python
+    type: str
+    default: '''detector.root'''
+    help: Converted file path
+    source:
+      file: test/testTrackFinder/dd4hep2root.py
+      line: 11
+    raw: "parser.add_argument('-o', '--out', help='Converted file path',\n       \
+      \                 default='detector.root', type=str)"
+  tgeoFile: &id236
+    kind: cli
+    lang: python
+    type: str
+    default: '"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root"'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 48
+    raw: "parser.add_argument(\"--tgeoFile\", default=\"/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03CF.root\"\
+      ,\n                    help=\"Optional TGeo ROOT geometry file to Import()"
+  skipDigi: &id214
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 62
+    raw: "parser.add_argument(\"--skipDigi\", action=\"store_true\", default=False,\n\
+      \                    help=\"If set: do NOT run the digitizer (useful if inputFile\
+      \ is already digitized)"
+  jobTag: &id215
+    kind: cli
+    lang: python
+    type: str
+    default: '""'
+    help: Optional free-form tag stored in metadata. If empty, auto-generated.
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 65
+    raw: "parser.add_argument(\"--jobTag\", default=\"\",\n                    help=\"\
+      Optional free-form tag stored in metadata. If empty, auto-generated.\")"
+  dchDigiVersion: &id237
+    kind: cli
+    lang: python
+    type: str
+    default: '"v02"'
+    help: Choose DCH digitizer implementation
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 69
+    raw: "parser.add_argument(\"--dchDigiVersion\", choices=[\"v01\", \"v02\"], default=\"\
+      v02\",\n                    help=\"Choose DCH digitizer implementation\")"
+  xyResolution_mm: &id238
+    kind: cli
+    lang: python
+    type: float
+    default: '0.10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 71
+    raw: parser.add_argument("--xyResolution_mm", type=float, default=0.10, help="xy-resolution
+      (mm)
+  zResolution_mm: &id239
+    kind: cli
+    lang: python
+    type: float
+    default: '30.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 72
+    raw: parser.add_argument("--zResolution_mm", type=float, default=30.0, help="z-resolution
+      (mm)
+  dch_deadtime_ns: &id240
+    kind: cli
+    lang: python
+    type: float
+    default: '450.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 75
+    raw: "parser.add_argument(\"--dch-deadtime-ns\", dest=\"dch_deadtime_ns\", type=float,\
+      \ default=450.0,\n                    help=\"[v02] cell deadtime (ns)"
+  dch_drift_um_ns: &id241
+    kind: cli
+    lang: python
+    type: float
+    default: '-1.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 77
+    raw: "parser.add_argument(\"--dch-drift-vel-um-ns\", dest=\"dch_drift_um_ns\"\
+      , type=float, default=-1.0,\n                    help=\"[v02] drift velocity\
+      \ (um/ns)"
+  dch_sig_mm_ns: &id242
+    kind: cli
+    lang: python
+    type: float
+    default: 2.0/3.0*299792458.0*1e-6
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 79
+    raw: "parser.add_argument(\"--dch-signal-vel-mm-ns\", dest=\"dch_sig_mm_ns\",\
+      \ type=float,\n                    default=2.0/3.0*299792458.0*1e-6,\n     \
+      \               help=\"[v02] signal velocity along wire (mm/ns)"
+  dch_gas_type: &id243
+    kind: cli
+    lang: python
+    type: int
+    default: '0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 82
+    raw: "parser.add_argument(\"--dch-gas-type\", dest=\"dch_gas_type\", type=int,\
+      \ default=0,\n                    help=\"[v02] gas: 0 He(90)"
+  rw_start_ns: &id123
+    kind: cli
+    lang: python
+    type: float
+    default: '1.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 84
+    raw: "parser.add_argument(\"--rw-start-ns\", dest=\"rw_start_ns\", type=float,\
+      \ default=1.0,\n                    help=\"[v02] readout window start (ns)"
+  rw_dur_ns: &id124
+    kind: cli
+    lang: python
+    type: float
+    default: '900.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 86
+    raw: "parser.add_argument(\"--rw-duration-ns\", dest=\"rw_dur_ns\", type=float,\
+      \ default=900.0,\n                    help=\"[v02] readout window duration (ns)"
+  ggtf_dropWireIfAbsDTooLarge: &id222
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 95
+    raw: "parser.add_argument(\"--ggtf-dropWireIfAbsDTooLarge\", dest=\"ggtf_dropWireIfAbsDTooLarge\"\
+      ,\n                    action=\"store_true\", default=True)"
+  ggtf_maxAbsDMM: &id223
+    kind: cli
+    lang: python
+    type: float
+    default: '30.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 99
+    raw: parser.add_argument("--ggtf-maxAbsDMM", type=float, default=30.0)
+  ggtf_zeroMinSizeKeep: &id224
+    kind: cli
+    lang: python
+    type: int
+    default: '8'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 101
+    raw: parser.add_argument("--ggtf-zeroMinSizeKeep", type=int, default=8)
+  ggtf_minWireFracKeep: &id225
+    kind: cli
+    lang: python
+    type: float
+    default: '0.60'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 102
+    raw: parser.add_argument("--ggtf-minWireFracKeep", type=float, default=0.60)
+  ggtf_promoteZeroIfGood: &id226
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 103
+    raw: parser.add_argument("--ggtf-promoteZeroIfGood", action="store_true", default=True)
+  ggtf_skipZeroIfSmall: &id227
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 105
+    raw: parser.add_argument("--ggtf-skipZeroIfSmall", action="store_true", default=True)
+  ggtf_skipZeroAlways: &id228
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 107
+    raw: parser.add_argument("--ggtf-skipZeroAlways", action="store_true", default=False)
+  ggtf_filterInputWiresByTruthPdg: &id229
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 111
+    raw: "parser.add_argument(\"--ggtf-filterInputWiresByTruthPdg\", dest=\"ggtf_filterInputWiresByTruthPdg\"\
+      ,\n                    action=\"store_true\", default=False)"
+  ggtf_keepTruthPdg: &id230
+    kind: cli
+    lang: python
+    type: int
+    default: '13'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 115
+    raw: parser.add_argument("--ggtf-keepTruthPdg", type=int, default=13)
+  ggtf_dropWireIfUnlinked: &id231
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 116
+    raw: "parser.add_argument(\"--ggtf-dropWireIfUnlinked\", dest=\"ggtf_dropWireIfUnlinked\"\
+      ,\n                    action=\"store_true\", default=True)"
+  ggtf_wireSimLinkColl: &id232
+    kind: cli
+    lang: python
+    type: str
+    default: '""'
+    help: Override wire->SimTrackerHit link collection name for GGTF truth gating.
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 120
+    raw: "parser.add_argument(\"--ggtf-wireSimLinkColl\", default=\"\",\n        \
+      \            help=\"Override wire->SimTrackerHit link collection name for GGTF\
+      \ truth gating. \"\n                         \"If empty, guesses based on digi\
+      \ version.\")"
+  ggtfTracksOut: &id216
+    kind: cli
+    lang: python
+    type: str
+    default: '"CDCHTracks"'
+    help: Name of GGTF output track collection.
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 124
+    raw: "parser.add_argument(\"--ggtfTracksOut\", default=\"CDCHTracks\",\n     \
+      \               help=\"Name of GGTF output track collection.\")"
+  gf_disableEloss: &id154
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 140
+    raw: "parser.add_argument(\"--gf-disableEloss\", dest=\"gf_disableEloss\", action=\"\
+      store_true\", default=True,\n                    help=\"Disable energy loss\
+      \ (keep MS)"
+  gf_disableAllMat: &id155
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: Disable all GenFit material effects.
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 143
+    raw: "parser.add_argument(\"--gf-disableAllMat\", dest=\"gf_disableAllMat\", action=\"\
+      store_true\", default=False,\n                    help=\"Disable all GenFit\
+      \ material effects.\")"
+  gf_hardDisableMatIfNoGeo: &id156
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 146
+    raw: "parser.add_argument(\"--gf-hardDisableMatIfNoGeo\", dest=\"gf_hardDisableMatIfNoGeo\"\
+      , action=\"store_true\", default=True,\n                    help=\"If gGeoManager\
+      \ is null: force MaterialEffects::setNoEffects(true)"
+  gf_dedupTolMM: &id157
+    kind: cli
+    lang: python
+    type: float
+    default: '0.10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 155
+    raw: parser.add_argument("--gf-dedupTolMM", type=float, default=0.10)
+  gf_rejectNegativeLabels: &id158
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 158
+    raw: "parser.add_argument(\"--gf-rejectNegativeLabels\", dest=\"gf_rejectNegativeLabels\"\
+      ,\n                    action=\"store_true\", default=True)"
+  gf_minHitsPerTrack: &id159
+    kind: cli
+    lang: python
+    type: int
+    default: '8'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 163
+    raw: parser.add_argument("--gf-minHitsPerTrack", type=int, default=8)
+  gf_minMeasurementsToFit: &id160
+    kind: cli
+    lang: python
+    type: int
+    default: '6'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 164
+    raw: parser.add_argument("--gf-minMeasurementsToFit", type=int, default=6)
+  gf_minFittedPointsWithFI: &id161
+    kind: cli
+    lang: python
+    type: int
+    default: '10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 165
+    raw: parser.add_argument("--gf-minFittedPointsWithFI", type=int, default=10)
+  gf_maxChi2Ndf: &id162
+    kind: cli
+    lang: python
+    type: float
+    default: '20.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 166
+    raw: parser.add_argument("--gf-maxChi2Ndf", type=float, default=20.0)
+  gf_useKFPreFit: &id163
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 169
+    raw: parser.add_argument("--gf-useKFPreFit", dest="gf_useKFPreFit", action="store_true",
+      default=True)
+  gf_kfMaxIters: &id164
+    kind: cli
+    lang: python
+    type: int
+    default: '12'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 171
+    raw: parser.add_argument("--gf-kfMaxIters", type=int, default=12)
+  gf_useDAF: &id165
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 173
+    raw: parser.add_argument("--gf-useDAF", dest="gf_useDAF", action="store_true",
+      default=True)
+  gf_dafMaxIters: &id166
+    kind: cli
+    lang: python
+    type: int
+    default: '8'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 175
+    raw: parser.add_argument("--gf-dafMaxIters", type=int, default=8)
+  gf_fallbackToKFIfDAFFails: &id167
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 177
+    raw: "parser.add_argument(\"--gf-fallbackToKFIfDAFFails\", dest=\"gf_fallbackToKFIfDAFFails\"\
+      ,\n                    action=\"store_true\", default=True)"
+  gf_tryBothMomDirs: &id168
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 182
+    raw: parser.add_argument("--gf-tryBothMomDirs", dest="gf_tryBothMomDirs", action="store_true",
+      default=True)
+  gf_useBiasedStateForPublish: &id169
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 186
+    raw: "parser.add_argument(\"--gf-useBiasedStateForPublish\", dest=\"gf_useBiasedStateForPublish\"\
+      ,\n                    action=\"store_true\", default=True)"
+  gf_publishStateCentralFrac: &id170
+    kind: cli
+    lang: python
+    type: float
+    default: '0.60'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 190
+    raw: "parser.add_argument(\"--gf-publishStateCentralFrac\", type=float, default=0.60,\n\
+      \                    help=\"Fraction of track points (by index)"
+  gf_publishPTMaxGeV: &id171
+    kind: cli
+    lang: python
+    type: float
+    default: '300.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 193
+    raw: parser.add_argument("--gf-publishPTMaxGeV", type=float, default=300.0)
+  gf_invalidPTSentinel: &id172
+    kind: cli
+    lang: python
+    type: float
+    default: '-1.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 194
+    raw: parser.add_argument("--gf-invalidPTSentinel", type=float, default=-1.0)
+  gf_omegaVarGood: &id173
+    kind: cli
+    lang: python
+    type: float
+    default: 1e-4
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 195
+    raw: parser.add_argument("--gf-omegaVarGood", type=float, default=1e-4)
+  gf_omegaVarBad: &id174
+    kind: cli
+    lang: python
+    type: float
+    default: '1.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 196
+    raw: parser.add_argument("--gf-omegaVarBad", type=float, default=1.0)
+  gf_positionUnitScale: &id175
+    kind: cli
+    lang: python
+    type: float
+    default: '0.1'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 199
+    raw: "parser.add_argument(\"--gf-positionUnitScale\", type=float, default=0.1,\n\
+      \                    help=\"Position unit scale for GenFit internal units (0.1\
+      \ => mm->cm)"
+  gf_wireHalfLengthMM: &id176
+    kind: cli
+    lang: python
+    type: float
+    default: '2250.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 201
+    raw: "parser.add_argument(\"--gf-wireHalfLengthMM\", type=float, default=2250.0,\n\
+      \                    help=\"Half wire length (mm)"
+  gf_maxDriftMM: &id177
+    kind: cli
+    lang: python
+    type: float
+    default: '30.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 203
+    raw: "parser.add_argument(\"--gf-maxDriftMM\", type=float, default=30.0,\n   \
+      \                 help=\"Max drift distance (mm)"
+  gf_maxDriftMMForHit: &id178
+    kind: cli
+    lang: python
+    type: float
+    default: '35.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 205
+    raw: "parser.add_argument(\"--gf-maxDriftMMForHit\", type=float, default=35.0,\n\
+      \                    help=\"Hard hit-level cut on |drift| (mm)"
+  gf_minDriftErrMM: &id179
+    kind: cli
+    lang: python
+    type: float
+    default: '0.10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 207
+    raw: "parser.add_argument(\"--gf-minDriftErrMM\", type=float, default=0.10,\n\
+      \                    help=\"Floor for drift distance error (mm)"
+  gf_maxDriftErrMM: &id180
+    kind: cli
+    lang: python
+    type: float
+    default: '5.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 209
+    raw: "parser.add_argument(\"--gf-maxDriftErrMM\", type=float, default=5.0,\n \
+      \                   help=\"Ceiling for drift distance error (mm)"
+  gf_seedEndpointK: &id181
+    kind: cli
+    lang: python
+    type: int
+    default: '6'
+    help: Mean of first/last K hits used as seed endpoints.
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 213
+    raw: "parser.add_argument(\"--gf-seedEndpointK\", type=int, default=6,\n     \
+      \               help=\"Mean of first/last K hits used as seed endpoints.\")"
+  gf_seedTangentK: &id182
+    kind: cli
+    lang: python
+    type: int
+    default: '10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 215
+    raw: "parser.add_argument(\"--gf-seedTangentK\", type=int, default=10,\n     \
+      \               help=\"Window size for tangent estimation at each end (PCA over\
+      \ first/last K hits)"
+  gf_seedPosSigmaMM: &id183
+    kind: cli
+    lang: python
+    type: float
+    default: '80.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 218
+    raw: parser.add_argument("--gf-seedPosSigmaMM", type=float, default=80.0)
+  gf_seedMomSigmaGeV: &id184
+    kind: cli
+    lang: python
+    type: float
+    default: '5.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 219
+    raw: parser.add_argument("--gf-seedMomSigmaGeV", type=float, default=5.0)
+  gf_seedPTFallbackGeV: &id185
+    kind: cli
+    lang: python
+    type: float
+    default: '50.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 220
+    raw: parser.add_argument("--gf-seedPTFallbackGeV", type=float, default=50.0)
+  gf_seedPTMinGeV: &id186
+    kind: cli
+    lang: python
+    type: float
+    default: '0.20'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 221
+    raw: parser.add_argument("--gf-seedPTMinGeV", type=float, default=0.20)
+  gf_seedPTMaxGeV: &id187
+    kind: cli
+    lang: python
+    type: float
+    default: '200.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 222
+    raw: parser.add_argument("--gf-seedPTMaxGeV", type=float, default=200.0)
+  gf_seedPMinGeV: &id188
+    kind: cli
+    lang: python
+    type: float
+    default: '0.05'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 223
+    raw: parser.add_argument("--gf-seedPMinGeV", type=float, default=0.05)
+  gf_useSagittaSeed: &id189
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 225
+    raw: parser.add_argument("--gf-useSagittaSeed", dest="gf_useSagittaSeed", action="store_true",
+      default=True)
+  gf_minSagittaForSeedMM: &id190
+    kind: cli
+    lang: python
+    type: float
+    default: '0.20'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 227
+    raw: parser.add_argument("--gf-minSagittaForSeedMM", type=float, default=0.20)
+  gf_minHitsForObs: &id191
+    kind: cli
+    lang: python
+    type: int
+    default: '10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 230
+    raw: parser.add_argument("--gf-minHitsForObs", type=int, default=10)
+  gf_obsSigmaEffMM: &id192
+    kind: cli
+    lang: python
+    type: float
+    default: '0.25'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 231
+    raw: parser.add_argument("--gf-obsSigmaEffMM", type=float, default=0.25)
+  gf_obsMinPhiSpanRad: &id193
+    kind: cli
+    lang: python
+    type: float
+    default: '0.06'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 232
+    raw: parser.add_argument("--gf-obsMinPhiSpanRad", type=float, default=0.06)
+  gf_obsMinChordMM: &id194
+    kind: cli
+    lang: python
+    type: float
+    default: '200.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 233
+    raw: parser.add_argument("--gf-obsMinChordMM", type=float, default=200.0)
+  gf_obsMinSagittaMM: &id195
+    kind: cli
+    lang: python
+    type: float
+    default: '0.15'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 234
+    raw: parser.add_argument("--gf-obsMinSagittaMM", type=float, default=0.15)
+  gf_obsMinScore: &id196
+    kind: cli
+    lang: python
+    type: float
+    default: '1.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 235
+    raw: parser.add_argument("--gf-obsMinScore", type=float, default=1.0)
+  gf_skipIfObsTooLow: &id197
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: 'If set: drop tracks that fail observability cuts. Default False keeps track
+      but marks pT invalid.'
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 236
+    raw: "parser.add_argument(\"--gf-skipIfObsTooLow\", dest=\"gf_skipIfObsTooLow\"\
+      , action=\"store_true\", default=False,\n                    help=\"If set:\
+      \ drop tracks that fail observability cuts. Default False keeps track but marks\
+      \ pT invalid.\")"
+  gf_prefitOutlierVeto: &id198
+    kind: cli
+    lang: python
+    type: bool
+    default: 'True'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 241
+    raw: parser.add_argument("--gf-prefitOutlierVeto", dest="gf_prefitOutlierVeto",
+      action="store_true", default=True)
+  gf_outlierMaxDrop: &id199
+    kind: cli
+    lang: python
+    type: int
+    default: '2'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 243
+    raw: parser.add_argument("--gf-outlierMaxDrop", type=int, default=2)
+  gf_outlierCircleResidualMM: &id200
+    kind: cli
+    lang: python
+    type: float
+    default: '8.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 244
+    raw: parser.add_argument("--gf-outlierCircleResidualMM", type=float, default=8.0)
+  gf_outlierChordResidualMM: &id201
+    kind: cli
+    lang: python
+    type: float
+    default: '20.0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 245
+    raw: parser.add_argument("--gf-outlierChordResidualMM", type=float, default=20.0)
+  gf_outlierMinKeep: &id202
+    kind: cli
+    lang: python
+    type: int
+    default: '10'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 246
+    raw: parser.add_argument("--gf-outlierMinKeep", type=int, default=10)
+  gf_minCovEigenvalue: &id203
+    kind: cli
+    lang: python
+    type: float
+    default: 1e-8
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 249
+    raw: parser.add_argument("--gf-minCovEigenvalue", type=float, default=1e-8)
+  gf_statsTruncCentralFrac: &id204
+    kind: cli
+    lang: python
+    type: float
+    default: '0.95'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 250
+    raw: parser.add_argument("--gf-statsTruncCentralFrac", type=float, default=0.95)
+  gf_diagEveryNTracks: &id205
+    kind: cli
+    lang: python
+    type: int
+    default: '1'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 251
+    raw: parser.add_argument("--gf-diagEveryNTracks", type=int, default=1)
+  gf_detId: &id206
+    kind: cli
+    lang: python
+    type: int
+    default: '0'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 254
+    raw: parser.add_argument("--gf-detId", type=int, default=0)
+  gf_useLabelAsDetId: &id207
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 255
+    raw: parser.add_argument("--gf-useLabelAsDetId", dest="gf_useLabelAsDetId", action="store_true",
+      default=False)
+  gf_wireAnglesAreDegrees: &id208
+    kind: cli
+    lang: python
+    type: bool
+    default: 'False'
+    help: ''
+    source:
+      file: test/testTrackFinder/runDCHTestTrackFinder.py
+      line: 258
+    raw: "parser.add_argument(\"--gf-wireAnglesAreDegrees\", dest=\"gf_wireAnglesAreDegrees\"\
+      ,\n                    action=\"store_true\", default=False,\n             \
+      \       help=\"Set if SenseWireHit wire angles are stored in degrees (normally\
+      \ radians)"
+groups:
+  misc:
+    TmaxNs: *id001
+    NHitsMax: *id002
+    KeepEmpty: *id003
+    ModelPath: *id004
+    Tbeta: *id005
+    Td: *id006
+    MaxHitsPerEvent: *id007
+    OnnxChunk: *id008
+    DropWireIfAbsDTooLarge: *id009
+    MaxAbsDMM: *id010
+    ZeroMinSizeKeep: *id011
+    MinWireFracKeep: *id012
+    PromoteZeroIfGood: *id013
+    SkipZeroIfSmall: *id014
+    SkipZeroAlways: *id015
+    FilterInputWiresByTruthPdg: *id016
+    KeepTruthPdg: *id017
+    DropWireIfUnlinked: *id018
+    GeoSvcName: *id019
+    DchName: *id020
+    JobTag: *id021
+    RejectNegativeLabels: *id022
+    MinHitsPerTrack: *id023
+    MinMeasurementsToFit: *id024
+    MinFittedPointsWithFI: *id025
+    SortHits: *id026
+    DeduplicateHits: *id027
+    DedupTolMM: *id028
+    PreFitOutlierVeto: *id029
+    OutlierMaxDrop: *id030
+    OutlierCircleResidualMM: *id031
+    OutlierChordResidualMM: *id032
+    OutlierMinKeep: *id033
+    SeedEndpointK: *id034
+    SeedTangentK: *id035
+    UseKFPreFit: *id036
+    FallbackToKFIfDAFFails: *id037
+    KFMaxIters: *id038
+    DAFMaxIters: *id039
+    TryBothMomentumDirections: *id040
+    UseBiasedStateForPublish: *id041
+    PublishStateCentralFrac: *id042
+    TGeoTopVolume: *id043
+    DisableEnergyLoss: *id044
+    DisableAllMaterialEffects: *id045
+    HardDisableMaterialIfNoGeo: *id046
+    PositionUnitScale: *id047
+    WireHalfLengthMM: *id048
+    MaxDriftMM: *id049
+    MaxDriftMMForHit: *id050
+    MinDriftErrMM: *id051
+    MaxDriftErrMM: *id052
+    MinCovEigenvalue: *id053
+    SeedPosSigmaMM: *id054
+    SeedMomSigmaGeV: *id055
+    SeedPTFallbackGeV: *id056
+    SeedPTMinGeV: *id057
+    SeedPTMaxGeV: *id058
+    SeedPMinGeV: *id059
+    MinHitsForObs: *id060
+    ObsSigmaEffMM: *id061
+    ObsMinPhiSpanRad: *id062
+    ObsMinChordMM: *id063
+    ObsMinSagittaMM: *id064
+    ObsMinScore: *id065
+    SkipIfObsTooLow: *id066
+    UseSagittaSeed: *id067
+    MinSagittaForSeedMM: *id068
+    MaxChi2Ndf: *id069
+    PublishPTMaxGeV: *id070
+    InvalidPTSentinel: *id071
+    OmegaVarGood: *id072
+    OmegaVarBad: *id073
+    StatsTruncCentralFrac: *id074
+    DetId: *id075
+    UseLabelAsDetId: *id076
+    WireAnglesAreDegrees: *id077
+    DiagEveryNTracks: *id078
+    PostFitOutlierRefit: *id079
+    PostFitMaxDrop: *id080
+    PostFitCircleResidualInternal: *id081
+    PostFitMinKeep: *id082
+    PreferSmoothedState: *id083
+    UseGBLRefit: *id084
+    GBLMaxIters: *id085
+    GBLOnlyIfImprovesChi2Ndf: *id086
+    UseMmidPoint: *id087
+    HitVarXY: *id088
+    HitVarZ: *id089
+    BaseVar_d0: *id090
+    BaseVar_phi: *id091
+    BaseVar_omega: *id092
+    BaseVar_z0: *id093
+    BaseVar_tanLambda: *id094
+    FillSummaryHisto: *id095
+    HistStream: *id096
+    PtBins: *id097
+    PtMax: *id098
+    MinChordMM: *id099
+    MinRadiusMM: *id100
+    MinDeltaPhi: *id101
+    FitTanLambda: *id102
+    PrintDiagnostics: *id103
+    DiagEveryN: *id104
+    ZmaxParameterName: *id105
+    ZminParameterName: *id106
+    RminParameterName: *id107
+    RmaxParameterName: *id108
+    GasSel: *id109
+    FillFactor: *id110
+    ExtrapolateToECal: *id111
+    KeepOnlyBestExtrapolation: *id112
+    MinimumParticleMomentum: *id113
+    SystemEncoding: *id114
+    produce3DHits: *id115
+    ggtfLog: *id116
+    wireGateMM: *id117
+    max3DHitsPerEvent: *id118
+    max3DPerTrack: *id119
+    fitterLog: *id120
+    c: *id121
+    o: *id122
+    rw_start_ns: *id123
+    rw_dur_ns: *id124
+  genfit2:
+    UseDAF: *id125
+    Bz: *id126
+    PDG: *id127
+    UseMaterialEffects: *id128
+    TGeoFile: *id129
+    gf_useMat: *id130
+    gf_sortHits: *id131
+    gf_dedup: *id132
+    gf_posScale: *id133
+    gf_len2m: *id134
+    gf_dedupTol: *id135
+    gf_hitSigmaXY: *id136
+    gf_hitSigmaZ: *id137
+    gf_seedPosSigma: *id138
+    gf_seedMomSigma: *id139
+    gf_seedPTMin: *id140
+    gf_seedPTMax: *id141
+    gf_bz: *id142
+    gf_pdg: *id143
+    gf_minGroup: *id144
+    gf_useFallback: *id145
+    gf_fallbackEpsCM: *id146
+    gf_fallbackMinPts: *id147
+    gf_retry: *id148
+    gf_retryMeasInfl: *id149
+    gf_retrySeedPos: *id150
+    gf_retrySeedMom: *id151
+    gf_maxMeasPerGroup: *id152
+    gf_seedPMin: *id153
+    gf_disableEloss: *id154
+    gf_disableAllMat: *id155
+    gf_hardDisableMatIfNoGeo: *id156
+    gf_dedupTolMM: *id157
+    gf_rejectNegativeLabels: *id158
+    gf_minHitsPerTrack: *id159
+    gf_minMeasurementsToFit: *id160
+    gf_minFittedPointsWithFI: *id161
+    gf_maxChi2Ndf: *id162
+    gf_useKFPreFit: *id163
+    gf_kfMaxIters: *id164
+    gf_useDAF: *id165
+    gf_dafMaxIters: *id166
+    gf_fallbackToKFIfDAFFails: *id167
+    gf_tryBothMomDirs: *id168
+    gf_useBiasedStateForPublish: *id169
+    gf_publishStateCentralFrac: *id170
+    gf_publishPTMaxGeV: *id171
+    gf_invalidPTSentinel: *id172
+    gf_omegaVarGood: *id173
+    gf_omegaVarBad: *id174
+    gf_positionUnitScale: *id175
+    gf_wireHalfLengthMM: *id176
+    gf_maxDriftMM: *id177
+    gf_maxDriftMMForHit: *id178
+    gf_minDriftErrMM: *id179
+    gf_maxDriftErrMM: *id180
+    gf_seedEndpointK: *id181
+    gf_seedTangentK: *id182
+    gf_seedPosSigmaMM: *id183
+    gf_seedMomSigmaGeV: *id184
+    gf_seedPTFallbackGeV: *id185
+    gf_seedPTMinGeV: *id186
+    gf_seedPTMaxGeV: *id187
+    gf_seedPMinGeV: *id188
+    gf_useSagittaSeed: *id189
+    gf_minSagittaForSeedMM: *id190
+    gf_minHitsForObs: *id191
+    gf_obsSigmaEffMM: *id192
+    gf_obsMinPhiSpanRad: *id193
+    gf_obsMinChordMM: *id194
+    gf_obsMinSagittaMM: *id195
+    gf_obsMinScore: *id196
+    gf_skipIfObsTooLow: *id197
+    gf_prefitOutlierVeto: *id198
+    gf_outlierMaxDrop: *id199
+    gf_outlierCircleResidualMM: *id200
+    gf_outlierChordResidualMM: *id201
+    gf_outlierMinKeep: *id202
+    gf_minCovEigenvalue: *id203
+    gf_statsTruncCentralFrac: *id204
+    gf_diagEveryNTracks: *id205
+    gf_detId: *id206
+    gf_useLabelAsDetId: *id207
+    gf_wireAnglesAreDegrees: *id208
+  pipeline:
+    inputFile: *id209
+    outputFile: *id210
+    stage: *id211
+    fitter: *id212
+    fitOut: *id213
+    skipDigi: *id214
+    jobTag: *id215
+    ggtfTracksOut: *id216
+  ggtf:
+    modelPath: *id217
+    tbeta: *id218
+    td: *id219
+    maxHitsPerEvent: *id220
+    onnxChunk: *id221
+    ggtf_dropWireIfAbsDTooLarge: *id222
+    ggtf_maxAbsDMM: *id223
+    ggtf_zeroMinSizeKeep: *id224
+    ggtf_minWireFracKeep: *id225
+    ggtf_promoteZeroIfGood: *id226
+    ggtf_skipZeroIfSmall: *id227
+    ggtf_skipZeroAlways: *id228
+    ggtf_filterInputWiresByTruthPdg: *id229
+    ggtf_keepTruthPdg: *id230
+    ggtf_dropWireIfUnlinked: *id231
+    ggtf_wireSimLinkColl: *id232
+  geometry:
+    dchSimHits: *id233
+    compactXML: *id234
+    dchName: *id235
+    tgeoFile: *id236
+  digitizer:
+    dchDigiVersion: *id237
+    xyResolution_mm: *id238
+    zResolution_mm: *id239
+    dch_deadtime_ns: *id240
+    dch_drift_um_ns: *id241
+    dch_sig_mm_ns: *id242
+    dch_gas_type: *id243

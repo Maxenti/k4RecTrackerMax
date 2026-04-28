@@ -1,37 +1,43 @@
 #!/usr/bin/env python3
 """
-
 DOC
-compare_pt_resolution_outputs.py
-
-Compare two ROOT outputs from analyze_pt_resolution_grid.py (e.g. CF vs W).
-
-Creates a new ROOT file containing:
-  - compare/byEta/<eta>/ : overlays CF vs W + ratio CF/W for each resolution METHOD
-  - compare/byMethod/<method>/ : overlays across etas for each METHOD + per-eta compare + ratio
-  - compare/diagnostics/byEta/<eta>/ :
-      * overlays for diagnostic quantities from the *summary* TTree (A vs B)
-      * ratio A/B for those diagnostics (only where both exist and denominator != 0)
-      * pass fraction plots: n_quality/n_usable (A vs B) and ratio
-  - compare/diagnostics/diag_compare : a TTree with per-(eta,pt) diagnostic values + diffs/ratios + a simple "suspect" flag
-
-This diagnostic section is meant to help decide whether improvements are "representative"
-(physics/material) or could be driven by selection/algorithmic survivorship.
-
-Missing points are handled gracefully: ratio only includes pT where both exist and finite.
-
+Summary: Compare two pT-resolution summary ROOT files, such as CF vs W variants, by producing overlay, ratio, and diagnostic representativeness products.
+Status: authoritative
 Usage:
-  python3 compare_pt_resolution_outputs.py \
-    --a CF_out.root --b W_out.root \
-    --out compare_CF_vs_W.root \
-    --tagA CF --tagB W
-
-Optional knobs:
-  --diagAbsTolPassFrac 0.05   (absolute tolerance on pass fraction difference)
-  --diagRelTolPassFrac 0.10   (relative tolerance on pass fraction ratio-1)
-  --diagAbsTolFrac     0.05   (abs tol for frac_* diagnostics)
-  --diagRelTolMed      0.25   (rel tol for med_* diagnostics)
-
+  python3 scripts/compare_pt_resolution_grid.py --a A_ptres.root --b B_ptres.root --out compare_A_vs_B.root --tagA A --tagB B
+  python3 scripts/compare_pt_resolution_grid.py --a CF_ptres.root --b W_ptres.root --out compare_CF_vs_W.root --tagA CF --tagB W
+Examples:
+  python3 scripts/compare_pt_resolution_grid.py \
+    --a /eos/.../CF25_Au2p227matched_ptres.root \
+    --b /eos/.../W20_Au0p3_defaultlike_ptres.root \
+    --out /eos/.../compare_CF25_Au2p227matched_vs_W20_Au0p3_defaultlike.root \
+    --tagA CF25_Au2p227matched \
+    --tagB W20_Au0p3_defaultlike
+Inputs: Two ROOT files produced by scripts/analyze_pt_resolution_grid.py, each containing byEta/, byMethod/, diagnostics/, and summary TTree products.
+Outputs: ROOT comparison file containing compare/byEta overlays and ratios, compare/byMethod overlays and per-eta ratios, diagnostic overlays, diagnostic ratios, pass-fraction comparisons, and a diag_compare TTree.
+Collections: None; reads ROOT analysis products rather than EDM4hep event collections. Expected graph names include byEta/<eta>/gr_rms, gr_madsigma, gr_central68, gr_truncrms68, gr_meanAbs, and gr_medianAbs.
+Connects-To: scripts/analyze_pt_resolution_grid.py, scripts/analyze_job.sh, scripts/summarize_ptres_improvement.py, scripts/export_root_plots.py
+Arguments:
+  --a: input ROOT summary file A, usually the variant being tested or numerator in A/B ratios.
+  --b: input ROOT summary file B, usually the baseline/reference or denominator in A/B ratios.
+  --out: output ROOT comparison file.
+  --tagA: legend and object label for input A; default A.
+  --tagB: legend and object label for input B; default B.
+  --xRound: number of decimal digits used to match pT points between A and B; default 6.
+  --diagAbsTolPassFrac: absolute tolerance on pass-fraction difference |passFrac_A - passFrac_B| used for suspect diagnostics; default 0.05.
+  --diagRelTolPassFrac: relative tolerance on pass-fraction ratio deviation |passFrac_A/passFrac_B - 1| used for suspect diagnostics; default 0.10.
+  --diagAbsTolFrac: absolute tolerance for frac_* diagnostic differences; default 0.05.
+  --diagRelTolMed: relative tolerance for med_* diagnostic ratio deviations |A/B - 1|; default 0.25.
+Notes:
+  Ratio graphs are A/B and are filled only where both files contain finite values at matching pT points and the B value is nonzero.
+  The comparison is only physically meaningful when A and B were produced with the same reco knobs, same analysis quality cuts, same eta/pT grid, and comparable event statistics.
+  For CF-vs-W closeout plots, use the CF material variant as A and the W/default-like variant as B if you want ratios below one to mean improved pT resolution.
+  The diagnostic section is designed to distinguish representative detector/material effects from changes driven by selection survivorship or algorithmic acceptance differences.
+  The derived passFrac is n_quality/n_usable from the summary TTree and is compared separately from the resolution estimators.
+  The diag_compare TTree stores per-(eta,pT) diagnostic A/B values, differences, ratios, and a simple suspect flag based on configurable tolerances.
+  Missing eta directories, missing methods, or missing pT points are handled gracefully; the script writes comparisons only for objects that exist.
+  The output ROOT file is intended as the main input to closeout plotting/export via scripts/export_root_plots.py and to numerical summaries via scripts/summarize_ptres_improvement.py.
+Tags: authoritative, comparison, pt-resolution, root, cf-vs-w, diagnostics, ratio-plots, closeout, material-variants
 DOC_END
 """
 

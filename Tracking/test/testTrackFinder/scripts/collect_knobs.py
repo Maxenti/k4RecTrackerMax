@@ -1,42 +1,45 @@
 #!/usr/bin/env python3
 """
-collect_knobs.py
-
-Scan a directory tree for:
-  - Python argparse / k4FWCore.parseArgs usage (parser.add_argument(...))
-  - C++ Gaudi::Property declarations (Gaudi::Property<T> Foo{ this, "Foo", default, "doc" })
-
-and emit a single config file (YAML or JSON) that your "main pipeline runner" can read to
-auto-wire knobs for:
-  - ddsim
-  - digitizer
-  - GGTF_tracking
-  - GenFit2DCHFitter
-  - any other component scripts you drop in
-
-Key behavior:
-  - Duplicate knob names: keep the first one encountered, print WARN with both locations.
-  - Outputs a normalized schema with per-knob metadata: type, default, help/doc, source file, source line.
-  - Can also emit a "exports.sh" snippet that sets env vars for a subset of keys.
-
-Notes / limitations (practical and intentional):
-  - Python parsing is regex-based, not AST: it handles the common patterns well, but not arbitrary metaprogramming.
-  - C++ parsing focuses on Gaudi::Property and friends; if your project uses custom wrappers, add patterns below.
-  - If you want “component properties” rather than “CLI args”, you can treat Gaudi::Property as the source of truth.
-
+DOC
+Summary: WIP utility that scans Python argparse knobs and C++ Gaudi::Property declarations and exports a normalized knob inventory for future pipeline/config automation.
+Status: secondary
 Usage:
+  python3 scripts/collect_knobs.py --root . --out configs/auto_knobs.yaml --format yaml --verbose
+  python3 scripts/collect_knobs.py --root . --out configs/auto_knobs.json --format json --include-ext .py .cpp .h .hpp
+Examples:
   python3 scripts/collect_knobs.py \
     --root . \
     --include-ext .py .cpp .h .hpp \
     --out configs/auto_knobs.yaml \
     --format yaml \
+    --exports configs/auto_knob_exports.sh \
+    --export-prefix gf_ ggtf_ dch_ \
     --verbose
-
-Then in your main runner:
-  - load configs/auto_knobs.yaml
-  - map "knobs" -> argparse defaults or Gaudi configurable properties
-
-Author: you + ChatGPT
+Inputs: Repository or workflow subtree containing Python scripts with parser.add_argument(...) calls and C++ headers/sources with Gaudi::Property<T> declarations.
+Outputs: YAML or JSON knob inventory with flat and grouped views; optional exports.sh file containing environment-variable defaults for selected knob prefixes.
+Collections: None; this is a static source/config introspection utility, not an EDM4hep/ROOT event processor.
+Connects-To: steering/runDCHTestTrackFinder.py, steering/local_chain.sh, scripts/reco_job.sh, Tracking/components/GGTF_tracking.cpp, Tracking/components/GenFit2DCHFitter.cpp, configs/auto_knobs.yaml
+Arguments:
+  --root: directory tree to scan.
+  --out: output YAML/JSON config path.
+  --format: output format, yaml or json; inferred from --out extension when omitted.
+  --include-ext: file extensions to scan; default .py .cpp .h .hpp.
+  --exclude-dir: directory names pruned from scan; default excludes .git, build, install, __pycache__, .condor, and cmake-build.
+  --keep-first: duplicate policy that keeps the first encountered knob name; default behavior.
+  --keep-last: duplicate policy that replaces earlier knob metadata with the last encountered instance.
+  --exports: optional output path for generated shell exports; empty disables export generation.
+  --export-prefix: optional list of knob-name prefixes to include in exports.sh, such as gf_, ggtf_, dch_.
+  --verbose: print scan/write diagnostics.
+Notes:
+  This script is explicitly WIP and should be treated as an exploratory maintenance helper, not an authoritative pipeline runner.
+  The intended long-term use is to help audit and eventually unify knob surfaces across ddsim, DCH digitization, GGTF_tracking, GenFit2DCHFitter, local wrappers, and Condor wrappers.
+  Python parsing is regex-based and intentionally limited to common parser.add_argument(...) patterns; it will not safely understand arbitrary AST/metaprogramming.
+  C++ parsing is regex-based and focused on Gaudi::Property<T> declarations; custom property wrappers may require new patterns.
+  Duplicate knob names are expected in this project because the same concept can appear in steering, local wrappers, worker wrappers, and C++ components. Review duplicate warnings before trusting generated configs.
+  Generated auto_knobs.yaml/json should be considered a diagnostic inventory until the project explicitly adopts it as a config contract.
+  Do not use this script to silently overwrite hand-maintained configs for production CF-vs-W or pT-resolution closeout campaigns.
+Tags: secondary, wip, config-audit, knob-inventory, argparse, gaudi-property, automation, maintenance
+DOC_END
 """
 
 from __future__ import annotations

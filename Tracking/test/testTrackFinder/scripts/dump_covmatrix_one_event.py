@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
 """
 DOC
-dump_covmatrix_one_event.py
-
-Dump EDM4hep TrackState covMatrix for ONE event, correctly handling
-EDM4hep CovMatrix6f packed LOWER-triangle storage (21 floats).
-
-- Auto-detects TrackState prefix (or --prefix).
-- Reads the *base leaf* "<prefix>covMatrix.values" to get all values for this entry.
-- Splits into per-TrackState blocks if multiple TrackStates exist in the event.
-- Reconstructs and prints the full NxN covariance matrix with labels.
-- Prints Var(omega) correctly.
-
+Summary: Dump and reconstruct packed EDM4hep TrackState covariance matrices for one event, with special attention to correct CovMatrix6f lower-triangle ordering and Var(omega).
+Status: secondary
 Usage:
-
-  python3 scripts/dump_covmatrix_one_event.py /eos/user/c/cglenn/reco_samples2/Debugging/1_20_2026/CF/eta_+1.00/reco_eta+1.00_pt14.142.root --event 0 --raw
-  python3 scripts/dump_covmatrix_one_event.py file.root --event 0
-  python3 scripts/dump_covmatrix_one_event.py file.root --event 0 --prefix _GenFitTracks_trackStates.
-  python3 scripts/dump_covmatrix_one_event.py file.root --event 0 --raw
-
+  python3 scripts/dump_covmatrix_one_event.py FILE.root --event EVENT_INDEX
+  python3 scripts/dump_covmatrix_one_event.py FILE.root --event EVENT_INDEX --prefix _GenFitTracks_trackStates. --raw
+Examples:
+  python3 scripts/dump_covmatrix_one_event.py \
+    /eos/.../reco_eta+1.00_pt14.142.root \
+    --event 0 \
+    --raw
+Inputs: EDM4hep/ROOT reco output file containing an events TTree and a TrackState covariance leaf such as _GenFitTracks_trackStates.covMatrix.values.
+Outputs: Terminal dump of detected tree/prefix/leaf metadata, inferred TrackState count, optional raw packed covariance values, reconstructed covariance matrix, and Var(omega).
+Collections: Reads GenFitTracks TrackState covariance leaves; common prefixes include _GenFitTracks_trackStates., GenFitTracks.trackStates., and AtIP variants.
+Connects-To: scripts/inspect_events_pt_pathology.py, scripts/scan_pt_time_by_event.py, scripts/debug_z_spur_event.py, steering/runDCHTestTrackFinder.py, Tracking/components/GenFit2DCHFitter.cpp
+Arguments:
+  file: input ROOT file to inspect.
+  --event: zero-based event index; default 0.
+  --prefix: TrackState leaf prefix; AUTO tries common GenFitTracks/TrackStates prefixes.
+  --raw: print raw packed covariance values with indices before reconstruction.
+  --max-states: safety cap on inferred TrackState count; default 50.
+Notes:
+  EDM4hep CovMatrix6f stores 21 values using packed lower-triangle ordering, not a flat row-major 6x6 matrix.
+  The standard TrackState parameter order used here is d0, phi, omega, z0, tanLambda, time.
+  Var(omega) is reconstructed as matrix element [2][2], which is important for checking pT/curvature uncertainty propagation.
+  The script also supports 15-value packed 5x5 covariance blocks and attempts single-state triangular-size inference for unusual layouts.
+  Use this for debugging suspicious covariance values, invalid pT states, bad omega uncertainties, or TrackState branch interpretation issues.
+  This is a read-only diagnostic utility and should not modify reco outputs.
+Tags: secondary, diagnostics, edm4hep, root, covariance, trackstate, genfittracks, omega, pt-resolution
 DOC_END
 """
 

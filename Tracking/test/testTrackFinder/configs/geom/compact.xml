@@ -3,7 +3,17 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
 
-
+  <!--
+  DOC:
+  Summary: Maintained compact DD4hep geometry reference used by the testTrackFinder workflow.
+  Status: authoritative
+  Usage: Referenced by steering and reco jobs as a compact geometry input for GeoSvc/DD4hep.
+  Inputs: DD4hep compact XML includes, detector definitions, constants, and material references.
+  Outputs: Geometry description consumed by GeoSvc and convertible to TGeo ROOT with steering/dd4hep2root.py.
+  Connects-To: steering/runDCHTestTrackFinder.py, steering/dd4hep2root.py, scripts/submit_reco.sh
+  Tags: config, geometry, dd4hep, compact, authoritative
+  DOC_END
+  -->
 
   <info name="IDEA_o1_v03"
     title="FCCee IDEA detector geometry master file"

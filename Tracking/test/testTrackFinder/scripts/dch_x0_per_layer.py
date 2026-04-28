@@ -1,45 +1,48 @@
 #!/usr/bin/env python3
 """
 DOC
-compute_dch_x0.py
-
-Compute the effective radiation length X0 (as a *length in meters*) to use in the
-Delphes TrackCovariance "DetectorGeometry" table for the IDEA drift chamber (DCH),
-including:
-  - Gas mixture (He / isobutane) in the DCH active volume (annulus Rin..Rout)
-  - Field wires: 229,056 wires, 40 µm Al core + Ag coating (default 0.3 µm)
-  - Guard wires: 58,464 wires, 50 µm Al core + Ag coating (default 0.3 µm)
-  - Sense wires: 56,448 wires, core material selectable (W or CF), selectable core
-    diameter, + Au coating thickness (selectable; default 0.3 µm)
-
-Model matches the spreadsheet logic you showed:
-  1) compute mass per cm (g/cm) for each component in a 1 cm slice along z
-  2) form mass fractions w_i
-  3) mixture radiation length in g/cm^2 via:  1/X0 = sum_i (w_i / X0_i)
-  4) average density rho = (total mass per cm) / (annulus area)
-  5) convert to radiation length as a length: X0_len_cm = X0_gcm2 / rho
-     then meters = X0_len_cm / 100
-
-Notes / knobs:
-  - By default we subtract wire-displaced volume from the gas volume (tiny effect).
-    You can disable with --no-displacement.
-  - "Per-layer X0" is printed as the same number repeated, since this calculation
-    uses total wire counts integrated over the whole DCH. If you later have per-layer
-    wire counts, we can extend this to vary X0 with radius.
-
-Typical usage (match your baseline):
-  # Baseline tungsten (like your r_W=0.00125 cm -> 25 µm diameter), no Au coating:
-  ./compute_dch_x0.py --sense-core W --sense-d-um 25 --au-um 0.0
-
-  # Tungsten with 0.3 µm Au on sense + 0.3 µm Ag on Al field/guard:
-  ./compute_dch_x0.py --sense-core W --sense-d-um 25 --au-um 0.3 --ag-um 0.3
-
-  # Carbon fiber core (CF) + Au:
-  ./compute_dch_x0.py --sense-core CF --sense-d-um 25 --au-um 0.3
-
-Outputs:
-  - X0_meters: the number you paste into the Delphes card X0 column for each DCH layer.
-ENDDOC
+Summary: Compute an effective IDEA DCH radiation length for Delphes TrackCovariance cards from gas, field/guard wires, and configurable W-or-CF sense-wire material assumptions.
+Status: secondary
+Usage:
+  python3 scripts/dch_x0_per_layer.py --sense-core CF --sense-d-um 25 --au-um 1.4 --ag-um 0.3
+  python3 scripts/dch_x0_per_layer.py --sense-core W --sense-d-um 25 --au-um 0.3 --ag-um 0.3 --print-layers 112
+Examples:
+  python3 scripts/dch_x0_per_layer.py \
+    --sense-core CF \
+    --sense-d-um 25 \
+    --au-um 1.4 \
+    --ag-um 0.3 \
+    --print-layers 112
+  Expected result: prints X0_meters plus an optional repeated per-layer X0 list suitable for copying into a Delphes DetectorGeometry-style table.
+Inputs: DCH radial bounds, He/isobutane gas fractions, total field/guard/sense wire counts, field/guard wire diameters, Ag coating thickness, sense-wire core material/diameter, and Au coating thickness.
+Outputs: Printed effective radiation length in meters, mixture X0 in g/cm^2, average density, per-component mass fractions, and optional identical per-layer X0 values.
+Collections: None; this is a standalone material-parameter utility, not an EDM4hep/ROOT event processor.
+Connects-To: configs/delphes/*.tcl, scripts/Calculate_Aucoating_thickness.py, scripts/patch_trkCov_match_dch_material.py, material-budget closeout studies, CF-vs-W wire-variant studies
+Arguments:
+  --rin-cm: inner radius of the DCH active annulus in cm; default 35.0.
+  --rout-cm: outer radius of the DCH active annulus in cm; default 200.0.
+  --f-he: helium volume fraction in the gas mixture; default 0.9.
+  --f-iso: isobutane volume fraction in the gas mixture; default 0.1.
+  --n-field: total number of field wires included in the effective DCH mixture; default 229056.
+  --n-guard: total number of guard wires included in the effective DCH mixture; default 58464.
+  --n-sense: total number of sense wires included in the effective DCH mixture; default 56448.
+  --field-d-um: field-wire Al core diameter in micrometers; default 40.0.
+  --guard-d-um: guard-wire Al core diameter in micrometers; default 50.0.
+  --sense-core: sense-wire core material; allowed values are W and CF; default CF.
+  --sense-d-um: sense-wire core diameter in micrometers; default 25.0.
+  --ag-um: Ag coating thickness on Al field/guard wires in micrometers; default 0.3.
+  --au-um: Au coating thickness on sense wires in micrometers; default 1.4.
+  --no-displacement: do not subtract wire volume from gas volume before computing gas mass.
+  --print-layers: if greater than zero, print that many identical X0_meters lines for layer-table insertion.
+Notes:
+  The calculation follows a spreadsheet-style effective-mixture model: compute mass per cm, form mass fractions, combine material radiation lengths in g/cm^2 with 1/X0 = sum_i w_i/X0_i, compute average density, then convert X0 to a length in meters.
+  The result is a fastsim/Delphes parameterization value, not a replacement for full DD4hep/Geant4 material-budget scans.
+  The current model uses total wire counts integrated over the full DCH and therefore prints the same X0 value for every layer.
+  If reliable per-layer wire counts become available, this script should be extended to compute radius- or layer-dependent X0 instead of repeating one global value.
+  Keep gas fractions, wire counts, and coating assumptions synchronized with the detector/material variant being studied before using the output in CF-vs-W comparisons.
+  The optional wire-volume displacement correction is small but enabled by default for consistency with the effective-density calculation.
+Tags: secondary, material-budget, delphes, track-covariance, dch, radiation-length, x0, carbon-fiber, tungsten, wire-materials
+DOC_END
 """
 
 import argparse, math
@@ -157,7 +160,7 @@ def main():
     ap.add_argument("--sense-d-um", type=float, default=25.0)
 
     ap.add_argument("--ag-um", type=float, default=0.3, help="Ag coating thickness on Al field/guard (µm)")
-    ap.add_argument("--au-um", type=float, default=2, help="Au coating thickness on sense wires (µm)")
+    ap.add_argument("--au-um", type=float, default=1.4, help="Au coating thickness on sense wires (µm)")
 
     ap.add_argument("--no-displacement", dest="displacement", action="store_false",
                     help="Do NOT subtract wire volume from gas volume (tiny effect).")

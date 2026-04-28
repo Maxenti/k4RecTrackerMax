@@ -1,4 +1,37 @@
 #!/usr/bin/env bash
+
+#DOC:
+#Summary: Legacy/secondary local pT-sweep helper that runs local_chain.sh over a small hand-coded eta≈0 gun-sample pT list.
+#Status: secondary
+#Usage:
+#  bash scripts/sweep_pt.sh
+#Examples:
+#  cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+#  bash scripts/sweep_pt.sh
+#Inputs: Hand-edited INPUT_DIR, OUTPUT_DIR, MODEL, XML, and PTS array; input gun ROOT files matching either gun_eta+0.00_E<PT>GeV.root or gun_eta+0.00_E<PT*1000>MeV.root.
+#Outputs: Reco ROOT files named reco_eta+0.00_pT<PT>GeV.root under OUTPUT_DIR.
+#Collections: Does not inspect collections directly; local_chain.sh normally runs DCHCollection -> DCH digi -> GGTF tracks -> GenFitTracks.
+#Connects-To: steering/local_chain.sh, steering/runDCHTestTrackFinder.py, scripts/submit_reco.sh, scripts/reco_job.sh, scripts/analyze_pt_resolution_grid.py
+#Arguments:
+#  INPUT_DIR: directory containing local or EOS-mounted gun ROOT files.
+#  OUTPUT_DIR: output directory for local reco ROOT files.
+#  MODEL: GGTF ONNX model path passed to local_chain.sh.
+#  XML: compact DD4hep XML path passed to local_chain.sh.
+#  PTS: hard-coded bash array of pT values in GeV to scan.
+#  STAGE: exported as fit for local_chain.sh.
+#  FITTER: exported as genfit2 for local_chain.sh.
+#  GF_SEED_PT_MIN, GF_SEED_PT_MAX, GF_SEED_P_MIN: GenFit seed momentum bounds used for this local sweep.
+#  GGTF_LOG, PRODUCE_3DHITS, MAX_HITS, TBETA, TD, WIRE_GATE_MM, MAX_3D_PER_EVT, MAX_3D_PER_TRK: GGTF/debug controls passed through the environment when recognized by local_chain.sh/steering.
+#  GF_HIT_SIGMA_XY, GF_HIT_SIGMA_Z, GF_MIN_GROUP, GF_USE_FALLBACK, GF_FALLBACK_EPS_CM, GF_FALLBACK_MINPTS, GF_RETRY, GF_RETRY_MEAS_INFL, GF_RETRY_SEED_POS, GF_RETRY_SEED_MOM, GF_MAX_MEAS_PER_GROUP: older/fallback fitter tuning knobs retained for historical local tests.
+#Notes:
+#  This is not the authoritative production campaign submission path. Production reco should use scripts/submit_reco.sh -> configs/condor/reco.condor -> scripts/reco_job.sh.
+#  This helper is still useful for quick local smoke tests over a few pT points when debugging steering or fitter behavior before Condor submission.
+#  Several exported knobs appear to come from an older local-chain/fitter era and may be ignored by the current runDCHTestTrackFinder.py interface.
+#  The input filename pattern is older and energy-like, not the newer gun_eta<eta>_pt<pt>.root naming used by the DDSim Condor pipeline.
+#  If this script is kept, treat it as a small manual diagnostic wrapper; do not rely on it for CF-vs-W closeout production.
+#  Before using it, verify that ./local_chain.sh resolves correctly from the working directory; in the current layout the maintained wrapper may live under steering/local_chain.sh.
+#Tags: secondary, local-test, pt-sweep, legacy-helper, reco, ggtf, genfit2, smoke-test
+#DOC_END
 set -euo pipefail
 
 # --- EDIT THESE ---

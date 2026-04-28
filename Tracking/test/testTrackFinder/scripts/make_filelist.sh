@@ -1,3 +1,29 @@
+# DOC:
+# Summary: Build the XRootD input file list for reco Condor submission by scanning selected eta directories under a gun-sample campaign.
+# Status: authoritative
+# Usage:
+#   bash scripts/make_filelist.sh [BASE_DIR] [OUT_FILE]
+# Examples:
+#   bash scripts/make_filelist.sh \
+#     /eos/user/c/cglenn/gun_samples/1_29_2026/100umCF_0.313474umAu \
+#     filelist.txt
+# Inputs: EOS or local gun-sample campaign directory containing eta_<+X.XX> or eta<+X.XX> subdirectories with ROOT files.
+# Outputs: Sorted unique text file containing one ROOT input path per line, converted to root://eosuser.cern.ch// URLs for EOS paths.
+# Collections: None; this is a file-discovery helper and does not inspect EDM4hep collections.
+# Connects-To: scripts/submit_reco.sh, configs/condor/reco.condor, scripts/reco_job.sh, scripts/condor_ddsim.sh, configs/condor/ddsim.condor
+# Arguments:
+#   BASE_DIR: optional first positional argument; base directory containing eta subdirectories. Defaults to a hard-coded campaign path.
+#   OUT_FILE: optional second positional argument; output file list path. Default filelist.txt.
+#   ETAS: internal bash array controlling which eta points are scanned; edit this list when changing campaign eta coverage.
+# Notes:
+#   This script is authoritative for preparing the reco Condor queue input list, but it is campaign-specific in the sense that the ETAS array is currently hard-coded.
+#   It checks both eta_<tag> and eta<tag> directory naming conventions, where tag is formatted as %+0.2f, such as +1.00.
+#   EOS POSIX paths are converted to XRootD URLs so worker nodes can read inputs robustly.
+#   Missing eta directories are warnings, not fatal errors, so always check the final path count before submitting reco.
+#   If a campaign uses a different eta grid, update ETAS or replace this script with a flag-driven eta-list version before production submission.
+# Tags: authoritative, reco, filelist, eos, xrootd, condor, gun-samples, submission
+# DOC_END
+
 #!/usr/bin/env bash
 set -euo pipefail
 

@@ -1,11 +1,42 @@
 #!/usr/bin/env python3
 """
-
 DOC
-debug_z_spur_event.py
-
-Small EDM4hep inspection script to debug "z-spur" events.
-
+Summary: Inspect one EDM4hep event for DCH z-spur pathologies by plotting wire-hit time versus z and grouping hits by linked MCParticle.
+Status: secondary
+Usage:
+  python3 scripts/debug_z_spur_event.py --input RECO_OR_DIGI.root --event EVENT_INDEX
+  python3 scripts/debug_z_spur_event.py --input RECO_OR_DIGI.root --event EVENT_INDEX --z-min ZMIN_MM --z-max ZMAX_MM --png OUT.png
+Examples:
+  python3 scripts/debug_z_spur_event.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --event 37 \
+    --wire-coll DCHDigi2Collection \
+    --link-coll DCHDigi2SimLinkCollection \
+    --z-min -2500 \
+    --z-max 2500 \
+    --png debug_evt37_time_vs_z.png
+Inputs: EDM4hep ROOT file readable by podio.root_io.Reader, one event index, DCH SenseWireHit collection, SenseWireHit-to-SimTrackerHit link collection, and optional MCParticles collection.
+Outputs: Terminal summary of wire-hit and link counts plus MCParticle-linked z/time ranges; PNG scatter plot of hit time versus z.
+Collections: Reads DCHDigi2Collection, DCH_DigiCollection, or DCHDigiCollection; reads DCHDigi2SimLinkCollection or DCHDigiSimLinkCollection; optionally reads MCParticles or MCParticle.
+Connects-To: scripts/view_tracks_event.py, scripts/view_simhits_event.py, scripts/inspect_events_pt_pathology.py, scripts/scan_pt_time_by_event.py
+Arguments:
+  --input: input EDM4hep ROOT file to inspect.
+  --event: zero-based event index to inspect.
+  --wire-coll: optional explicit SenseWireHit collection; if omitted, auto-detects common DCH digi collection names.
+  --link-coll: optional explicit SenseWireHitSimTrackerHitLink collection; if omitted, auto-detects common DCH digi link collection names.
+  --mc-coll: optional explicit MCParticles collection; if omitted, auto-detects MCParticles or MCParticle when present.
+  --z-min: optional lower z cut in mm for focusing on a suspected spur region.
+  --z-max: optional upper z cut in mm for focusing on a suspected spur region.
+  --png: output PNG path; default is <input_basename>_evt<event>_time_vs_z.png.
+Notes:
+  This is a diagnostic utility, not part of the production reco or pT-resolution reduction chain.
+  Use it when an event display or pT scan suggests suspicious large-z structures, unusual timing, or multiple MCParticle contributions to one DCH event.
+  The MC association is built through SenseWireHitSimTrackerHit links by mapping each wire hit object ID to the linked SimTrackerHit particle.
+  If MCParticles is unavailable, the script still reports linked SimTrackerHit particle object IDs where possible, but PDG labels may be missing.
+  The z cut is applied only to the plotted and summarized points after collection/link loading.
+  Auto-detection supports both newer v02-style DCHDigi2Collection/DCHDigi2SimLinkCollection and older v01-style DCH_DigiCollection/DCHDigiSimLinkCollection.
+  The output scatter uses color groups for linked MCParticle IDs, with a compact legend capped to avoid unreadable plots.
+Tags: secondary, diagnostics, z-spur, edm4hep, podio, dch, wire-hits, mc-links, event-inspection, plotting
 DOC_END
 """
 

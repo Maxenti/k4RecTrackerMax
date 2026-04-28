@@ -1,0 +1,77 @@
+# DOC:
+# Summary: Generic HTCondor submit description for running one pT-resolution grid analysis job over a configured reco campaign directory.
+# Status: secondary
+# Usage:
+#   condor_submit configs/condor/analyze.condor
+#   condor_submit -append "INPUTDIR=/eos/.../reco_samples/VARIANT" -append "EOSOUT=/eos/.../analysis/VARIANT_ptres.root" configs/condor/analyze.condor
+# Examples:
+#   cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+#   condor_submit configs/condor/analyze.condor
+#   Expected result: one analysis worker runs scripts/analyze_job.sh over INPUTDIR and writes the pT-resolution summary ROOT file to EOSOUT.
+# Inputs: Reco campaign directory, scripts/analyze_job.sh, scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py, and runtime.tgz.
+# Outputs: Analysis ROOT summary file at EOSOUT plus HTCondor stdout/stderr/log files under scripts/logs/.
+# Collections: Reads GenFitTracks as TRACKCOLL and OutputWireHitsGGTF as HITCOLL by default through analyze_pt_resolution_grid.py.
+# Connects-To: scripts/analyze_job.sh, scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py, scripts/compare_pt_resolution_grid.py, scripts/summarize_ptres_improvement.py, scripts/export_root_plots.py
+# Arguments:
+#   INPUTDIR: reco campaign directory containing eta_* subdirectories with reco_*.root files.
+#   EOSOUT: EOS output path for the produced pT-resolution summary ROOT file.
+#   TRACKCOLL: reconstructed track collection to analyze; default GenFitTracks.
+#   HITCOLL: hit collection used by scanner diagnostics; default OutputWireHitsGGTF.
+#   QCUT: quality selection mode passed to analysis; allowed values are none, curv, curv_circle; default none.
+#   MINPHI: minimum phi span threshold for curvature-observability diagnostics; default 0.06 rad.
+#   MINCHORD: minimum transverse chord threshold for curvature-observability diagnostics; default 500.0 mm.
+#   MAXCOND: maximum circle-fit condition-number threshold; default 1e6.
+#   CENTFRAC: central fraction used by robust statistics; default 0.95.
+#   request_cpus/request_memory/request_disk: Condor resource requests, currently 2 CPUs, 8 GB memory, and 6 GB disk.
+#   +JobFlavour: CERN batch runtime class; set to workday.
+# Notes:
+#   This is the generic analysis Condor submit file. Campaign-specific closeout cards such as analyze_CF25_Au2p227matched.condor and analyze_W20_Au0p3_defaultlike.condor are preferred for frozen comparisons.
+#   The hard-coded INPUTDIR/EOSOUT values make this file usable as a concrete example, but they should be overridden or edited before reuse on a different campaign.
+#   Keep TRACKCOLL, HITCOLL, QCUT, MINPHI, MINCHORD, MAXCOND, and CENTFRAC fixed across variants when producing fair CF-vs-W or material-variant comparisons.
+#   This submit file runs one analysis job over the full reco campaign directory rather than splitting analysis by eta or pT.
+#   The output ROOT file is normally consumed by compare_pt_resolution_grid.py, summarize_ptres_improvement.py, and export_root_plots.py.
+#   Update transfer_input_files if the analysis scripts or runtime.tgz move out of scripts/.
+# Tags: secondary, condor, analysis, pt-resolution, reco-summary, genfittracks, closeout, template
+# DOC_END
+
+
+universe                = vanilla
+initialdir              = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+executable              = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/analyze_job.sh
+transfer_executable     = True
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+request_cpus   = 2
+request_memory = 8 GB
+request_disk   = 6 GB
+
++JobFlavour = "workday"
+
+# Ship the analysis script and helpers into worker scratch.
+# Use the active runtime tarball under scripts/.
+transfer_input_files = \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/analyze_pt_resolution_grid.py, \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/scan_pt_time_by_event.py, \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/runtime.tgz
+
+output = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_$(ClusterId)_$(ProcId).out
+error  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_$(ClusterId)_$(ProcId).err
+log    = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_$(ClusterId).log
+
+# 1 inputDir 2 eosOut 3 trackColl 4 hitColl 5 qualityCut 6 minPhiSpan 7 minChordXY 8 maxCircleCond 9 centralFrac
+arguments = $(INPUTDIR) $(EOSOUT) $(TRACKCOLL) $(HITCOLL) $(QCUT) $(MINPHI) $(MINCHORD) $(MAXCOND) $(CENTFRAC)
+
+INPUTDIR  = /eos/user/c/cglenn/reco_samples2/1_29_2026/25umCF_1.2318umAu
+EOSOUT    = /eos/user/c/cglenn/analyze_mat_gridscan/analyze_pt_gridscan25umCF_1.2318umAu.root
+
+TRACKCOLL = GenFitTracks
+HITCOLL   = OutputWireHitsGGTF
+
+QCUT      = none
+MINPHI    = 0.06
+MINCHORD  = 500.0
+MAXCOND   = 1e6
+CENTFRAC  = 0.95
+
+queue 1

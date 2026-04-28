@@ -1,25 +1,41 @@
 #!/usr/bin/env python3
 """
-
 DOC
-pt_diagnostics_to_root.py
-
-- Reads MCParticles momentum branches (flattened EDM4hep style)
-- Reads TrackStates omega (and friends) if present
-- Writes an output ROOT with TTrees:
-    * mc  : particle rows (optionally filtered by PDG)
-    * ts  : trackstate rows (if found)
-    * evt : per-event summary (including selected-PDG truth)
-
-Key fixes vs earlier version:
-  - Uses uproot arrays(..., how=dict) so branch names remain exact
-  - Robust TrackState prefix resolution (scans for *.omega)
-  - Correct default prefix for your file: _GenFitTracks_TrackStates
-
-New:
-  - --pdg (default 13) to filter MCParticles by PDG
-  - --pdg-abs (default True) to match abs(PDG)
-
+Summary: Convert selected MCParticle truth momentum and reconstructed TrackState curvature information into compact ROOT diagnostic TTrees for pT/source debugging.
+Status: secondary
+Usage:
+  python3 scripts/pt_diagnostics_to_root.py --input RECO.root --out pt_diagnostics.root
+  python3 scripts/pt_diagnostics_to_root.py --input RECO.root --out pt_diagnostics.root --pdg 13 --pdg-abs --trackstate-prefix _GenFitTracks_TrackStates
+Examples:
+  python3 scripts/pt_diagnostics_to_root.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --out artifacts/analysis/pt_diagnostics_eta+1.00_pt14.142.root \
+    --pdg 13 \
+    --pdg-abs
+Inputs: EDM4hep/ROOT file readable by uproot, containing MCParticles momentum branches and optionally reconstructed TrackState branches with omega/time/phi/tanLambda/D0/Z0.
+Outputs: ROOT diagnostics file with TTrees named mc, ts when TrackStates are found, and evt.
+Collections: Reads flattened MCParticles branches under MCParticles/MCParticles by default; auto-detects TrackState omega branches, preferably GenFitTracks-related prefixes.
+Connects-To: scripts/scan_pt_time_by_event.py, scripts/inspect_events_pt_pathology.py, scripts/dump_covmatrix_one_event.py, scripts/plot_pt_from_trackstate_time.py, steering/runDCHTestTrackFinder.py
+Arguments:
+  --input: input EDM4hep/ROOT reco file.
+  --out: output diagnostics ROOT file; default pt_diagnostics.root.
+  --tree: input TTree name; default events.
+  --mc-prefix: MCParticles branch prefix; default MCParticles/MCParticles.
+  --max-events: optional maximum number of events to read; -1 means all.
+  --pdg: PDG code to select from MCParticles; default 13.
+  --pdg-abs: match absolute PDG value; enabled by default.
+  --no-pdg-abs: require signed PDG match instead of absolute match.
+  --trackstate-prefix: explicit TrackState prefix, such as _GenFitTracks_TrackStates; if empty, auto-detects from *.omega branches.
+  --assume-q: assumed charge sign used for pT=|q/omega| when deriving reconstructed pT from curvature; default -1 for mu-.
+Notes:
+  The mc tree contains one row per selected MCParticle with event, particle index, momentum components, pT, p, eta, phi, PDG, and inferred charge.
+  The ts tree, when available, contains one row per TrackState with event, TrackState index, omega, pT from omega, and optional time/phi/tanLambda/d0/z0.
+  The evt tree contains one row per event with selected-truth count, TrackState count, first selected truth pT, first TrackState omega, and first TrackState pT from omega.
+  TrackState prefix resolution scans for omega branches and prefers GenFitTracks/TrackStates-like layouts.
+  This script is useful when validating whether pT is being carried through TrackState.time, TrackState.omega, or both consistently.
+  It depends on uproot and awkward rather than PyROOT for fast branch-level extraction.
+  This is a diagnostic conversion utility, not part of the production reco or closeout summary chain.
+Tags: secondary, diagnostics, pt, mcparticles, trackstate, omega, uproot, awkward, root, genfittracks
 DOC_END
 """
 

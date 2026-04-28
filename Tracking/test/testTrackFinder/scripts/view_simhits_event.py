@@ -1,28 +1,55 @@
 #!/usr/bin/env python3
 """
 DOC
-view_tracks_event_simhits.py
-
-Multi-event visualizer for:
-  - GGTF SenseWireHits (or any hit collection with position.{x,y,z} and optional .type)
-  - optional DCH SimTrackerHits (simhits) overlay
-  - GenFitTracks TrackStates (draw helix/straight in uniform Bz)
-
-NEW: Top-N event selection by sigma(pT) at an expected pT.
-  - For each event, compute an event-level sigma(pT) using TrackState covariance:
-        sigma(pT)/pT ≈ sigma(omega)/|omega|   with omega = q/pT
-    so:
-        sigma(pT) ≈ expectedPt^2 * sqrt(Var(omega)) / |q|
-    (uses expectedPt to avoid relying on TrackState.time semantics)
-
-NEW (requested): Per-event digihit -> nearest simhit diagnostics saved into output ROOT file.
-  - For each digihit, find nearest simhit (brute force) and store:
-        minDist3D_mm, minDistXY_mm, dZ_mm, nearestSimhitIndex
-  - Saved under each event directory as:
-        - TTree "hit_match"
-        - TH1F  "h_minDist3D", "h_minDistXY", "h_dZ"
-        - TNamed "hit_match_json" with top offenders + summary stats
-
+Summary: Create multi-event ROOT event-display products for GGTF/GenFit DCH reco events, with optional simhit overlays, helix/straight track drawing, sigma(pT)-ranked event selection, and nearest-simhit hit-matching diagnostics.
+Status: secondary
+Usage:
+  python3 scripts/view_tracks_event.py --input RECO.root --event EVENT_INDEX --outRoot tracks_display.root
+  python3 scripts/view_tracks_event.py --input RECO.root --topN 10 --expectedPt PT_TRUE --rankOrder largest --outRoot tracks_display_topN.root
+Examples:
+  python3 scripts/view_tracks_event.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --topN 10 \
+    --expectedPt 14.142 \
+    --hitsCollection OutputWireHitsGGTF \
+    --simhitCollection DCHCollection \
+    --trackCollection GenFitTracks \
+    --trackStyle helix \
+    --Bz 2.0 \
+    --assumeQ -1 \
+    --outRoot artifacts/analysis/view_tracks_eta+1.00_pt14.142_topSigma.root
+Inputs: EDM4hep/ROOT reco file containing an events TTree, a hit collection with position.x/y/z leaves, optional DCH SimTrackerHit position leaves, and optional GenFitTracks TrackState/covariance leaves.
+Outputs: ROOT file containing per-event directories with XY, RZ, and 3D canvases/histograms; GenFit track overlays; optional simhit overlays; per-event metadata; hit_match TTree; hit-match histograms; and JSON summaries of nearest-simhit residuals.
+Collections: Reads OutputWireHitsGGTF by default for reco/digihit display; reads DCHCollection by default for simhit overlay; reads GenFitTracks by default for TrackState helix drawing and sigma(pT) ranking.
+Connects-To: scripts/debug_z_spur_event.py, scripts/inspect_events_pt_pathology.py, scripts/dump_covmatrix_one_event.py, scripts/scan_pt_time_by_event.py, Tracking/components/GGTF_tracking.cpp, Tracking/components/GenFit2DCHFitter.cpp
+Arguments:
+  --input: input EDM4hep/ROOT reco file.
+  --tree: input TTree name; default events.
+  --event: zero-based event index to process; if >=0, ignores --topN.
+  --hitsCollection: reco/digihit collection with position.x/y/z leaves; default OutputWireHitsGGTF.
+  --autoDetectHits: force auto-detection of a likely hit collection with position.x/y/z leaves.
+  --simhitCollection: SimTrackerHit collection used for overlay and nearest-simhit diagnostics; default DCHCollection; empty disables simhit overlay.
+  --trackCollection: reconstructed track collection used for GenFit TrackStates; default GenFitTracks; empty disables track overlays.
+  --trackStyle: draw tracks as straight or helix; default helix.
+  --Bz: magnetic field along z in Tesla used for helix drawing and should match GenFit2DCHFitter.Bz; default 2.0.
+  --assumeQ: assumed charge sign used for pT(|q/omega|) and sigma(pT) calculations; default -1 for mu-.
+  --topN: if >0 and --event <0, select top N events ranked by sigma(pT); default 10.
+  --expectedPt: expected true pT in GeV used for sigma(pT) ranking; required for meaningful --topN ranking.
+  --scanMaxEvents: maximum number of events scanned for ranking; -1 means all events.
+  --rankOrder: select largest or smallest sigma(pT) events; default largest.
+  --hitMatchTopK: number of worst nearest-simhit matches stored in hit_match_json; default 25.
+  --outRoot: output ROOT display/diagnostics file; default tracks_display_simhits_multi.root.
+Notes:
+  This is a visual/debug diagnostic utility, not part of the production reco or pT-resolution summary chain.
+  It is useful for investigating suspicious tracks, large sigma(pT), z-spurs, bad hit geometry, or disagreement between reconstructed hit positions and truth simhits.
+  Top-N ranking estimates sigma(pT) from TrackState covariance using sigma(pT)/pT ≈ sigma(omega)/|omega| and sigma(pT) ≈ expectedPt^2*sqrt(Var(omega))/|q|.
+  TrackState covariance is interpreted as packed lower-triangle EDM4hep covariance, with Var(omega) taken from parameter index 2.
+  For each displayed event, nearest-simhit diagnostics are computed by brute-force matching every reco/digihit point to the closest simhit in 3D.
+  The hit_match TTree stores vector branches with one vector element per digihit; h_minDist3D, h_minDistXY, h_dZ summarize residuals.
+  Helix drawing assumes a uniform Bz field and uses TrackState omega/phi/tanLambda plus reference point or D0/Z0 fallback.
+  Auto-detected hit collections are scored to prefer GGTF/SenseWire-like collections with position.x/y/z and optional type labels.
+  Because nearest-simhit matching is O(N_hits*N_simhits), very high-occupancy events may be slow.
+Tags: secondary, diagnostics, event-display, root, ggtf, genfittracks, simhits, hit-matching, covariance, sigma-pt
 DOC_END
 """
 

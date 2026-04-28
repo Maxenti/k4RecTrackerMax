@@ -1,0 +1,71 @@
+# DOC:
+# Summary: Campaign-specific HTCondor submit description for the CF25_Au2p227matched pT-resolution closeout analysis job.
+# Status: campaign-specific
+# Usage:
+#   condor_submit configs/condor/analyze_CF25_Au2p227matched.condor
+# Examples:
+#   cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+#   condor_submit configs/condor/analyze_CF25_Au2p227matched.condor
+#   Expected result: one analysis worker runs scripts/analyze_job.sh over the CF25_Au2p227matched reco campaign and writes CF25_Au2p227matched_ptres.root to EOS.
+# Inputs: CF25_Au2p227matched reco campaign directory, scripts/analyze_job.sh, scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py, and runtime.tgz.
+# Outputs: /eos/user/c/cglenn/reco_samples2/cf_vs_w_closeout/final_analysis/CF25_Au2p227matched_ptres.root plus HTCondor stdout/stderr/log files under scripts/logs/.
+# Collections: Reads GenFitTracks as the reconstructed track collection and OutputWireHitsGGTF as the hit/diagnostic collection through analyze_pt_resolution_grid.py.
+# Connects-To: scripts/analyze_job.sh, scripts/analyze_pt_resolution_grid.py, scripts/scan_pt_time_by_event.py, scripts/compare_pt_resolution_grid.py, scripts/summarize_ptres_improvement.py, scripts/export_root_plots.py
+# Arguments:
+#   INPUTDIR: EOS reco campaign directory for the CF25_Au2p227matched variant.
+#   EOSOUT: EOS output ROOT summary path for the CF pT-resolution analysis.
+#   TRACKCOLL: reconstructed track collection analyzed by the scanner; set to GenFitTracks.
+#   HITCOLL: hit collection used for scanner diagnostics; set to OutputWireHitsGGTF.
+#   QCUT: analysis quality cut mode; set to none for this closeout campaign.
+#   MINPHI: minimum phi span diagnostic threshold; set to 0.06 rad.
+#   MINCHORD: minimum transverse chord diagnostic threshold; set to 500.0 mm.
+#   MAXCOND: maximum circle condition-number threshold; set to 1e6.
+#   CENTFRAC: robust central fraction used by the analysis; set to 0.95.
+#   request_cpus/request_memory/request_disk: Condor resource requests, currently 2 CPUs, 8 GB memory, and 6 GB disk.
+#   +JobFlavour: CERN batch runtime class; set to workday.
+# Notes:
+#   This file is campaign-specific because it hard-codes the CF25_Au2p227matched input and output paths.
+#   Keep QCUT, MINPHI, MINCHORD, MAXCOND, CENTFRAC, TRACKCOLL, and HITCOLL identical to the W/default-like analysis card for a fair CF-vs-W comparison.
+#   The output ROOT file is intended to be compared against the W20_Au0p3_defaultlike analysis output using compare_pt_resolution_grid.py and summarize_ptres_improvement.py.
+#   Update transfer_input_files if analyze_pt_resolution_grid.py, scan_pt_time_by_event.py, or runtime.tgz move out of the scripts directory.
+#   This submit file runs exactly one analysis job over the full reco campaign directory rather than one job per eta or pT point.
+# Tags: campaign-specific, condor, analysis, pt-resolution, cf-vs-w, cf25-au2p227matched, genfittracks, closeout
+# DOC_END
+
+universe                = vanilla
+initialdir              = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+executable              = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/analyze_job.sh
+transfer_executable     = True
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+request_cpus   = 2
+request_memory = 8 GB
+request_disk   = 6 GB
+
++JobFlavour = "workday"
+
+transfer_input_files = \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/analyze_pt_resolution_grid.py, \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/scan_pt_time_by_event.py, \
+  /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/runtime.tgz
+
+output = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_CF25_Au2p227matched_$(ClusterId)_$(ProcId).out
+error  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_CF25_Au2p227matched_$(ClusterId)_$(ProcId).err
+log    = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/analyze_CF25_Au2p227matched_$(ClusterId).log
+
+arguments = $(INPUTDIR) $(EOSOUT) $(TRACKCOLL) $(HITCOLL) $(QCUT) $(MINPHI) $(MINCHORD) $(MAXCOND) $(CENTFRAC)
+
+INPUTDIR  = /eos/user/c/cglenn/reco_samples2/cf_vs_w_closeout/CF25_Au2p227matched
+EOSOUT    = /eos/user/c/cglenn/reco_samples2/cf_vs_w_closeout/final_analysis/CF25_Au2p227matched_ptres.root
+
+TRACKCOLL = GenFitTracks
+HITCOLL   = OutputWireHitsGGTF
+
+QCUT      = none
+MINPHI    = 0.06
+MINCHORD  = 500.0
+MAXCOND   = 1e6
+CENTFRAC  = 0.95
+
+queue 1

@@ -1,4 +1,43 @@
 #!/usr/bin/env bash
+
+
+
+
+#DOC:
+#Summary: HTCondor worker wrapper for DDSim single-particle gun production, writing locally, validating, stamping metadata, and staging output ROOT files to EOS.
+#Status: Secondary
+#Usage:
+#  ./condor_ddsim.sh PARAMS_JSON COMPACT_XML EOS_OUT_DIR
+#Examples:
+#  ./condor_ddsim.sh \
+#    params_eta+1.00_pt14.142.json \
+#    /eos/.../IDEA_o1_v03CF_2umAu.xml \
+#    /eos/user/c/cglenn/gun_samples/CF25_Au2p227matched
+#Inputs: Per-job JSON parameter file containing pt, eta, p, theta, nev, particle, seed, phi_uniform, and theta_smear; compact DD4hep XML; EOS output directory base.
+#Outputs: DDSim EDM4hep ROOT file named gun_eta<SIGNETA>_pt<PT>.root under EOS_OUT_DIR/eta_<SIGNETA>/, plus stamped DDsim provenance metadata when stamp_ddsim_metadata.py is available.
+#Collections: Produces standard DDSim EDM4hep event content, including events and podio_metadata trees; downstream reco expects DCHCollection and other detector SimTrackerHit collections according to the compact geometry.
+#Connects-To: scripts/stamp_ddsim_metadata.py, configs/condor/ddsim.condor, scripts/reco_job.sh, scripts/submit_reco.sh, steering/runDCHTestTrackFinder.py
+#Arguments:
+#  PARAMS_JSON: JSON file defining the gun point; required keys are pt, eta, p, theta, nev, particle, seed, phi_uniform, and theta_smear.
+#  COMPACT_XML: compact DD4hep detector XML passed to ddsim --compactFile.
+#  OUT_DIR_BASE: EOS output directory base; final files are written under OUT_DIR_BASE/eta_<eta_tag>/.
+#  KEY4HEP_STACK/K4ENV: if already set, the script does not source Key4HEP again.
+#  TRANSFER_COMPACT: optional metadata-only job extra recording whether compact XML was transferred by Condor.
+#Notes:
+#  This is a DDSim production wrapper, not the current authoritative reco wrapper.
+#  The script configures a particle gun using fixed momentum magnitude p, not energy; p should satisfy p/cosh(eta) ≈ pt.
+#  Output is first written to local worker scratch, then validated, optionally metadata-stamped, copied to EOS with xrdcp, and validated remotely.
+#  The filename tag uses pT, not energy: gun_eta<eta>_pt<pt>.root.
+#  If local or remote validation fails, the job retries once with the random seed incremented by 12345.
+#  Validation requires the output ROOT file to contain events and podio_metadata trees with at least one event branch.
+#  This script is useful historical infrastructure for gun-sample production, but should be kept separate from the current authoritative DCH reco/analysis closeout path.
+#Tags: secondary, ddsim, condor, gun-production, eos, xrootd, metadata, edm4hep
+#DOC_END
+
+
+
+
+
 # Wrapper for DDSim gun jobs on HTCondor: write local, stage to EOS via xrdcp, validate.
 set -euo pipefail
 
@@ -7,7 +46,7 @@ K4SETUP=/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 
 # Source only if not already set; clear "$@" while sourcing
 if [[ -z "${KEY4HEP_STACK:-}" && -z "${K4ENV:-}" ]]; then
-  __orig_args=("$@"); set +u; set --; source "$K4SETUP" -r 2026-01-11; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
+  __orig_args=("$@"); set +u; set --; source "$K4SETUP"; set -- "${__orig_args[@]}"; set -u 2>/dev/null || true
 else
   echo "[env] Key4HEP already set, not sourcing again."
 fi

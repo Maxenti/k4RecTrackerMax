@@ -22,3 +22,30 @@ Tracking/test/testTrackFinder/logs
 *.tar
 *.tar.gz
 *.tgz
+
+# testTrackFinder generated runtime/artifact outputs
+Tracking/test/testTrackFinder/artifacts/
+Tracking/test/testTrackFinder/scripts/runtime.tgz
+Tracking/test/testTrackFinder/runtime.tgz
+Tracking/test/testTrackFinder/**/*.tgz
+Tracking/test/testTrackFinder/**/*.tar.gz
+
+# Condor/log/generated outputs
+Tracking/test/testTrackFinder/logs/
+Tracking/test/testTrackFinder/scripts/logs/
+Tracking/test/testTrackFinder/params/job_*.json
+Tracking/test/testTrackFinder/params_ddsim.jsonl
+Tracking/test/testTrackFinder/scripts/queue_items.txt
+Tracking/test/testTrackFinder/scripts/filelist.txt
+# testTrackFinder generated outputs
+Tracking/test/testTrackFinder/artifacts/
+Tracking/test/testTrackFinder/scripts/runtime.tgz
+Tracking/test/testTrackFinder/runtime.tgz
+Tracking/test/testTrackFinder/**/*.tgz
+Tracking/test/testTrackFinder/**/*.tar.gz
+Tracking/test/testTrackFinder/logs/
+Tracking/test/testTrackFinder/scripts/logs/
+Tracking/test/testTrackFinder/params/job_*.json
+Tracking/test/testTrackFinder/params_ddsim.jsonl
+Tracking/test/testTrackFinder/scripts/queue_items.txt
+Tracking/test/testTrackFinder/scripts/filelist.txt

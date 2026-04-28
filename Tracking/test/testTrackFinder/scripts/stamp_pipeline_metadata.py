@@ -1,4 +1,50 @@
 #!/usr/bin/env python3
+
+"""
+DOC
+Summary: Stamp general pipeline-stage provenance into a ROOT output file as a JSON payload plus convenience ROOT keys.
+Status: secondary
+Usage:
+  python3 scripts/stamp_pipeline_metadata.py --root OUTPUT.root --stage fit --cmd "k4run ..." --input INPUT.root --config CONFIG.xml --config model.onnx
+Examples:
+  python3 scripts/stamp_pipeline_metadata.py \
+    --root reco_gun_eta+1.00_pt14.142.root \
+    --stage final \
+    --cmd "k4run runtime/runDCHTestTrackFinder.py --inputFile ... --stage fit ..." \
+    --input root://eosuser.cern.ch///eos/.../gun_eta+1.00_pt14.142.root \
+    --config geom/IDEA_variant.xml \
+    --config runtime/models/model.onnx \
+    --config runtime/runDCHTestTrackFinder.py \
+    --workdir . \
+    --key pipeline_metadata_json \
+    --extra condor_job=1 \
+    --extra k4rel=2026-01-11
+Inputs: ROOT file opened in UPDATE mode, stage label, command string, optional input paths, optional config paths, optional extra key=value metadata, and a working directory for git context.
+Outputs: ROOT key pipeline_metadata_json or the requested --key containing full JSON provenance; convenience keys pipeline_stage and pipeline_cmd.
+Collections: None; writes top-level ROOT metadata objects rather than EDM4hep event collections.
+Connects-To: scripts/reco_job.sh, steering/local_chain.sh, scripts/print_metadata.py, scripts/analyze_pt_resolution_grid.py, downstream closeout/reproducibility checks
+Arguments:
+  --root: ROOT file to update with provenance metadata.
+  --stage: pipeline stage label, such as ddsim, digi, ggtf, fit, final, or analysis.
+  --cmd: command line used to produce the file.
+  --config: config or steering file to hash and embed; may be repeated.
+  --input: input file path to hash and record; may be repeated.
+  --extra: additional key=value metadata entry; may be repeated.
+  --workdir: directory used for best-effort git repository context; default current directory.
+  --key: ROOT key name for the JSON payload; default pipeline_metadata_json.
+Notes:
+  This script is the general reco/pipeline provenance stamper, complementary to stamp_ddsim_metadata.py for DDSim gun production.
+  The JSON payload records stage, command, input file hashes/sizes, config file hashes/content heads, environment breadcrumbs, tool versions, git branch/commit/status/remote, and arbitrary extras.
+  Config contents are stored only up to a size limit and accompanied by SHA256 hashes to keep the ROOT file size controlled.
+  Input paths that are not local files may have null size/hash values; the path is still recorded for reproducibility.
+  Worker wrappers treat stamping as non-fatal so provenance failures do not hide actual reco success/failure.
+  Use print_metadata.py or ROOT key inspection to verify the stored payload.
+Tags: secondary, metadata, provenance, root, reco, k4run, condor, reproducibility, key4hep
+DOC_END
+"""
+
+
+
 import argparse, json, os, sys, time, subprocess, hashlib
 
 def try_cmd(cmd):

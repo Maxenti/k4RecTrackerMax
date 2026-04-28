@@ -1,4 +1,33 @@
 #!/usr/bin/env python3
+
+
+"""
+DOC
+Summary: Print metadata-like ROOT trees from an EDM4hep/PODIO ROOT file for quick provenance inspection.
+Status: secondary
+Usage:
+  python3 scripts/print_metadata.py FILE.root
+Examples:
+  python3 scripts/print_metadata.py /eos/.../reco_eta+1.00_pt14.142.root
+  python3 scripts/print_metadata.py /eos/.../gun_eta+1.00_pt14.142.root
+Inputs: ROOT file containing optional metadata-like TTrees.
+Outputs: Terminal dump of metadata tree structure and the first few entries from each detected metadata-like tree.
+Collections: None; reads metadata-style ROOT TTrees, not EDM4hep event collections.
+Connects-To: scripts/stamp_pipeline_metadata.py, scripts/stamp_ddsim_metadata.py, scripts/reco_job.sh, scripts/condor_ddsim.sh, steering/local_chain.sh
+Arguments:
+  file.root: input ROOT file to inspect.
+Notes:
+  The script checks common metadata tree names: metadata, runMetadata, MetaData, and metaData.
+  For each found tree, it prints the ROOT branch structure with TTree.Print() and shows up to the first three entries with TTree.Show().
+  This is intended for quick validation of provenance stamping after DDSim production, local-chain reco, or Condor reco jobs.
+  It does not inspect the standard PODIO events or podio_metadata trees.
+  Use this after stamp_ddsim_metadata.py or stamp_pipeline_metadata.py when verifying campaign/job metadata was embedded correctly.
+Tags: secondary, metadata, provenance, root, edm4hep, podio, diagnostics
+DOC_END
+"""
+
+
+
 import sys
 import os
 import ROOT

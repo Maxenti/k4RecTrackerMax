@@ -1,4 +1,52 @@
 #!/usr/bin/env python3
+
+"""
+DOC
+Summary: Stamp DDSim gun-production provenance into a generated EDM4hep ROOT file as JSON plus convenience ROOT keys.
+Status: secondary
+Usage:
+  python3 scripts/stamp_ddsim_metadata.py --root GUN.root --params-json JOB.json --compact-xml COMPACT.xml --cmd "ddsim ..." --theta-min THETA_MIN --theta-max THETA_MAX
+Examples:
+  python3 scripts/stamp_ddsim_metadata.py \
+    --root gun_eta+1.00_pt14.142.root \
+    --params-json params/job_17.json \
+    --compact-xml IDEA_variant.xml \
+    --cmd "ddsim --compactFile IDEA_variant.xml --numberOfEvents 5000 ..." \
+    --theta-min 0.705 \
+    --theta-max 0.705 \
+    --phi-opts "--gun.phiMin 0*deg --gun.phiMax 360*deg --gun.distribution uniform" \
+    --out-eos /eos/.../gun_eta+1.00_pt14.142.root \
+    --out-url root://eosuser.cern.ch///eos/.../gun_eta+1.00_pt14.142.root \
+    --k4-release 2026-01-11 \
+    --job-extra jobfile=job_17.json
+Inputs: Local DDSim output ROOT file opened in UPDATE mode, per-job JSON parameters, compact XML used by the job, full DDSim command string, resolved theta/phi gun settings, optional EOS targets, Key4HEP release label, and repeated key=value job extras.
+Outputs: ROOT keys ddsim_metadata_json, ddsim_cmd, and compact_xml_sha256 written into the input ROOT file.
+Collections: None; writes top-level ROOT metadata objects rather than EDM4hep event collections.
+Connects-To: scripts/condor_ddsim.sh, scripts/prepare_and_submit.sh, scripts/mk_ddsim_grid.py, scripts/print_metadata.py, downstream reco provenance checks
+Arguments:
+  --root: local EDM4hep ROOT file to update.
+  --params-json: per-job DDSim parameter JSON produced from the pT/eta grid.
+  --compact-xml: compact DD4hep XML path actually used on the worker.
+  --cmd: full DDSim command line string to store.
+  --theta-min: resolved DDSim gun theta minimum in radians.
+  --theta-max: resolved DDSim gun theta maximum in radians.
+  --phi-opts: resolved DDSim gun phi options string.
+  --out-eos: final EOS POSIX target path.
+  --out-url: final EOS XRootD target URL.
+  --k4-release: Key4HEP release/nightly label.
+  --job-extra: additional key=value metadata entries; may be repeated.
+Notes:
+  This script is called by condor_ddsim.sh after local DDSim output validation and before staging the file to EOS.
+  The metadata payload includes DDSim command provenance, grid parameters, resolved runtime gun angles, compact XML path/hash/content head, output targets, environment breadcrumbs, and tool versions.
+  The compact XML contents are stored only up to a size limit and accompanied by a SHA256 hash so large geometry files do not make the ROOT file unreasonably large.
+  Stamping is intended to be non-fatal in the worker wrapper; a failed stamp should not hide a DDSim generation failure or success.
+  Use print_metadata.py or ROOT key inspection to verify the stored ddsim_metadata_json object.
+Tags: secondary, metadata, provenance, ddsim, gun-production, root, eos, condor, key4hep
+DOC_END
+"""
+
+
+
 import argparse, json, os, sys, time, subprocess, hashlib
 
 def try_cmd(cmd):

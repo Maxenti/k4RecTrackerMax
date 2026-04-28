@@ -1,0 +1,102 @@
+# DOC:
+# Summary: Authoritative HTCondor submit description for reco jobs, launching one worker job per gun-sample ROOT input listed in the reco queue file.
+# Status: authoritative
+# Usage:
+#   condor_submit configs/condor/reco.condor
+#   condor_submit configs/condor/reco.condor -append "queuefile=/path/to/filelist.txt" -append "outdir=/eos/.../reco_samples/VARIANT" -append "compactxml=/eos/.../IDEA_variant.xml" -append "tgeofile=/eos/.../IDEA_variant.root"
+#   Usually submitted through scripts/submit_reco.sh after scripts/make_filelist.sh builds filelist.txt.
+# Examples:
+#   cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts
+#   condor_submit reco.condor \
+#     -append "queuefile=$(pwd)/filelist.txt" \
+#     -append "outdir=/eos/user/c/cglenn/reco_samples2/1_29_2026/100umCF_0.313474umAu" \
+#     -append "compactxml=/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03_100umCF_0.313474umAu.xml" \
+#     -append "fitter=genfit2" \
+#     -append "usemat=1" \
+#     -append "stage=fit" \
+#     -append "fitout=auto" \
+#     -append "k4rel=2026-04-22" \
+#     -append "tgeofile=/afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03_100umCF_0.313474umAu.root"
+#   Expected result: one reco_job.sh worker runs per input ROOT file and writes reco outputs under outdir/<eta_dir>/.
+# Inputs: queuefile containing one input ROOT path per line, scripts/reco_job.sh, runtime.tgz from scripts/make_runtime.sh, scripts/stamp_pipeline_metadata.py, compact DD4hep XML, optional matching TGeo ROOT file, and EOS-readable DDSim gun samples.
+# Outputs: Reco ROOT files staged by reco_job.sh to outdir/<eta_dir>/reco_<input>.root, optional failure logs under outdir/<eta_dir>/logs/, and HTCondor stdout/stderr/log files under scripts/logs/reco/.
+# Collections: Does not inspect collections directly; worker jobs normally run DCHCollection -> DCHDigi2Collection/DCH_DigiCollection -> CDCHTracks/GGTF products -> GenFitTracks through steering/runDCHTestTrackFinder.py.
+# Connects-To: scripts/submit_reco.sh, scripts/make_filelist.sh, scripts/reco_job.sh, scripts/make_runtime.sh, scripts/stamp_pipeline_metadata.py, steering/runDCHTestTrackFinder.py, scripts/analyze_job.sh
+# Arguments:
+#   infile: queued input ROOT path from queuefile; may be /eos/... or root://... .
+#   outdir: EOS output directory base for reco outputs.
+#   compactxml: compact DD4hep XML detector/material variant passed to reco_job.sh.
+#   fitter: fitter mode passed to steering through reco_job.sh; default genfit2.
+#   usemat: material-effects toggle passed as GF_USE_MAT_ARG to reco_job.sh; default 1.
+#   stage: cumulative reco stage, normally digi, ggtf, or fit; default fit.
+#   fitout: requested output track collection or auto; default auto.
+#   k4rel: Key4HEP nightly release sourced inside each worker job; default 2026-01-11 in this file unless overridden.
+#   tgeofile: TGeo ROOT geometry file used when material effects are enabled; should match compactxml/material variant.
+#   queuefile: text file containing one input ROOT file per line; produced by scripts/make_filelist.sh.
+#   request_cpus/request_memory/request_disk: Condor resource requests, currently 2 CPUs, 8 GB memory, and 5 GB disk.
+#   +JobFlavour: CERN batch runtime class; set to workday.
+# Notes:
+#   This is the authoritative submit description for the maintained reco Condor pipeline.
+#   The normal workflow is submit_reco.sh -> reco.condor -> reco_job.sh -> EOS reco outputs.
+#   runtime.tgz must be current before submission; rebuild it with scripts/make_runtime.sh after changes to k4RecTracker libraries, GenFit2, steering, catalogs, or model.onnx.
+#   Logging paths are on AFS/local storage because EOS is not appropriate for Condor submit/log files.
+#   transfer_output_files is intentionally empty because reco_job.sh stages physics ROOT outputs to EOS explicitly with xrdcp.
+#   For material comparisons, compactxml and tgeofile must correspond to the same detector/material variant, and all reco/analysis knobs should be kept fixed between variants.
+#   Defaults in this file are concrete campaign defaults; submit_reco.sh normally overrides them with -append values for the active campaign.
+#   Stale EOS reco outputs are skipped by reco_job.sh, so delete old outputs before rerunning changed configurations.
+# Tags: authoritative, reco, condor, submission, worker-queue, eos, xrootd, dch, ggtf, genfit2, key4hep
+# DOC_END
+
+# reco.condor — one job per input ROOT file
+
+universe        = vanilla
+
+# Keep all relative resolution anchored here.
+initialdir      = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts
+
+executable      = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/reco_job.sh
+transfer_executable = True
+
+# Resources / runtime window
+request_cpus    = 2
+request_memory  = 8 GB
+request_disk    = 5 GB
++JobFlavour     = "workday"
+
+# --- I/O under HTCondor ---
+# Only ship what the job actually needs
+transfer_input_files    = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/runtime.tgz, /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/stamp_pipeline_metadata.py
+transfer_output_files   = ""
+
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+# Logging (make sure logs/reco exists before condor_submit)
+# Logging MUST be on AFS/local (EOS submission not supported)
+output  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/reco/reco.$(Cluster).$(Process).out
+error   = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/reco/reco.$(Cluster).$(Process).err
+log     = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/logs/reco/reco.$(Cluster).log
+
+getenv = True
+stream_output = False
+stream_error  = False
+
+# --- Defaults (can be overridden by condor_submit -append "...") ---
+queuefile  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/scripts/filelist.txt
+
+outdir     = /eos/user/c/cglenn/reco_samples2/1_29_2026/100umCF_0.313474umAu
+compactxml = /eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03_100umCF_0.313474umAu.xml
+
+fitter    = genfit2
+usemat    = 1
+stage     = fit
+fitout    = auto
+
+# Key4hep nightly used INSIDE the job
+k4rel = 2026-01-11
+tgeofile  = /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder/IDEA_o1_v03_100umCF_0.313474umAu.root
+
+# Arguments: fixed-position only
+arguments = $(infile) $(outdir) $(compactxml) $(fitter) $(usemat) $(stage) $(fitout) $(k4rel) $(tgeofile)
+
+queue infile from $(queuefile)

@@ -1,21 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# -----------------------------------------------------------------------------
 #DOC
-# prepare_and_submit.sh
-# - Generates a JSONL grid of (pt, eta) points
-# - Splits into per-job JSON files under params/
-# - Writes queue file scripts/queue_items.txt
-# - Submits HTCondor jobs, optionally transferring the compact XML
-#
-# Notes / fixes vs old:
-# - Ensures OUT_DIR exists on EOS (mkdir -p)
-# - Uses a stable tag for this production (date or custom) without changing behavior
-# - Keeps TRANSFER_COMPACT logic, but avoids relying on "scripts/" being in transfer list
-# - No behavior changes to mk_ddsim_grid.py usage; just safer plumbing + clearer logging
+#Summary: Authoritative DDSim gun-production submission wrapper that generates a pT/eta job grid, splits it into per-job JSON parameter files, builds the Condor queue list, and submits the DDSim campaign.
+#Status: authoritative
+#Usage:
+#  bash scripts/prepare_and_submit.sh
+#  TRANSFER_COMPACT=1 bash scripts/prepare_and_submit.sh
+#Examples:
+#  cd /afs/cern.ch/user/c/cglenn/FCCWork/k4RecTracker/Tracking/test/testTrackFinder
+#  bash scripts/prepare_and_submit.sh
+#  Expected result: params/job_*.json and scripts/queue_items.txt are created, then condor_submit launches the DDSim gun-production campaign.
+#Inputs: Hard-coded COMPACT_XML detector variant, hard-coded OUT_DIR EOS campaign destination, scripts/mk_ddsim_grid.py, configs/condor/ddsim.condor or scripts/ddsim.condor depending on local layout, and scripts/condor_ddsim.sh through the Condor submit file.
+#Outputs: params/job_*.json per-job parameter files, params_ddsim.jsonl grid file, scripts/queue_items.txt Condor queue list, HTCondor DDSim jobs, and generated gun-sample ROOT files under OUT_DIR/eta_<eta>/.
+#Collections: None directly; submitted DDSim jobs produce EDM4hep ROOT files whose downstream reco expects DCHCollection and related SimTrackerHit collections from the configured compact geometry.
+#Connects-To: scripts/mk_ddsim_grid.py, configs/condor/ddsim.condor, scripts/condor_ddsim.sh, scripts/make_filelist.sh, scripts/submit_reco.sh
+#Arguments:
+#  COMPACT_XML: compact DD4hep XML detector/material variant used for the DDSim gun campaign; currently edited inside this script.
+#  OUT_DIR: EOS output directory for generated gun samples; currently edited inside this script.
+#  GRID_JSON: JSONL grid filename written by mk_ddsim_grid.py; default params_ddsim.jsonl.
+#  TRANSFER_COMPACT: if 1, transfer the compact XML with each Condor job; if 0, workers read the XML from its EOS path. Default 0.
+#  mk_ddsim_grid.py knobs: pt range, eta list, events per point, particle species, and theta smearing are currently fixed in the command inside this script.
+#Notes:
+#  This is the authoritative high-level submission entry point for DDSim gun-sample production in the current testTrackFinder workflow.
+#  Update COMPACT_XML and OUT_DIR together for each detector/material variant so produced gun samples are clearly tied to the intended geometry.
+#  The eta and pT grid here must remain synchronized with downstream make_filelist.sh, reco submission, analysis, and comparison expectations.
+#  The script clears params/job_*.json and scripts/queue_items.txt before regenerating them, so do not store hand-written files there.
+#  TRANSFER_COMPACT=0 is preferred when the worker can read the EOS XML reliably; TRANSFER_COMPACT=1 is useful when Condor file transfer is safer for a specific campaign.
+#  The printed condor_submit command appends submit-time variables such as OUT_DIR, COMPACT_XML_ARG, and TRANSFER_COMPACT to the DDSim submit description.
+#  Generated gun samples are upstream inputs to the reco pipeline: scripts/submit_reco.sh -> configs/condor/reco.condor -> scripts/reco_job.sh.
+#Tags: authoritative, ddsim, gun-production, condor, eos, parameter-grid, submission, upstream
 #DOC_END
-# -----------------------------------------------------------------------------
+
 
 # ---- EDIT THESE ----
 COMPACT_XML="/eos/user/c/cglenn/FCCWork/GithubRepos/k4geoMax/FCCee/IDEA/compact/IDEA_o1_v03/IDEA_o1_v03_25umCF_0.2umNiP_1.2umAu.xml"

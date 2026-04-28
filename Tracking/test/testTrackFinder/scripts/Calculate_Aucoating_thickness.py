@@ -1,44 +1,42 @@
 #!/usr/bin/env python3
 """
-Calculate_Aucoating_thickness.py
-
-AC-aware conductance matching with optional Ni(P) adhesion/underplate layer (Option A: constant thickness).
-
-Goal:
-  Given a carbon-fiber (CF) core diameter/radius, compute the Au coating thickness required so that the
-  *AC resistance per unit length* (R_ac/L) of:
-
-      CF  (+ optional NiP underlayer)  +  Au
-
-  matches the AC resistance per unit length of the reference wire:
-
-      20 µm tungsten (W) core + 0.3 µm Au coat
-
-AC model (engineering approximation, transparent):
-  - Skin effect via effective conducting thickness:
-        t_eff = min(t, k * delta)
-  - Shell effective conducting area (thin-shell approx):
-        A_eff_shell ≈ 2π * R_outer * t_eff
-  - Core effective conducting area if fields reach it:
-        A_eff_core ≈ π * min(r_core, k*delta_core)^2
-
-Screening rule (simple, deterministic):
-  - If Au is thick enough: t_Au >= k*δ_Au  -> ignore deeper layers (NiP + core).
-  - Else include Au + NiP.
-  - If NiP is thick enough: t_NiP >= k*δ_NiP -> ignore core.
-  - Else include core as well.
-
-Option A (what you chose):
-  - Ni(P) thickness is a *constant* (continuous-film threshold + margin):
-        t_NiP = --t_nip_um  (default 0.10 µm)
-    enabled by --use_nip
-
-Notes / limitations:
-  - This is still a simplified AC-resistance model (ignores proximity effect, detailed impedance, roughness, etc.).
-  - The relevant “frequency” is a proxy for frontend bandwidth / rise time, not bunch frequency.
-
-Example:
-  python3 Calculate_Aucoating_thickness.py --cf_d_um 25 --use_nip --t_nip_um 0.10 --f_max_GHz 2.0
+DOC
+Summary: Compute the gold coating thickness needed for a carbon-fiber wire, optionally with a Ni(P) underlayer, to match the AC resistance per unit length of a reference W+Au wire.
+Status: secondary
+Usage:
+  python3 scripts/Calculate_Aucoating_thickness.py --cf_d_um CF_DIAMETER_UM [--use_nip --t_nip_um NIP_THICKNESS_UM] [--f_max_GHz FREQ] [--k_skin K]
+  python3 scripts/Calculate_Aucoating_thickness.py --cf_r_um CF_RADIUS_UM [conductivity/material options]
+Examples:
+  python3 scripts/Calculate_Aucoating_thickness.py --cf_d_um 25 --use_nip --t_nip_um 0.10 --f_max_GHz 2.0
+  python3 scripts/Calculate_Aucoating_thickness.py --cf_d_um 100 --sigma_cf 4.0e4 --use_nip --t_nip_um 0.10 --f_max_GHz 2.0 --k_skin 3.0
+Inputs: Carbon-fiber core radius or diameter; material conductivities for Au, W, CF, and optional Ni(P); reference W+Au wire dimensions; frequency/skin-depth model parameters.
+Outputs: Printed engineering estimate of required Au coating thickness, total wire radius, skin depths, target and achieved AC resistance per length, and diminishing-returns warnings.
+Collections: None; this is a standalone wire-material calculation utility, not an EDM4hep/ROOT event processor.
+Connects-To: material-budget closeout studies, CF-vs-W wire-variant design choices, geometry/material variant preparation, scripts/dch_x0_per_layer.py
+Arguments:
+  --cf_d_um: carbon-fiber core diameter in micrometers; mutually exclusive with --cf_r_um.
+  --cf_r_um: carbon-fiber core radius in micrometers; mutually exclusive with --cf_d_um.
+  --sigma_au: gold conductivity in S/m; default 4.10e7.
+  --sigma_w: tungsten conductivity in S/m; default 1.79e7.
+  --sigma_cf: carbon-fiber conductivity in S/m; default 4.00e4; use 0 to ignore CF core conductance.
+  --sigma_nip: Ni(P) conductivity in S/m; default 1.5e6.
+  --w_d_um: reference tungsten core diameter in micrometers; default 20.0.
+  --au_ref_t_um: reference gold coating thickness on W in micrometers; default 0.3.
+  --f_max_GHz: frequency proxy used for skin-depth evaluation in GHz; default 2.0.
+  --k_skin: effective conducting depth in units of skin depth; default 3.0.
+  --mu_r_au, --mu_r_w, --mu_r_cf, --mu_r_nip: relative permeabilities for Au, W, CF, and Ni(P); all default 1.0.
+  --use_nip: include a constant-thickness Ni(P) adhesion/underplate layer below Au.
+  --t_nip_um: Ni(P) thickness in micrometers when --use_nip is enabled; default 0.10.
+  --tmax_factor: bisection search upper bound scale relative to the reference Au thickness, with an additional skin-depth safeguard; default 50.0.
+Notes:
+  This is a simplified AC-resistance matching model for wire-design studies, not a detailed electromagnetic field solver.
+  The model approximates skin effect with t_eff = min(t, k_skin * skin_depth) and thin-shell effective area A_eff ≈ 2π R_outer t_eff.
+  The screening rule is deterministic: sufficiently thick Au screens deeper layers; otherwise the Ni(P) layer and, if not screened, the CF core contribute conductance.
+  The frequency is a proxy for frontend bandwidth/rise-time sensitivity, not the bunch-crossing frequency.
+  Results should be treated as engineering guidance for CF/Au/Ni(P) coating scale choices and then checked against material budget, manufacturability, mechanical reliability, and detector-performance constraints.
+  This script is secondary to the active reco chain; it supports wire/material side studies used to define CF-vs-W detector variants.
+Tags: secondary, wire-materials, carbon-fiber, gold-coating, nickel-phosphorus, ac-resistance, skin-depth, material-budget
+DOC_END
 """
 
 import argparse

@@ -1,42 +1,50 @@
 #!/usr/bin/env python3
 """
 DOC
-view_tracks_event.py
-
-Visualize DCH wire-hits (GGTF SenseWireHits), optional raw DCH digis, and GenFit2 tracks
-from an EDM4hep ROOT file.
-
-UPDATED for your NEW pipeline:
-  - GGTF no longer produces GGTF_3DHits (spacepoints).
-  - GenFit2DCHFitter consumes SenseWireHits on candidate tracks and outputs GenFitTracks.
-
-For a chosen event:
-  - GGTF SenseWireHits positions (x,y,z) and labels (type)
-  - Optional DCHDigi2Collection positions (SenseWireHit positions in mm)
-  - GenFitTracks TrackStates (typically one AtIP state per track):
-      * helix visualization from (x0,y0,z0, phi, tanLambda, omega) in uniform Bz
-
-Key robustness features:
-  1) Collection auto-detection (optional):
-     - If your requested hit collection doesn't exist, we can auto-pick a GGTF-like
-       collection that has position.{x,y,z} (and ideally .type).
-  2) Track <-> TrackState association:
-     - Uses GenFitTracks.trackStates_begin/end (or equivalent) when available.
-     - Picks AtIP-like state per track (smallest r^2 among that track's states).
-  3) Sanity print:
-     - Compare pT stored in TrackState.time (if your fitter encodes pT here)
-       vs pT derived from omega: pT_from_omega = 1/|omega| (or |q/omega|).
-     - If time is not used anymore, this comparison will just be informational.
-  4) Robust leaf discovery:
-     - Handles multiple common branch naming patterns.
-
-Writes histograms, canvases, and metadata into a ROOT file (no interactive windows).
-
+Summary: Build a single-event ROOT display for DCH reco debugging, showing GGTF/SenseWire-like hits, optional raw DCH digis, and GenFit track-state helix or straight-line overlays.
+Status: secondary
+Usage:
+  python3 scripts/view_tracks_event.py --input RECO.root
+  python3 scripts/view_tracks_event.py --input RECO.root --event EVENT_INDEX --outRoot tracks_display.root
+  python3 scripts/view_tracks_event.py --input RECO.root --hitsCollection OutputWireHitsGGTF --digiCollection DCHDigi2Collection --trackCollection GenFitTracks --trackStyle helix --Bz 2.0
 Examples:
-  python3 view_tracks_event.py --input reco.root
-  python3 view_tracks_event.py --input reco.root --event 12
-  python3 view_tracks_event.py --input reco.root --hitsCollection GGTF_SenseWireHits
-  python3 view_tracks_event.py --input reco.root --hitsCollection OutputTracksGGTF --hitSource trackhits
+  python3 scripts/view_tracks_event.py \
+    --input /eos/.../reco_eta+1.00_pt14.142.root \
+    --event 12 \
+    --hitsCollection OutputWireHitsGGTF \
+    --digiCollection DCHDigi2Collection \
+    --trackCollection GenFitTracks \
+    --trackStyle helix \
+    --Bz 2.0 \
+    --assumeQ -1 \
+    --outRoot artifacts/analysis/view_tracks_eta+1.00_pt14.142_evt12.root
+Inputs: EDM4hep/ROOT reco file containing an events TTree, a hit collection with position.x/y/z leaves, optional DCH digi position leaves, and optional GenFitTracks TrackState leaves.
+Outputs: ROOT file containing XY and RZ hit histograms, a 3D event display canvas, optional digi overlay markers, optional GenFit track overlays, and metadata describing the input/event/collections/command.
+Collections: Reads OutputWireHitsGGTF by default as the main reco hit display collection; optionally reads DCHDigi2Collection as raw digi overlay; reads GenFitTracks TrackStates by default for fitted-track overlays.
+Connects-To: scripts/view_tracks_event_simhits.py, scripts/debug_z_spur_event.py, scripts/inspect_events_pt_pathology.py, scripts/dump_covmatrix_one_event.py, scripts/scan_pt_time_by_event.py, Tracking/components/GGTF_tracking.cpp, Tracking/components/GenFit2DCHFitter.cpp
+Arguments:
+  --input: input EDM4hep/ROOT reco file.
+  --tree: input TTree name; default events.
+  --event: zero-based event index to visualize; if negative, auto-selects the first event with hits.
+  --hitsCollection: primary hit collection with position.x/y/z leaves; default OutputWireHitsGGTF.
+  --autoDetectHits: auto-detect a likely GGTF/SenseWire-like collection with position.x/y/z leaves if the requested collection is missing.
+  --digiCollection: optional raw DCH digi collection with position.x/y/z leaves; default DCHDigi2Collection; empty disables digi overlay.
+  --trackCollection: optional reconstructed track collection used for GenFit TrackStates; default GenFitTracks; empty disables fitted-track overlays.
+  --trackStyle: fitted-track drawing style, straight or helix; default helix.
+  --Bz: magnetic field along z in Tesla used for helix drawing; default 2.0 and should match the fitter configuration.
+  --assumeQ: assumed charge sign used for pT(|q/omega|) sanity checks; default -1.
+  --outRoot: output ROOT display file; default tracks_display.root.
+Notes:
+  This is a diagnostic/event-display utility, not part of the production reco or pT-resolution summary chain.
+  It is useful for quickly checking whether GGTF hit positions, raw DCH digis, and GenFit fitted tracks are geometrically consistent in a selected event.
+  The script supports the newer pipeline where GGTF no longer emits separate GGTF_3DHits spacepoints and GenFit2DCHFitter consumes SenseWireHit-style candidate hits.
+  Hit labels are read from <hitsCollection>.type when present and used to color/group the displayed hit markers.
+  Track-to-TrackState association uses trackStates_begin/end when available; the displayed state is chosen as the AtIP-like state with smallest reference-point r² for each track.
+  TrackState branch discovery handles common EDM4hep/PODIO naming variants such as GenFitTracks.trackStates., GenFitTracks.TrackStates., and underscore-prefixed forms.
+  The pT(time) versus pT(|q/omega|) printout is a sanity diagnostic for the project convention where TrackState.time may encode pT; ignore the comparison if time is no longer used that way.
+  Helix drawing assumes a uniform Bz field and uses TrackState referencePoint or D0/Z0 fallback together with phi, tanLambda, and omega.
+  For truth/simhit overlay and nearest-simhit residual diagnostics, use view_tracks_event_simhits.py instead.
+Tags: secondary, diagnostics, event-display, root, dch, ggtf, sensewirehit, digis, genfittracks, helix, trackstate
 DOC_END
 """
 
