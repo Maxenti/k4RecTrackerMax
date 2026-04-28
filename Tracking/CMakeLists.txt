@@ -21,6 +21,7 @@ find_package(k4FWCore REQUIRED)
 find_package(DD4hep REQUIRED COMPONENTS DDRec DDCore)
 find_package(onnxruntime REQUIRED)
 find_package(ROOT REQUIRED COMPONENTS RIO Tree)
+find_package(Eigen3 REQUIRED)
 # torch can be header-only or a cmake target depending on env
 find_package(Torch QUIET)  # provides Torch::Torch if available
 
@@ -84,6 +85,9 @@ if(NOT HAVE_GENFIT2)
   list(FILTER sources EXCLUDE REGEX ".*/GenFit2.*\\.cpp$")
 endif()
 
+# Exclude the experimental v03 fitter entirely.
+list(FILTER sources EXCLUDE REGEX ".*/GenFit2DCHFitter_v03\\.cpp$")
+
 # -------- Build the Gaudi module (the plugin) ----------
 gaudi_add_module(${PackageName}
   SOURCES ${sources}
@@ -97,6 +101,7 @@ gaudi_add_module(${PackageName}
     onnxruntime::onnxruntime
     DD4hep::DDRec
     DD4hep::DDCore
+    Eigen3::Eigen
     ${DELPHES_LIBRARIES}
 )
 
@@ -120,7 +125,7 @@ set_target_properties(${PackageName} PROPERTIES PUBLIC_HEADER "${headers}")
 if(HAVE_GENFIT2)
   target_compile_definitions(${PackageName} PRIVATE HAVE_GENFIT2=1)
   target_include_directories(${PackageName} PRIVATE ${GENFIT2_INCLUDE_DIR})
-  target_link_libraries(${PackageName} PRIVATE ${GENFIT2_LIBRARY})
+  target_link_libraries(${PackageName} PRIVATE ${GENFIT2_LIBRARY} Eigen3::Eigen)
 
   # Optional standalone fitter tool (kept from your old tree)
   if(EXISTS ${CMAKE_SOURCE_DIR}/Tracking/fitter/fit_ggtf_tracks.cpp)
@@ -128,6 +133,7 @@ if(HAVE_GENFIT2)
     target_include_directories(fit_ggtf_tracks PRIVATE ${GENFIT2_INCLUDE_DIR})
     target_link_libraries(fit_ggtf_tracks PRIVATE
         ${GENFIT2_LIBRARY}
+        Eigen3::Eigen
         EDM4HEP::edm4hep
         podio::podioRootIO
         ROOT::Tree ROOT::RIO
